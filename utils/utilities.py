@@ -121,7 +121,7 @@ async def get_publication_profile(publication_id: int) -> Embed:
     """
 
     embed = disnake.Embed(
-        title=f"Информация о выпуске #{publication[0]}",
+        title=f"Информация о выпуске `[#{publication[0]}]`",
         description=embed_description,
         color=0x2B2D31,
     )
