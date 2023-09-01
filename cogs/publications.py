@@ -131,10 +131,15 @@ class Publications(commands.Cog):
                 )
                 return
 
+            if not made_by:
+                made_by = "NULL"
+            else:
+                made_by = made_by[0]
+
             try:
                 await self.pubaction_db.add_pub_action(
                     pub_id=id,
-                    made_by=made_by[0],
+                    made_by=made_by,
                     action="createpub",
                     meta=f"[{date}, {amount_dp}]",
                 )
@@ -221,9 +226,14 @@ class Publications(commands.Cog):
                 )
                 return
 
+            if not made_by:
+                made_by = "NULL"
+            else:
+                made_by = made_by[0]
+
             try:
                 await self.pubaction_db.add_pub_action(
-                    pub_id=id, made_by=made_by[0], action="deletepub", meta=id
+                    pub_id=id, made_by=made_by, action="deletepub", meta=id
                 )
                 action_written_success = True
             except Exception as error:
@@ -386,9 +396,14 @@ class Publications(commands.Cog):
                 )
                 return
 
+            if not made_by:
+                made_by = "NULL"
+            else:
+                made_by = made_by[0]
+
             try:
                 await self.pubaction_db.add_pub_action(
-                    pub_id=id, made_by=made_by[0], action="setpub_id", meta=new_id
+                    pub_id=id, made_by=made_by, action="setpub_id", meta=new_id
                 )
                 action_written_success = True
             except Exception as error:
@@ -482,9 +497,14 @@ class Publications(commands.Cog):
                 )
                 return
 
+            if not made_by:
+                made_by = "NULL"
+            else:
+                made_by = made_by[0]
+
             try:
                 await self.pubaction_db.add_pub_action(
-                    pub_id=id, made_by=made_by[0], action="setpub_date", meta=date
+                    pub_id=id, made_by=made_by, action="setpub_date", meta=date
                 )
                 action_written_success = True
             except Exception as error:
@@ -597,10 +617,15 @@ class Publications(commands.Cog):
                 )
                 return
 
+            if not made_by:
+                made_by = "NULL"
+            else:
+                made_by = made_by[0]
+
             try:
                 await self.pubaction_db.add_pub_action(
                     pub_id=id,
-                    made_by=made_by[0],
+                    made_by=made_by,
                     action="setpub_maker",
                     meta=maker_db[0],
                 )
@@ -694,9 +719,14 @@ class Publications(commands.Cog):
                 )
                 return
 
+            if not made_by:
+                made_by = "NULL"
+            else:
+                made_by = made_by[0]
+
             try:
                 await self.pubaction_db.add_pub_action(
-                    pub_id=id, made_by=made_by[0], action="setpub_status", meta=status
+                    pub_id=id, made_by=made_by, action="setpub_status", meta=status
                 )
                 action_written_success = True
             except Exception as error:
@@ -790,9 +820,14 @@ class Publications(commands.Cog):
                 )
                 return
 
+            if not made_by:
+                made_by = "NULL"
+            else:
+                made_by = made_by[0]
+
             try:
                 await self.pubaction_db.add_pub_action(
-                    pub_id=id, made_by=made_by[0], action="setpub_amount", meta=amount
+                    pub_id=id, made_by=made_by, action="setpub_amount", meta=amount
                 )
                 action_written_success = True
             except Exception as error:
@@ -916,10 +951,15 @@ class Publications(commands.Cog):
                 )
                 return
 
+            if not made_by:
+                made_by = "NULL"
+            else:
+                made_by = made_by[0]
+
             try:
                 await self.pubaction_db.add_pub_action(
                     pub_id=id,
-                    made_by=made_by[0],
+                    made_by=made_by,
                     action="setpub_infocreator",
                     meta=creator_db[0],
                 )
@@ -1045,10 +1085,15 @@ class Publications(commands.Cog):
                 )
                 return
 
+            if not made_by:
+                made_by = "NULL"
+            else:
+                made_by = made_by[0]
+
             try:
                 await self.pubaction_db.add_pub_action(
                     pub_id=id,
-                    made_by=made_by[0],
+                    made_by=made_by,
                     action="setpub_salarypayer",
                     meta=payer_db[0],
                 )
