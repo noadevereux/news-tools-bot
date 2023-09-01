@@ -390,7 +390,8 @@ class MakerActionsTable(MainDataBase):
         async with connect(self.file) as connection:
             async with connection.cursor() as cursor:
                 await cursor.execute(
-                    "SELECT * FROM `maker_actions` WHERE `maker_id` = ?", (maker_id,)
+                    "SELECT * FROM `maker_actions` WHERE `maker_id` = ? ORDER BY `timestamp` DESC",
+                    (maker_id,),
                 )
                 data = await cursor.fetchall()
 
@@ -399,7 +400,9 @@ class MakerActionsTable(MainDataBase):
     async def get_all_maker_actions(self):
         async with connect(self.file) as connection:
             async with connection.cursor() as cursor:
-                await cursor.execute("SELECT * FROM `maker_actions`")
+                await cursor.execute(
+                    "SELECT * FROM `maker_actions` ORDER BY `timestamp` DESC"
+                )
                 data = await cursor.fetchall()
 
         return data
