@@ -2,7 +2,7 @@ from typing import Literal
 import disnake
 from disnake.ext import commands
 from utils.logger import Logger
-from utils.databases.main_db import PublicationsTable
+from utils.databases.main_db import PublicationsTable, PubsActionsTable
 from utils.databases.access_db import AccessDataBase
 from utils.access_checker import command_access_checker
 from utils.utilities import date_validator, get_publication_profile, get_status_title
@@ -15,6 +15,7 @@ class Publications(commands.Cog):
         self.log = Logger("cogs.publications.py.log")
         self.db = PublicationsTable()
         self.access_db = AccessDataBase()
+        self.pubaction_db = PubsActionsTable()
 
     @commands.Cog.listener(name="on_ready")
     async def on_ready(self):
@@ -118,9 +119,38 @@ class Publications(commands.Cog):
                 )
                 return
 
-            await ctx.message.add_reaction("✅")
+            try:
+                made_by = await self.db.get_maker(discord_id=ctx.author.id)
+            except Exception as error:
+                await self.log.error(
+                    f"Не удалось найти исполнителя команды в базе данных: {error}."
+                )
+                await ctx.message.add_reaction("❗")
+                await ctx.message.reply(
+                    content=f"**Произошла ошибка, вас не удалось найти в базе данных.**"
+                )
+                return
+
+            try:
+                await self.pubaction_db.add_pub_action(
+                    pub_id=id,
+                    made_by=made_by[0],
+                    action="createpub",
+                    meta=f"[{date}, {amount_dp}]",
+                )
+                action_written_success = True
+            except Exception as error:
+                await self.log.error(
+                    f"Не удалось записать действие с публикацией: {error}."
+                )
+                action_written_success = False
+
+        await ctx.message.add_reaction("✅")
+        await ctx.message.reply(content="**Вы успешно создали выпуск**", embed=embed)
+
+        if not action_written_success:
             await ctx.message.reply(
-                content="**Вы успешно создали выпуск**", embed=embed
+                content="**Произошла ошибка во время записи действия в лог.**"
             )
 
     @commands.command(name="deletepub")
@@ -179,8 +209,36 @@ class Publications(commands.Cog):
                 )
                 return
 
-            await ctx.message.add_reaction("✅")
-            await ctx.message.reply(content=f"**Вы успешно удалили выпуск #{id}**")
+            try:
+                made_by = await self.db.get_maker(discord_id=ctx.author.id)
+            except Exception as error:
+                await self.log.error(
+                    f"Не удалось найти исполнителя команды в базе данных: {error}."
+                )
+                await ctx.message.add_reaction("❗")
+                await ctx.message.reply(
+                    content=f"**Произошла ошибка, вас не удалось найти в базе данных.**"
+                )
+                return
+
+            try:
+                await self.pubaction_db.add_pub_action(
+                    pub_id=id, made_by=made_by[0], action="deletepub", meta=id
+                )
+                action_written_success = True
+            except Exception as error:
+                await self.log.error(
+                    f"Не удалось записать действие с публикацией: {error}."
+                )
+                action_written_success = False
+
+        await ctx.message.add_reaction("✅")
+        await ctx.message.reply(content=f"**Вы успешно удалили выпуск #{id}**")
+
+        if not action_written_success:
+            await ctx.message.reply(
+                content="**Произошла ошибка во время записи действия в лог.**"
+            )
 
     @commands.command(name="pubprofile")
     async def pub_profile(self, ctx: commands.Context, id: int):
@@ -316,9 +374,37 @@ class Publications(commands.Cog):
                 )
                 return
 
-            await ctx.message.add_reaction("✅")
+            try:
+                made_by = await self.db.get_maker(discord_id=ctx.author.id)
+            except Exception as error:
+                await self.log.error(
+                    f"Не удалось найти исполнителя команды в базе данных: {error}."
+                )
+                await ctx.message.add_reaction("❗")
+                await ctx.message.reply(
+                    content=f"**Произошла ошибка, вас не удалось найти в базе данных.**"
+                )
+                return
+
+            try:
+                await self.pubaction_db.add_pub_action(
+                    pub_id=id, made_by=made_by[0], action="setpub_id", meta=new_id
+                )
+                action_written_success = True
+            except Exception as error:
+                await self.log.error(
+                    f"Не удалось записать действие с публикацией: {error}."
+                )
+                action_written_success = False
+
+        await ctx.message.add_reaction("✅")
+        await ctx.message.reply(
+            content=f"**Вы изменили номер выпуска #{id}. Его новый номер: #{new_id}.**"
+        )
+
+        if not action_written_success:
             await ctx.message.reply(
-                content=f"**Вы изменили номер выпуска #{id}. Его новый номер: #{new_id}.**"
+                content="**Произошла ошибка во время записи действия в лог.**"
             )
 
     @commands.command(name="setpub_date")
@@ -384,9 +470,37 @@ class Publications(commands.Cog):
                 )
                 return
 
-            await ctx.message.add_reaction("✅")
+            try:
+                made_by = await self.db.get_maker(discord_id=ctx.author.id)
+            except Exception as error:
+                await self.log.error(
+                    f"Не удалось найти исполнителя команды в базе данных: {error}."
+                )
+                await ctx.message.add_reaction("❗")
+                await ctx.message.reply(
+                    content=f"**Произошла ошибка, вас не удалось найти в базе данных.**"
+                )
+                return
+
+            try:
+                await self.pubaction_db.add_pub_action(
+                    pub_id=id, made_by=made_by[0], action="setpub_date", meta=date
+                )
+                action_written_success = True
+            except Exception as error:
+                await self.log.error(
+                    f"Не удалось записать действие с публикацией: {error}."
+                )
+                action_written_success = False
+
+        await ctx.message.add_reaction("✅")
+        await ctx.message.reply(
+            content=f"**Вы изменили дату выпуска #{id} на {date}.**"
+        )
+
+        if not action_written_success:
             await ctx.message.reply(
-                content=f"**Вы изменили дату выпуска #{id} на {date}.**"
+                content="**Произошла ошибка во время записи действия в лог.**"
             )
 
     @commands.command(name="setpub_maker")
@@ -471,9 +585,40 @@ class Publications(commands.Cog):
                 )
                 return
 
-            await ctx.message.add_reaction("✅")
+            try:
+                made_by = await self.db.get_maker(discord_id=ctx.author.id)
+            except Exception as error:
+                await self.log.error(
+                    f"Не удалось найти исполнителя команды в базе данных: {error}."
+                )
+                await ctx.message.add_reaction("❗")
+                await ctx.message.reply(
+                    content=f"**Произошла ошибка, вас не удалось найти в базе данных.**"
+                )
+                return
+
+            try:
+                await self.pubaction_db.add_pub_action(
+                    pub_id=id,
+                    made_by=made_by[0],
+                    action="setpub_maker",
+                    meta=maker_db[0],
+                )
+                action_written_success = True
+            except Exception as error:
+                await self.log.error(
+                    f"Не удалось записать действие с публикацией: {error}."
+                )
+                action_written_success = False
+
+        await ctx.message.add_reaction("✅")
+        await ctx.message.reply(
+            content=f"**Вы изменили редактора выпуска #{id} на <@{maker_db[1]}>.**"
+        )
+
+        if not action_written_success:
             await ctx.message.reply(
-                content=f"**Вы изменили редактора выпуска #{id} на <@{maker_db[1]}>.**"
+                content="**Произошла ошибка во время записи действия в лог.**"
             )
 
     @commands.command(name="setpub_status")
@@ -537,9 +682,37 @@ class Publications(commands.Cog):
 
             status_title = await get_status_title(status_kw=status)
 
-            await ctx.message.add_reaction("✅")
+            try:
+                made_by = await self.db.get_maker(discord_id=ctx.author.id)
+            except Exception as error:
+                await self.log.error(
+                    f"Не удалось найти исполнителя команды в базе данных: {error}."
+                )
+                await ctx.message.add_reaction("❗")
+                await ctx.message.reply(
+                    content=f"**Произошла ошибка, вас не удалось найти в базе данных.**"
+                )
+                return
+
+            try:
+                await self.pubaction_db.add_pub_action(
+                    pub_id=id, made_by=made_by[0], action="setpub_status", meta=status
+                )
+                action_written_success = True
+            except Exception as error:
+                await self.log.error(
+                    f"Не удалось записать действие с публикацией: {error}."
+                )
+                action_written_success = False
+
+        await ctx.message.add_reaction("✅")
+        await ctx.message.reply(
+            content=f"**Вы изменили статус выпуска #{id} на `{status_title}`.**"
+        )
+
+        if not action_written_success:
             await ctx.message.reply(
-                content=f"**Вы изменили статус выпуска #{id} на `{status_title}`.**"
+                content="**Произошла ошибка во время записи действия в лог.**"
             )
 
     @commands.command(name="setpub_amount")
@@ -605,9 +778,37 @@ class Publications(commands.Cog):
                 )
                 return
 
-            await ctx.message.add_reaction("✅")
+            try:
+                made_by = await self.db.get_maker(discord_id=ctx.author.id)
+            except Exception as error:
+                await self.log.error(
+                    f"Не удалось найти исполнителя команды в базе данных: {error}."
+                )
+                await ctx.message.add_reaction("❗")
+                await ctx.message.reply(
+                    content=f"**Произошла ошибка, вас не удалось найти в базе данных.**"
+                )
+                return
+
+            try:
+                await self.pubaction_db.add_pub_action(
+                    pub_id=id, made_by=made_by[0], action="setpub_amount", meta=amount
+                )
+                action_written_success = True
+            except Exception as error:
+                await self.log.error(
+                    f"Не удалось записать действие с публикацией: {error}."
+                )
+                action_written_success = False
+
+        await ctx.message.add_reaction("✅")
+        await ctx.message.reply(
+            content=f"**Вы изменили зарплату за выпуск #{id} на {amount} DP.**"
+        )
+
+        if not action_written_success:
             await ctx.message.reply(
-                content=f"**Вы изменили зарплату за выпуск #{id} на {amount} DP.**"
+                content="**Произошла ошибка во время записи действия в лог.**"
             )
 
     @commands.command(name="setpub_infocreator")
@@ -703,9 +904,40 @@ class Publications(commands.Cog):
                 )
                 return
 
-            await ctx.message.add_reaction("✅")
+            try:
+                made_by = await self.db.get_maker(discord_id=ctx.author.id)
+            except Exception as error:
+                await self.log.error(
+                    f"Не удалось найти исполнителя команды в базе данных: {error}."
+                )
+                await ctx.message.add_reaction("❗")
+                await ctx.message.reply(
+                    content=f"**Произошла ошибка, вас не удалось найти в базе данных.**"
+                )
+                return
+
+            try:
+                await self.pubaction_db.add_pub_action(
+                    pub_id=id,
+                    made_by=made_by[0],
+                    action="setpub_infocreator",
+                    meta=creator_db[0],
+                )
+                action_written_success = True
+            except Exception as error:
+                await self.log.error(
+                    f"Не удалось записать действие с публикацией: {error}."
+                )
+                action_written_success = False
+
+        await ctx.message.add_reaction("✅")
+        await ctx.message.reply(
+            content=f"**Вы изменили автора информации к выпуску #{id} на <@{creator_db[1]}>.**"
+        )
+
+        if not action_written_success:
             await ctx.message.reply(
-                content=f"**Вы изменили автора информации к выпуску #{id} на <@{creator_db[1]}>.**"
+                content="**Произошла ошибка во время записи действия в лог.**"
             )
 
     @commands.command(name="setpub_salarypayer")
@@ -801,9 +1033,40 @@ class Publications(commands.Cog):
                 )
                 return
 
-            await ctx.message.add_reaction("✅")
+            try:
+                made_by = await self.db.get_maker(discord_id=ctx.author.id)
+            except Exception as error:
+                await self.log.error(
+                    f"Не удалось найти исполнителя команды в базе данных: {error}."
+                )
+                await ctx.message.add_reaction("❗")
+                await ctx.message.reply(
+                    content=f"**Произошла ошибка, вас не удалось найти в базе данных.**"
+                )
+                return
+
+            try:
+                await self.pubaction_db.add_pub_action(
+                    pub_id=id,
+                    made_by=made_by[0],
+                    action="setpub_salarypayer",
+                    meta=payer_db[0],
+                )
+                action_written_success = True
+            except Exception as error:
+                await self.log.error(
+                    f"Не удалось записать действие с публикацией: {error}."
+                )
+                action_written_success = False
+
+        await ctx.message.add_reaction("✅")
+        await ctx.message.reply(
+            content=f"**Вы изменили человека, который выплатил зарплату за выпуск #{id} на <@{payer_db[1]}>.**"
+        )
+
+        if not action_written_success:
             await ctx.message.reply(
-                content=f"**Вы изменили человека, который выплатил зарплату за выпуск #{id} на <@{payer_db[1]}>.**"
+                content="**Произошла ошибка во время записи действия в лог.**"
             )
 
 
