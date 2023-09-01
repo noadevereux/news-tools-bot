@@ -366,9 +366,7 @@ class Main(commands.Cog):
         await ctx.message.reply(embed=embed)
 
     @commands.command(name="setdiscord", usage="setdiscord <@ping | ID> <Nick_Name>")
-    async def set_discord(
-        self, ctx: commands.Context, member: disnake.User, new_member: disnake.User
-    ):
+    async def set_discord(self, ctx: commands.Context, id: int, member: disnake.User):
         async with ctx.typing():
             try:
                 access = await command_access_checker(
@@ -393,7 +391,7 @@ class Main(commands.Cog):
                     return
 
             try:
-                is_maker_exists = await self.db.is_maker_exists(member.id)
+                is_maker_exists = await self.db.is_maker_exists_by_id(id=id)
             except Exception as error:
                 await self.log.error(
                     f"Не удалось проверить существует ли редактор: {error}."
@@ -406,13 +404,11 @@ class Main(commands.Cog):
 
             if not is_maker_exists:
                 await ctx.message.add_reaction("❗")
-                await ctx.message.reply(
-                    content=f"**Редактор {member.mention} не найден.**"
-                )
+                await ctx.message.reply(content=f"**Редактор с ID `{id}` не найден.**")
                 return
 
             try:
-                is_new_maker_exists = await self.db.is_maker_exists(new_member.id)
+                is_new_maker_exists = await self.db.is_maker_exists(member.id)
             except Exception as error:
                 await self.log.error(
                     f"Не удалось проверить существует ли редактор: {error}."
@@ -426,12 +422,12 @@ class Main(commands.Cog):
             if is_new_maker_exists:
                 await ctx.message.add_reaction("❗")
                 await ctx.message.reply(
-                    content=f"**Редактор {new_member.mention} уже существует.**"
+                    content=f"**Редактор {member.mention} уже существует.**"
                 )
                 return
 
             try:
-                maker = await self.db.get_maker(discord_id=member.id)
+                maker = await self.db.get_maker_by_id(id=id)
             except Exception as error:
                 await self.log.error(
                     f"Не удалось найти редактора в базе данных: {error}."
@@ -439,20 +435,6 @@ class Main(commands.Cog):
                 await ctx.message.add_reaction("❗")
                 await ctx.message.reply(
                     content=f"**Произошла ошибка, не удалось найти редактора в базе данных.**"
-                )
-                return
-
-            try:
-                await self.db.update_maker(
-                    discord_id=member.id, column="discord_id", value=new_member.id
-                )
-            except Exception as error:
-                await self.log.error(
-                    f"Произошла ошибка при попытке обновить дискорд: {error}."
-                )
-                await ctx.message.add_reaction("❗")
-                await ctx.message.reply(
-                    content=f"**Произошла ошибка при попытке обновить дискорд.**"
                 )
                 return
 
@@ -469,11 +451,30 @@ class Main(commands.Cog):
                 return
 
             try:
+                await self.db.update_maker_by_id(
+                    id=id, column="discord_id", value=member.id
+                )
+            except Exception as error:
+                await self.log.error(
+                    f"Произошла ошибка при попытке обновить дискорд: {error}."
+                )
+                await ctx.message.add_reaction("❗")
+                await ctx.message.reply(
+                    content=f"**Произошла ошибка при попытке обновить дискорд.**"
+                )
+                return
+
+            if author:
+                author_id = author[0]
+            else:
+                author_id = "NULL"
+
+            try:
                 await self.maker_actions_db.add_maker_action(
                     maker_id=maker[0],
-                    made_by=author[0],
+                    made_by=author_id,
                     action="setdiscord",
-                    meta=new_member.id,
+                    meta=member.id,
                 )
                 action_write_success = True
             except Exception as error:
@@ -482,7 +483,7 @@ class Main(commands.Cog):
 
         await ctx.message.add_reaction("✅")
         await ctx.message.reply(
-            content=f"**Вы изменили редактору {member.mention} дискорд на {new_member.mention}**"
+            content=f"**Вы изменили редактору с ID {id} дискорд на {member.mention}**"
         )
 
         if not action_write_success:
