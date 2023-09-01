@@ -34,6 +34,14 @@ class MainDataBase:
 
         return bool(len(data))
 
+    async def is_maker_exists_by_id(self, id: int) -> bool:
+        async with connect(self.file) as connection:
+            async with connection.cursor() as cursor:
+                await cursor.execute("SELECT * FROM `makers` WHERE `id` = ?", (id,))
+                data = await cursor.fetchall()
+
+        return bool(len(data))
+
     async def add_maker(
         self,
         discord_id: int,
@@ -80,7 +88,31 @@ class MainDataBase:
             async with connection.cursor() as cursor:
                 await cursor.execute(query, parameters)
             await connection.commit()
-        return True
+
+    async def update_maker_by_id(
+        self,
+        id: int,
+        column: Literal[
+            "id",
+            "discord_id",
+            "nickname",
+            "level",
+            "status",
+            "warns",
+            "appointment_datetime",
+            "account_status",
+        ],
+        value: str | int,
+    ) -> bool:
+        query = "UPDATE `makers` SET {} = ? WHERE `id` = ?".format(column)
+        parameters = (
+            value,
+            id,
+        )
+        async with connect(self.file) as connection:
+            async with connection.cursor() as cursor:
+                await cursor.execute(query, parameters)
+            await connection.commit()
 
     async def get_all(self) -> list[tuple] | None:
         async with connect(self.file) as connection:
@@ -293,7 +325,7 @@ class MakerActionsTable(MainDataBase):
         query = """CREATE TABLE IF NOT EXISTS `maker_actions` (
             `id` INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
             `maker_id` INTEGER NOT NULL,
-            `made_by` INTEGER NOT NULL,
+            `made_by` INTEGER,
             `action` VARCHAR(255) CHECK(`action` IN (
                 'addmaker',
                 'deactivate',
@@ -430,7 +462,7 @@ class PubsActionsTable(MainDataBase):
         async with connect(self.file) as connection:
             async with connection.cursor() as cursor:
                 await cursor.execute(
-                    "INSERT INTO `maker_actions` (`maker_id`, `made_by`, `action`, `meta`, `reason`) VALUES (?, ?, ?, ?, ?)",
+                    "INSERT INTO `publication_actions` (`pub_id`, `made_by`, `action`, `meta`, `reason`) VALUES (?, ?, ?, ?, ?)",
                     (
                         pub_id,
                         made_by,
