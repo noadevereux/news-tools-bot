@@ -178,10 +178,15 @@ class Main(commands.Cog):
                 )
                 return
 
+            if not author:
+                author = "NULL"
+            else:
+                author = author[0]
+
             try:
                 await self.maker_actions_db.add_maker_action(
                     maker_id=maker[0],
-                    made_by=author[0],
+                    made_by=author,
                     action="addmaker",
                     meta=nickname,
                 )
@@ -283,10 +288,15 @@ class Main(commands.Cog):
                 )
                 return
 
+            if not author:
+                author = "NULL"
+            else:
+                author = author[0]
+
             try:
                 await self.maker_actions_db.add_maker_action(
                     maker_id=maker[0],
-                    made_by=author[0],
+                    made_by=author,
                     action="deactivate",
                     reason=reason,
                 )
@@ -464,15 +474,15 @@ class Main(commands.Cog):
                 )
                 return
 
-            if author:
-                author_id = author[0]
+            if not author:
+                author = "NULL"
             else:
-                author_id = "NULL"
+                author = author[0]
 
             try:
                 await self.maker_actions_db.add_maker_action(
                     maker_id=maker[0],
-                    made_by=author_id,
+                    made_by=author,
                     action="setdiscord",
                     meta=member.id,
                 )
@@ -575,10 +585,15 @@ class Main(commands.Cog):
                 )
                 return
 
+            if not author:
+                author = "NULL"
+            else:
+                author = author[0]
+
             try:
                 await self.maker_actions_db.add_maker_action(
                     maker_id=maker[0],
-                    made_by=author[0],
+                    made_by=author,
                     action="setnickname",
                     meta=nickname,
                 )
@@ -684,10 +699,15 @@ class Main(commands.Cog):
                 )
                 return
 
+            if not author:
+                author = "NULL"
+            else:
+                author = author[0]
+
             try:
                 await self.maker_actions_db.add_maker_action(
                     maker_id=maker[0],
-                    made_by=author[0],
+                    made_by=author,
                     action="setlevel",
                     meta=level,
                 )
@@ -700,6 +720,11 @@ class Main(commands.Cog):
         await ctx.message.reply(
             content=f"**Вы изменили редактору {member.mention} должность на `{level_title}`**"
         )
+
+        if not action_write_success:
+            await ctx.message.reply(
+                content="**Произошла ошибка во время записи действия в лог.**"
+            )
 
     @commands.command(name="setstatus", usage="setstatus <@ping | ID> <status>")
     async def set_status(
@@ -790,10 +815,15 @@ class Main(commands.Cog):
                 )
                 return
 
+            if not author:
+                author = "NULL"
+            else:
+                author = author[0]
+
             try:
                 await self.maker_actions_db.add_maker_action(
                     maker_id=maker[0],
-                    made_by=author[0],
+                    made_by=author,
                     action="setstatus",
                     meta=status,
                 )
@@ -901,9 +931,14 @@ class Main(commands.Cog):
                 )
                 return
 
+            if not author:
+                author = "NULL"
+            else:
+                author = author[0]
+
             try:
                 await self.maker_actions_db.add_maker_action(
-                    maker_id=maker[0], made_by=author[0], action="warn", reason=reason
+                    maker_id=maker[0], made_by=author, action="warn", reason=reason
                 )
                 action_write_success = True
             except Exception as error:
@@ -1016,9 +1051,14 @@ class Main(commands.Cog):
                 )
                 return
 
+            if not author:
+                author = "NULL"
+            else:
+                author = author[0]
+
             try:
                 await self.maker_actions_db.add_maker_action(
-                    maker_id=maker[0], made_by=author[0], action="unwarn", reason=reason
+                    maker_id=maker[0], made_by=author, action="unwarn", reason=reason
                 )
                 action_write_success = True
             except Exception as error:
