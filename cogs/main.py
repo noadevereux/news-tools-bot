@@ -34,6 +34,8 @@ class Main(commands.Cog):
             await self.access_db.add_command("setdiscord")
             await self.access_db.add_command("setlevel")
             await self.access_db.add_command("setstatus")
+            await self.access_db.add_command("warn")
+            await self.access_db.add_command("unwarn")
             await self.access_db.add_command("profile")
         except Exception as error:
             await self.log.critical(f"Не удалось инициализировать команды: {error}.")
@@ -152,14 +154,57 @@ class Main(commands.Cog):
                 )
                 return
 
+            try:
+                maker = await self.db.get_maker(discord_id=member.id)
+            except Exception as error:
+                await self.log.error(
+                    f"Не удалось найти редактора в базе данных: {error}."
+                )
+                await ctx.message.add_reaction("❗")
+                await ctx.message.reply(
+                    content=f"**Произошла ошибка, не удалось найти редактора в базе данных.**"
+                )
+                return
+
+            try:
+                author = await self.db.get_maker(discord_id=ctx.author.id)
+            except Exception as error:
+                await self.log.error(
+                    f"Не удалось найти исполнителя команды в базе данных: {error}."
+                )
+                await ctx.message.add_reaction("❗")
+                await ctx.message.reply(
+                    content=f"**Произошла ошибка, вас не удалось найти в базе данных.**"
+                )
+                return
+
+            try:
+                await self.maker_actions_db.add_maker_action(
+                    maker_id=maker[0],
+                    made_by=author[0],
+                    action="addmaker",
+                    meta=nickname,
+                )
+                action_write_success = True
+            except Exception as error:
+                await self.log.error(f"Не удалось записать действие: {error}.")
+                action_write_success = False
+
         await ctx.message.add_reaction("✅")
         await ctx.message.reply(
             content=f"**Вы добавили редактора {member.mention} `{nickname}`.**",
             embed=embed,
         )
 
+        if not action_write_success:
+            await ctx.message.reply(
+                content="**Произошла ошибка во время записи действия в лог.**"
+            )
+
     @commands.command(name="deactivate", usage="deactivate <@ping | ID>")
-    async def deactivate_maker(self, ctx: commands.Context, member: disnake.User):
+    async def deactivate_maker(
+        self, ctx: commands.Context, member: disnake.User, reason: str
+    ):
         async with ctx.typing():
             try:
                 access = await command_access_checker(
@@ -214,10 +259,51 @@ class Main(commands.Cog):
                 )
                 return
 
+            try:
+                maker = await self.db.get_maker(discord_id=member.id)
+            except Exception as error:
+                await self.log.error(
+                    f"Не удалось найти редактора в базе данных: {error}."
+                )
+                await ctx.message.add_reaction("❗")
+                await ctx.message.reply(
+                    content=f"**Произошла ошибка, не удалось найти редактора в базе данных.**"
+                )
+                return
+
+            try:
+                author = await self.db.get_maker(discord_id=ctx.author.id)
+            except Exception as error:
+                await self.log.error(
+                    f"Не удалось найти исполнителя команды в базе данных: {error}."
+                )
+                await ctx.message.add_reaction("❗")
+                await ctx.message.reply(
+                    content=f"**Произошла ошибка, вас не удалось найти в базе данных.**"
+                )
+                return
+
+            try:
+                await self.maker_actions_db.add_maker_action(
+                    maker_id=maker[0],
+                    made_by=author[0],
+                    action="deactivate",
+                    reason=reason,
+                )
+                action_write_success = True
+            except Exception as error:
+                await self.log.error(f"Не удалось записать действие: {error}.")
+                action_write_success = False
+
         await ctx.message.add_reaction("✅")
         await ctx.message.reply(
             content=f"**{ctx.author.mention}, вы деактивировали аккаунт редактора {member.mention}.**"
         )
+
+        if not action_write_success:
+            await ctx.message.reply(
+                content="**Произошла ошибка во время записи действия в лог.**"
+            )
 
     @commands.command(name="profile", usage="profile [@ping | ID]")
     async def maker_profile(self, ctx: commands.Context, member: disnake.User = None):
@@ -280,7 +366,7 @@ class Main(commands.Cog):
         await ctx.message.reply(embed=embed)
 
     @commands.command(name="setdiscord", usage="setdiscord <@ping | ID> <Nick_Name>")
-    async def set_nickname(
+    async def set_discord(
         self, ctx: commands.Context, member: disnake.User, new_member: disnake.User
     ):
         async with ctx.typing():
@@ -345,6 +431,18 @@ class Main(commands.Cog):
                 return
 
             try:
+                maker = await self.db.get_maker(discord_id=member.id)
+            except Exception as error:
+                await self.log.error(
+                    f"Не удалось найти редактора в базе данных: {error}."
+                )
+                await ctx.message.add_reaction("❗")
+                await ctx.message.reply(
+                    content=f"**Произошла ошибка, не удалось найти редактора в базе данных.**"
+                )
+                return
+
+            try:
                 await self.db.update_maker(
                     discord_id=member.id, column="discord_id", value=new_member.id
                 )
@@ -358,10 +456,39 @@ class Main(commands.Cog):
                 )
                 return
 
+            try:
+                author = await self.db.get_maker(discord_id=ctx.author.id)
+            except Exception as error:
+                await self.log.error(
+                    f"Не удалось найти исполнителя команды в базе данных: {error}."
+                )
+                await ctx.message.add_reaction("❗")
+                await ctx.message.reply(
+                    content=f"**Произошла ошибка, вас не удалось найти в базе данных.**"
+                )
+                return
+
+            try:
+                await self.maker_actions_db.add_maker_action(
+                    maker_id=maker[0],
+                    made_by=author[0],
+                    action="setdiscord",
+                    meta=new_member.id,
+                )
+                action_write_success = True
+            except Exception as error:
+                await self.log.error(f"Не удалось записать действие: {error}.")
+                action_write_success = False
+
         await ctx.message.add_reaction("✅")
         await ctx.message.reply(
             content=f"**Вы изменили редактору {member.mention} дискорд на {new_member.mention}**"
         )
+
+        if not action_write_success:
+            await ctx.message.reply(
+                content="**Произошла ошибка во время записи действия в лог.**"
+            )
 
     @commands.command(name="setnickname", usage="setnickname <@ping | ID> <Nick_Name>")
     async def set_nickname(
@@ -423,10 +550,51 @@ class Main(commands.Cog):
                 )
                 return
 
+            try:
+                maker = await self.db.get_maker(discord_id=member.id)
+            except Exception as error:
+                await self.log.error(
+                    f"Не удалось найти редактора в базе данных: {error}."
+                )
+                await ctx.message.add_reaction("❗")
+                await ctx.message.reply(
+                    content=f"**Произошла ошибка, не удалось найти редактора в базе данных.**"
+                )
+                return
+
+            try:
+                author = await self.db.get_maker(discord_id=ctx.author.id)
+            except Exception as error:
+                await self.log.error(
+                    f"Не удалось найти исполнителя команды в базе данных: {error}."
+                )
+                await ctx.message.add_reaction("❗")
+                await ctx.message.reply(
+                    content=f"**Произошла ошибка, вас не удалось найти в базе данных.**"
+                )
+                return
+
+            try:
+                await self.maker_actions_db.add_maker_action(
+                    maker_id=maker[0],
+                    made_by=author[0],
+                    action="setnickname",
+                    meta=nickname,
+                )
+                action_write_success = True
+            except Exception as error:
+                await self.log.error(f"Не удалось записать действие: {error}.")
+                action_write_success = False
+
         await ctx.message.add_reaction("✅")
         await ctx.message.reply(
             content=f"**Вы изменили редактору {member.mention} никнейм на `{nickname}`**"
         )
+
+        if not action_write_success:
+            await ctx.message.reply(
+                content="**Произошла ошибка во время записи действия в лог.**"
+            )
 
     @commands.command(name="setlevel", usage="setlevel <@ping | ID> <level>")
     async def set_level(
@@ -490,6 +658,42 @@ class Main(commands.Cog):
                 return
 
             level_title = await get_level_title(level)
+
+            try:
+                maker = await self.db.get_maker(discord_id=member.id)
+            except Exception as error:
+                await self.log.error(
+                    f"Не удалось найти редактора в базе данных: {error}."
+                )
+                await ctx.message.add_reaction("❗")
+                await ctx.message.reply(
+                    content=f"**Произошла ошибка, не удалось найти редактора в базе данных.**"
+                )
+                return
+
+            try:
+                author = await self.db.get_maker(discord_id=ctx.author.id)
+            except Exception as error:
+                await self.log.error(
+                    f"Не удалось найти исполнителя команды в базе данных: {error}."
+                )
+                await ctx.message.add_reaction("❗")
+                await ctx.message.reply(
+                    content=f"**Произошла ошибка, вас не удалось найти в базе данных.**"
+                )
+                return
+
+            try:
+                await self.maker_actions_db.add_maker_action(
+                    maker_id=maker[0],
+                    made_by=author[0],
+                    action="setlevel",
+                    meta=level,
+                )
+                action_write_success = True
+            except Exception as error:
+                await self.log.error(f"Не удалось записать действие: {error}.")
+                action_write_success = False
 
         await ctx.message.add_reaction("✅")
         await ctx.message.reply(
@@ -561,109 +765,274 @@ class Main(commands.Cog):
 
             status_title = await get_status_title(status)
 
+            try:
+                maker = await self.db.get_maker(discord_id=member.id)
+            except Exception as error:
+                await self.log.error(
+                    f"Не удалось найти редактора в базе данных: {error}."
+                )
+                await ctx.message.add_reaction("❗")
+                await ctx.message.reply(
+                    content=f"**Произошла ошибка, не удалось найти редактора в базе данных.**"
+                )
+                return
+
+            try:
+                author = await self.db.get_maker(discord_id=ctx.author.id)
+            except Exception as error:
+                await self.log.error(
+                    f"Не удалось найти исполнителя команды в базе данных: {error}."
+                )
+                await ctx.message.add_reaction("❗")
+                await ctx.message.reply(
+                    content=f"**Произошла ошибка, вас не удалось найти в базе данных.**"
+                )
+                return
+
+            try:
+                await self.maker_actions_db.add_maker_action(
+                    maker_id=maker[0],
+                    made_by=author[0],
+                    action="setstatus",
+                    meta=status,
+                )
+                action_write_success = True
+            except Exception as error:
+                await self.log.error(f"Не удалось записать действие: {error}.")
+                action_write_success = False
+
         await ctx.message.add_reaction("✅")
         await ctx.message.reply(
             content=f"**Вы изменили редактору {member.mention} статус на `{status_title}`**"
         )
 
-    # @commands.command(name = "setcolor", usage = "setcolor <@ping | ID> <color>")
-    # @commands.has_role(CHIEF_ROLE_ID)
-    # async def set_color(
-    #     self,
-    #     ctx: commands.Context,
-    #     member: disnake.User,
-    #     color: str
-    # ):
-    #     async with ctx.typing():
+        if not action_write_success:
+            await ctx.message.reply(
+                content="**Произошла ошибка во время записи действия в лог.**"
+            )
 
-    #         if color.startswith("#"):
-    #             await ctx.message.add_reaction("❗")
-    #             await ctx.message.reply(
-    #                 content="Напишите цвет в формате HEX без знака \"#\" в начале."
-    #             )
-    #             return
+    @commands.command(name="warn", usage="warn <@ping | ID> <status>")
+    async def warn_maker(
+        self,
+        ctx: commands.Context,
+        member: disnake.User,
+        reason: str,
+    ):
+        async with ctx.typing():
+            try:
+                access = await command_access_checker(ctx.guild, ctx.author, "warn")
+            except Exception as error:
+                await self.log.error(
+                    f"Не удалось проверить доступ к команде /warn: {error}."
+                )
+                await ctx.message.add_reaction("❗")
+                await ctx.message.reply(
+                    content="**Произошла ошибка, не удалось проверить доступ к команде.**"
+                )
+                return
+            if not access:
+                is_owner = await self.bot.is_owner(ctx.author)
+                if not is_owner:
+                    await ctx.message.add_reaction("❗")
+                    await ctx.message.reply(
+                        content="**У вас недостаточно прав для выполнения данной команды.**"
+                    )
+                    return
 
-    #         try:
-    #             is_maker_exists = await self.db.is_maker_exists(member.id)
-    #         except Exception as error:
-    #             await self.log.error(f"Не удалось проверить существует ли редактор: {error}.")
-    #             await ctx.message.add_reaction("❗")
-    #             await ctx.message.reply(
-    #                 content=f"**Произошла ошибка, не удалось проверить существует ли редактор.**"
-    #             )
-    #             return
+            try:
+                is_maker_exists = await self.db.is_maker_exists(member.id)
+            except Exception as error:
+                await self.log.error(
+                    f"Не удалось проверить существует ли редактор: {error}."
+                )
+                await ctx.message.add_reaction("❗")
+                await ctx.message.reply(
+                    content=f"**Произошла ошибка, не удалось проверить существует ли редактор.**"
+                )
+                return
 
-    #         if not is_maker_exists:
-    #             await ctx.message.add_reaction("❗")
-    #             await ctx.message.reply(
-    #                 content = f"**{ctx.author.mention}, редактор {member.mention} не найден.**"
-    #             )
-    #             return
+            if not is_maker_exists:
+                await ctx.message.add_reaction("❗")
+                await ctx.message.reply(
+                    content=f"**Редактор {member.mention} не найден.**"
+                )
+                return
 
-    #         try:
-    #             await self.db.update_maker(
-    #                 discord_id = member.id,
-    #                 column = "color",
-    #                 value = color
-    #             )
-    #         except Exception as error:
-    #             await self.log.error(f"Произошла ошибка при попытке обновить цвет: {error}.")
-    #             await ctx.message.add_reaction("❗")
-    #             await ctx.message.reply(
-    #                 content = f"**{ctx.author.mention}, произошла ошибка при попытке обновить цвет.**"
-    #             )
-    #             return
+            try:
+                maker = await self.db.get_maker(discord_id=member.id)
+            except Exception as error:
+                await self.log.error(
+                    f"Не удалось найти редактора в базе данных: {error}."
+                )
+                await ctx.message.add_reaction("❗")
+                await ctx.message.reply(
+                    content=f"**Произошла ошибка, не удалось найти редактора в базе данных.**"
+                )
+                return
 
-    #     await ctx.message.add_reaction("✅")
-    #     await ctx.message.reply(
-    #         content = f"**{ctx.author.mention}, вы изменили редактору {member.mention} цвет на `#{color}`**"
-    #     )
+            try:
+                author = await self.db.get_maker(discord_id=ctx.author.id)
+            except Exception as error:
+                await self.log.error(
+                    f"Не удалось найти исполнителя команды в базе данных: {error}."
+                )
+                await ctx.message.add_reaction("❗")
+                await ctx.message.reply(
+                    content=f"**Произошла ошибка, вас не удалось найти в базе данных.**"
+                )
+                return
 
-    # @commands.command(name = "seticon", usage = "seticon <@ping | ID> <link>")
-    # @commands.has_role(CHIEF_ROLE_ID)
-    # async def set_icon(
-    #     self,
-    #     ctx: commands.Context,
-    #     member: disnake.User,
-    #     link: str
-    # ):
-    #     async with ctx.typing():
+            maker_warns: int = maker[5]
 
-    #         try:
-    #             is_maker_exists = await self.db.is_maker_exists(member.id)
-    #         except Exception as error:
-    #             await self.log.error(f"Не удалось проверить существует ли редактор: {error}.")
-    #             await ctx.message.add_reaction("❗")
-    #             await ctx.message.reply(
-    #                 content=f"**Произошла ошибка, не удалось проверить существует ли редактор.**"
-    #             )
-    #             return
+            maker_warns_set_to: int = maker_warns + 1
 
-    #         if not is_maker_exists:
-    #             await ctx.message.add_reaction("❗")
-    #             await ctx.message.reply(
-    #                 content = f"**{ctx.author.mention}, редактор {member.mention} не найден.**"
-    #             )
-    #             return
+            try:
+                await self.db.update_maker(
+                    discord_id=member.id, column="warns", value=maker_warns_set_to
+                )
+            except Exception as error:
+                await self.log.error(
+                    f"Произошла ошибка при попытке обновить кол-во варнов: {error}."
+                )
+                await ctx.message.add_reaction("❗")
+                await ctx.message.reply(
+                    content=f"**Произошла ошибка при попытке выдать выговор.**"
+                )
+                return
 
-    #         try:
-    #             await self.db.update_maker(
-    #                 discord_id = member.id,
-    #                 column = "icon_link",
-    #                 value = link
-    #             )
-    #         except Exception as error:
-    #             await self.log.error(f"Произошла ошибка при попытке обновить ссылку на аватар: {error}.")
-    #             await ctx.message.add_reaction("❗")
-    #             await ctx.message.reply(
-    #                 content = f"**{ctx.author.mention}, произошла ошибка при попытке обновить ссылку на аватар.**"
-    #             )
-    #             return
+            try:
+                await self.maker_actions_db.add_maker_action(
+                    maker_id=maker[0], made_by=author[0], action="warn", reason=reason
+                )
+                action_write_success = True
+            except Exception as error:
+                await self.log.error(f"Не удалось записать действие: {error}.")
+                action_write_success = False
 
-    #     await ctx.message.add_reaction("✅")
-    #     await ctx.message.reply(
-    #         content = f"**{ctx.author.mention}, вы изменили редактору {member.mention} ссылку на аватарку на `{link}`**"
-    #     )
+        await ctx.message.add_reaction("✅")
+        await ctx.message.reply(
+            content=f"**Вы выдали выговор редактору <@{maker[1]}>. Причина: {reason}.**"
+        )
+
+        if not action_write_success:
+            await ctx.message.reply(
+                content="**Произошла ошибка во время записи действия в лог.**"
+            )
+
+    @commands.command(name="unwarn", usage="unwarn <@ping | ID> <status>")
+    async def unwarn_maker(
+        self,
+        ctx: commands.Context,
+        member: disnake.User,
+        reason: str,
+    ):
+        async with ctx.typing():
+            try:
+                access = await command_access_checker(ctx.guild, ctx.author, "unwarn")
+            except Exception as error:
+                await self.log.error(
+                    f"Не удалось проверить доступ к команде /unwarn: {error}."
+                )
+                await ctx.message.add_reaction("❗")
+                await ctx.message.reply(
+                    content="**Произошла ошибка, не удалось проверить доступ к команде.**"
+                )
+                return
+            if not access:
+                is_owner = await self.bot.is_owner(ctx.author)
+                if not is_owner:
+                    await ctx.message.add_reaction("❗")
+                    await ctx.message.reply(
+                        content="**У вас недостаточно прав для выполнения данной команды.**"
+                    )
+                    return
+
+            try:
+                is_maker_exists = await self.db.is_maker_exists(member.id)
+            except Exception as error:
+                await self.log.error(
+                    f"Не удалось проверить существует ли редактор: {error}."
+                )
+                await ctx.message.add_reaction("❗")
+                await ctx.message.reply(
+                    content=f"**Произошла ошибка, не удалось проверить существует ли редактор.**"
+                )
+                return
+
+            if not is_maker_exists:
+                await ctx.message.add_reaction("❗")
+                await ctx.message.reply(
+                    content=f"**Редактор {member.mention} не найден.**"
+                )
+                return
+
+            try:
+                maker = await self.db.get_maker(discord_id=member.id)
+            except Exception as error:
+                await self.log.error(
+                    f"Не удалось найти редактора в базе данных: {error}."
+                )
+                await ctx.message.add_reaction("❗")
+                await ctx.message.reply(
+                    content=f"**Произошла ошибка, не удалось найти редактора в базе данных.**"
+                )
+                return
+
+            try:
+                author = await self.db.get_maker(discord_id=ctx.author.id)
+            except Exception as error:
+                await self.log.error(
+                    f"Не удалось найти исполнителя команды в базе данных: {error}."
+                )
+                await ctx.message.add_reaction("❗")
+                await ctx.message.reply(
+                    content=f"**Произошла ошибка, вас не удалось найти в базе данных.**"
+                )
+                return
+
+            maker_warns: int = maker[5]
+
+            if maker_warns <= 0:
+                await ctx.message.add_reaction("❗")
+                await ctx.message.reply(
+                    content=f"**Вы не можете установить отрицательное количество выговоров редактору.**"
+                )
+                return
+
+            maker_warns_set_to: int = maker_warns - 1
+
+            try:
+                await self.db.update_maker(
+                    discord_id=member.id, column="warns", value=maker_warns_set_to
+                )
+            except Exception as error:
+                await self.log.error(
+                    f"Произошла ошибка при попытке обновить кол-во варнов: {error}."
+                )
+                await ctx.message.add_reaction("❗")
+                await ctx.message.reply(
+                    content=f"**Произошла ошибка при попытке снять выговор.**"
+                )
+                return
+
+            try:
+                await self.maker_actions_db.add_maker_action(
+                    maker_id=maker[0], made_by=author[0], action="unwarn", reason=reason
+                )
+                action_write_success = True
+            except Exception as error:
+                await self.log.error(f"Не удалось записать действие: {error}.")
+                action_write_success = False
+
+        await ctx.message.add_reaction("✅")
+        await ctx.message.reply(
+            content=f"**Вы сняли выговор редактору <@{maker[1]}>. Причина: {reason}.**"
+        )
+
+        if not action_write_success:
+            await ctx.message.reply(
+                content="**Произошла ошибка во время записи действия в лог.**"
+            )
 
 
 def setup(bot: commands.Bot):

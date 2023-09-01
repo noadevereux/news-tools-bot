@@ -300,7 +300,9 @@ class MakerActionsTable(MainDataBase):
                 'setnickname',
                 'setdiscord',
                 'setlevel',
-                'setstatus'
+                'setstatus',
+                'warn',
+                'unwarn'
             )),
             `meta` VARCHAR(255),
             `timestamp` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -326,12 +328,16 @@ class MakerActionsTable(MainDataBase):
             "setdiscord",
             "setlevel",
             "setstatus",
+            "warn",
+            "unwarn",
         ],
-        meta: str,
+        meta: str = None,
         reason: str = None,
     ):
         if not reason:
             reason = "NULL"
+        if not meta:
+            meta = "NULL"
 
         async with connect(self.file) as connection:
             async with connection.cursor() as cursor:
