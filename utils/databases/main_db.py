@@ -1,4 +1,3 @@
-from re import A
 from aiosqlite import connect
 from typing import Literal
 from utils.errors import NotFound

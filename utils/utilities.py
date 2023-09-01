@@ -1,7 +1,4 @@
-from cmath import inf
 import re
-from socketserver import DatagramRequestHandler
-from typing import Self
 import disnake
 from disnake.colour import Colour
 from disnake import Embed, User
