@@ -123,11 +123,57 @@ class Main(commands.Cog):
                     )
                     return
 
+                try:
+                    maker = await self.db.get_maker(discord_id=member.id)
+                except Exception as error:
+                    await self.log.error(
+                        f"Не удалось найти редактора в базе данных: {error}."
+                    )
+                    await ctx.message.add_reaction("❗")
+                    await ctx.message.reply(
+                        content=f"**Произошла ошибка, не удалось найти редактора в базе данных.**"
+                    )
+                    return
+
+                try:
+                    author = await self.db.get_maker(discord_id=ctx.author.id)
+                except Exception as error:
+                    await self.log.error(
+                        f"Не удалось найти исполнителя команды в базе данных: {error}."
+                    )
+                    await ctx.message.add_reaction("❗")
+                    await ctx.message.reply(
+                        content=f"**Произошла ошибка, вас не удалось найти в базе данных.**"
+                    )
+                    return
+
+                if not author:
+                    author = "NULL"
+                else:
+                    author = author[0]
+
+                try:
+                    await self.maker_actions_db.add_maker_action(
+                        maker_id=maker[0],
+                        made_by=author,
+                        action="addmaker",
+                        meta=nickname,
+                    )
+                    action_write_success = True
+                except Exception as error:
+                    await self.log.error(f"Не удалось записать действие: {error}.")
+                    action_write_success = False
+
                 await ctx.message.add_reaction("✅")
                 await ctx.message.reply(
                     content=f"**Вы активировали аккаунт редактора {member.mention} `{nickname}`.**",
                     embed=embed,
                 )
+
+                if not action_write_success:
+                    await ctx.message.reply(
+                        content="**Произошла ошибка во время записи действия в лог.**"
+                    )
 
                 return
             try:
