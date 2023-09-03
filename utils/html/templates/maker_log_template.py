@@ -35,7 +35,7 @@ maker_log_template = jinja2.Template(
                   </table>
             </div>
         </div>
-        <div class="mt-5 text-center">
+        <div class="mt-5 mb-5 text-center">
             <p class="text-center fw-lighter opacity-75 lh-1">
                 © News Tools | Arizona Scottdale<br>
                 An open-source tool for news department
