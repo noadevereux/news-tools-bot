@@ -18,42 +18,42 @@ class Notifier(commands.Cog):
         async for entry in after.guild.audit_logs(
             limit=1, action=disnake.AuditLogAction.member_role_update
         ):
-            if (maker_role not in entry.before) and (maker_role in entry.after):
+            if (not maker_role in before.roles) and (maker_role in after.roles):
                 if entry.user.bot:
                     await makers_channel.send(
-                        content=f"• `WARNING` Пользователю {entry.target.mention} была выдана роль {maker_role.mention} ботом {entry.user.mention}."
+                        content=f"• {chief_role.mention} `WARNING` Пользователю {entry.target.mention} была выдана роль `{maker_role}` ботом {entry.user.mention}."
                     )
                 else:
                     await makers_channel.send(
-                        content=f"• `WARNING` Пользователю {entry.target.mention} была выдана роль {maker_role.mention} модератором {entry.user.mention}."
+                        content=f"• {chief_role.mention} `WARNING` Пользователю {entry.target.mention} была выдана роль `{maker_role}` модератором {entry.user.mention}."
                     )
-            elif (maker_role in entry.before) and (maker_role not in entry.after):
+            elif (maker_role in before.roles) and (not maker_role in after.roles):
                 if entry.user.bot:
                     await makers_channel.send(
-                        content=f"• `WARNING` Пользователю {entry.target.mention} была снята роль {maker_role.mention} ботом {entry.user.mention}."
+                        content=f"• {chief_role.mention} `WARNING` Пользователю {entry.target.mention} была снята роль `{maker_role}` ботом {entry.user.mention}."
                     )
                 else:
                     await makers_channel.send(
-                        content=f"• `WARNING` Пользователю {entry.target.mention} была снята роль {maker_role.mention} модератором {entry.user.mention}."
+                        content=f"• {chief_role.mention} `WARNING` Пользователю {entry.target.mention} была снята роль `{maker_role}` модератором {entry.user.mention}."
                     )
 
-            if (chief_role not in entry.before) and (chief_role in entry.after):
+            if (not chief_role in before.roles) and (chief_role in after.roles):
                 if entry.user.bot:
                     await makers_channel.send(
-                        content=f"• `WARNING` Пользователю {entry.target.mention} была выдана роль {chief_role.mention} ботом {entry.user.mention}."
+                        content=f"• {chief_role.mention} `WARNING` Пользователю {entry.target.mention} была выдана роль `{chief_role}` ботом {entry.user.mention}."
                     )
                 else:
                     await makers_channel.send(
-                        content=f"• `WARNING` Пользователю {entry.target.mention} была выдана роль {chief_role.mention} модератором {entry.user.mention}."
+                        content=f"• {chief_role.mention} `WARNING` Пользователю {entry.target.mention} была выдана роль `{chief_role}` модератором {entry.user.mention}."
                     )
-            elif (chief_role in entry.before) and (chief_role not in entry.after):
+            elif (chief_role in before.roles) and (not chief_role in after.roles):
                 if entry.user.bot:
                     await makers_channel.send(
-                        content=f"• `WARNING` Пользователю {entry.target.mention} была снята роль {chief_role.mention} ботом {entry.user.mention}."
+                        content=f"• {chief_role.mention} `WARNING` Пользователю {entry.target.mention} была снята роль `{chief_role}` ботом {entry.user.mention}."
                     )
                 else:
                     await makers_channel.send(
-                        content=f"• `WARNING` Пользователю {entry.target.mention} была снята роль {chief_role.mention} модератором {entry.user.mention}."
+                        content=f"• {chief_role.mention} `WARNING` Пользователю {entry.target.mention} была снята роль `{chief_role}` модератором {entry.user.mention}."
                     )
 
 
