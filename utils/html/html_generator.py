@@ -1,3 +1,4 @@
+import ast
 import jinja2
 from utils.databases.main_db import MainDataBase, PublicationsTable
 from utils.html.templates.logs_template import logs_template
@@ -98,7 +99,7 @@ async def html_pubs_actions_generator(
         action_type = action[3]
 
         if action_type == "createpub":
-            meta_list = loads(meta)
+            meta_list = ast.literal_eval(meta)
             date = meta_list[0]
             amount_dp = meta_list[1]
             log = f"{madeby_nickname} [{madeby_discord_id}] создал выпуск #{pub_id} с датой {date} и суммой DP {amount_dp}"
