@@ -254,7 +254,7 @@ class Main(commands.Cog):
 
     @commands.command(name="deactivate", usage="deactivate <@ping | ID>")
     async def deactivate_maker(
-        self, ctx: commands.Context, member: disnake.User, reason: str
+        self, ctx: commands.Context, member: disnake.User, *, reason: str
     ):
         async with ctx.typing():
             try:
@@ -893,6 +893,7 @@ class Main(commands.Cog):
         self,
         ctx: commands.Context,
         member: disnake.User,
+        *,
         reason: str,
     ):
         async with ctx.typing():
@@ -1006,6 +1007,7 @@ class Main(commands.Cog):
         self,
         ctx: commands.Context,
         member: disnake.User,
+        *,
         reason: str,
     ):
         async with ctx.typing():
