@@ -481,7 +481,8 @@ class PubsActionsTable(MainDataBase):
         async with connect(self.file) as connection:
             async with connection.cursor() as cursor:
                 await cursor.execute(
-                    "SELECT * FROM `publication_actions` WHERE `pub_id` = ?", (pub_id,)
+                    "SELECT * FROM `publication_actions` WHERE `pub_id` = ? ORDER BY `timestamp` DESC",
+                    (pub_id,),
                 )
                 data = await cursor.fetchall()
 
@@ -490,7 +491,9 @@ class PubsActionsTable(MainDataBase):
     async def get_all_pub_actions(self):
         async with connect(self.file) as connection:
             async with connection.cursor() as cursor:
-                await cursor.execute("SELECT * FROM `publication_actions`")
+                await cursor.execute(
+                    "SELECT * FROM `publication_actions` ORDER BY `timestamp` DESC"
+                )
                 data = await cursor.fetchall()
 
         return data

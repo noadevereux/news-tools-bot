@@ -6,6 +6,7 @@ from utils.databases.main_db import PublicationsTable, PubsActionsTable
 from utils.databases.access_db import AccessDataBase
 from utils.access_checker import command_access_checker
 from utils.utilities import date_validator, get_publication_profile, get_status_title
+from json import dumps
 
 
 class Publications(commands.Cog):
@@ -141,7 +142,7 @@ class Publications(commands.Cog):
                     pub_id=id,
                     made_by=made_by,
                     action="createpub",
-                    meta=f"[{date}, {amount_dp}]",
+                    meta=dumps([date, amount_dp]),
                 )
                 action_written_success = True
             except Exception as error:

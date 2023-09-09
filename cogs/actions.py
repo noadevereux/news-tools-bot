@@ -118,8 +118,8 @@ class Actions(commands.Cog):
             )
 
             await ctx.message.reply(file=file)
-
             os.remove(f"./tmp/makers-logs-{rand_id}.html")
+            await ctx.message.add_reaction("✅")
 
     @commands.command(name="viewlog_pubs")
     async def view_log_publications(
@@ -200,8 +200,8 @@ class Actions(commands.Cog):
             )
 
             await ctx.message.reply(file=file)
-
             os.remove(f"./tmp/pubs-logs-{rand_id}.html")
+            await ctx.message.add_reaction("✅")
 
 
 def setup(bot: commands.Bot):
