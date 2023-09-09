@@ -403,7 +403,7 @@ class Publications(commands.Cog):
 
             try:
                 await self.pubaction_db.add_pub_action(
-                    pub_id=id, made_by=made_by, action="setpub_id", meta=new_id
+                    pub_id=new_id, made_by=made_by, action="setpub_id", meta=id
                 )
                 action_written_success = True
             except Exception as error:

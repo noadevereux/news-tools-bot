@@ -1,6 +1,6 @@
 import jinja2
 
-maker_log_template = jinja2.Template(
+logs_template = jinja2.Template(
     """<!DOCTYPE html>
 <html lang="en">
 <head>
