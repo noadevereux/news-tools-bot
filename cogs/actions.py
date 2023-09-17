@@ -1,7 +1,7 @@
 import disnake
 from disnake.ext import commands
-from utils.databases.main_db import MakerActionsTable, PubsActionsTable
 from utils.logger import Logger
+from utils.database_orm import methods
 from utils.access_checker import command_access_checker
 from utils.databases.access_db import AccessDataBase
 import datetime
@@ -18,21 +18,12 @@ class Actions(commands.Cog):
     def __init__(self, bot: commands.Bot) -> None:
         super().__init__()
         self.bot = bot
-        self.makers_db = MakerActionsTable()
-        self.pubs_db = PubsActionsTable()
         self.access_db = AccessDataBase()
+        self.methods = methods
         self.log = Logger("cogs.actions.py.log")
 
     @commands.Cog.listener(name="on_ready")
     async def on_ready(self):
-        try:
-            await self.makers_db.create_tables()
-            await self.pubs_db.create_tables()
-        except Exception as error:
-            await self.log.critical(
-                f"Не удалось инициализировать таблицы actions: {error}."
-            )
-
         try:
             await self.access_db.add_command("viewlog_makers")
             await self.access_db.add_command("viewlog_pubs")
@@ -66,7 +57,7 @@ class Actions(commands.Cog):
                     )
                     return
 
-            data = await self.makers_db.get_all_maker_actions()
+            data = self.methods.get_all_maker_actions()
             rand_id = randint(9999, 9999999999999999)
             if (not date_start) and (not date_end):
                 html_code = await html_makers_actions_generator(data=data)

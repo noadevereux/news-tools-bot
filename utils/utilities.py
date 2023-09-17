@@ -2,14 +2,13 @@ import re
 import disnake
 from disnake.colour import Colour
 from disnake import Embed, User
-from utils.databases.main_db import MainDataBase, PublicationsTable
 import datetime
 
-main_db = MainDataBase()
-pub_db = PublicationsTable()
+from .database_orm import methods
 
 
 async def get_level_title(levelnum: int) -> str:
+    levelnum = int(levelnum)
     if levelnum == 1:
         level = "Редактор"
     elif levelnum == 2:
@@ -49,37 +48,35 @@ async def get_color_object(color_hex: str) -> Colour:
 
 
 async def get_maker_profile(user: User) -> Embed:
-    maker = await main_db.get_maker(discord_id=user.id)
+    maker = methods.get_maker(discord_id=user.id)
 
-    level = await get_level_title(maker[3])
-    status = await get_status_title(maker[4])
-    publications_amount = await pub_db.get_publications_by_maker(id=maker[0])
+    level = await get_level_title(maker.level)
+    status = await get_status_title(maker.status)
+    publications_amount = methods.get_publications_by_maker(id=maker.id)
     if not publications_amount:
         publications_amount = 0
     else:
         publications_amount = len(publications_amount)
 
-    appointment_datetime = datetime.datetime.fromisoformat(maker[6])
-
     embed_description = f"""
-    **ID аккаунта: `{maker[0]}`**
-    **Discord: <@{maker[1]}>**
-    **Никнейм: {maker[2]}**
+    **ID аккаунта: `{maker.id}`**
+    **Discord: <@{maker.discord_id}>**
+    **Никнейм: {maker.nickname}**
     **Должность: {level}**
     **Статус: {status}**
 
     **Сделано выпусков: {publications_amount}**
-    **Предупреждения: {maker[5]}**
+    **Предупреждения: {maker.warns}**
     """
 
     embed = Embed(
         title=f"Профиль редактора {user.display_name}",
         color=0x2B2D31,
         description=embed_description,
-        timestamp=appointment_datetime,
+        timestamp=maker.appointment_datetime,
     )
 
-    if maker[7] == 0:
+    if maker.account_status == False:
         embed.set_author(name="🔴 АККАУНТ ДЕАКТИВИРОВАН 🔴")
 
     embed.set_thumbnail(user.display_avatar.url)
@@ -89,39 +86,52 @@ async def get_maker_profile(user: User) -> Embed:
 
 
 async def get_publication_profile(publication_id: int) -> Embed:
-    publication = await pub_db.get_publication(id=publication_id)
-    maker = await main_db.get_maker_by_id(id=publication[1])
+    publication = methods.get_publication(publication_id=publication_id)
+    maker = methods.get_maker_by_id(id=publication.maker_id)
     if not maker:
         maker = "`не указан`"
     else:
-        maker = f"<@{maker[1]}> `{maker[2]}`"
-    information_creator = await main_db.get_maker_by_id(id=publication[3])
+        maker = f"<@{maker.discord_id}> `{maker.nickname}`"
+
+    information_creator = methods.get_maker_by_id(id=publication.information_creator_id)
     if not information_creator:
         information_creator = "`не указан`"
     else:
-        information_creator = f"<@{information_creator[1]}> `{information_creator[2]}`"
-    dp_paid_by = await main_db.get_maker_by_id(id=publication[6])
+        information_creator = (
+            f"<@{information_creator.discord_id}> `{information_creator.nickname}`"
+        )
+
+    dp_paid_by = methods.get_maker_by_id(id=publication.salary_payer_id)
     if not dp_paid_by:
         dp_paid_by = "`не выплачено`"
     else:
-        dp_paid_by = f"<@{dp_paid_by[1]}> `{dp_paid_by[2]}`"
+        dp_paid_by = f"<@{dp_paid_by.discord_id}> `{dp_paid_by.nickname}`"
 
-    date = datetime.date.fromisoformat(publication[2]).strftime("%d.%m.%Y")
-    status = await get_status_title(status_kw=publication[4])
+    if not publication.date:
+        date = "`не указана`"
+    else:
+        date = publication.date.strftime("%d.%m.%Y")
+
+    if not publication.amount_dp:
+        amount_dp = "`не установлено`"
+    else:
+        amount_dp = f"{publication.amount_dp} DP"
+
+    status = await get_status_title(status_kw=publication.status)
 
     embed_description = f"""
-    **Номер выпуска: `{publication[0]}`**
+    **Номер выпуска: `{publication.publication_number}`**
     **Дата публикации выпуска: {date}**
     **Редактор: {maker}**
     **Статус: {status}**
-    **Зарплата за выпуск: {publication[5]} DP**
+    **Зарплата за выпуск: {amount_dp}**
 
     **Информацию для выпуска собрал: {information_creator}**
     **DP выплатил: {dp_paid_by}**
     """
 
     embed = disnake.Embed(
-        title=f"Информация о выпуске `[#{publication[0]}]`",
+        title=f"Информация о выпуске `[#{publication.publication_number}]`",
         description=embed_description,
         color=0x2B2D31,
     )

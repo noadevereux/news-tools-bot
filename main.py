@@ -1,12 +1,12 @@
+from asyncio import run
 import disnake
 from disnake.ext import commands
 import os
-from config import PREFIX
+from config import PREFIX, TOKEN
+from utils.database_orm.methods import is_maker_exists
 from utils.logger import Logger
-from dotenv import load_dotenv
-
-load_dotenv("./venv/.env")
-TOKEN = os.getenv("TOKEN")
+from utils.database_orm.database import engine
+from utils.database_orm.orm_models import Base
 
 bot = commands.Bot(
     command_prefix=PREFIX,
@@ -108,6 +108,7 @@ async def on_ready():
 
 
 if __name__ == "__main__":
+    Base.metadata.create_all(bind=engine)
     for file in os.listdir("cogs"):
         if (file.endswith(".py")) and (not file.startswith(".")):
             try:
