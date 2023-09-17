@@ -1,12 +1,10 @@
 import disnake
 from disnake.ext import commands
 from utils.access_checker import command_access_checker
-
 from utils.logger import Logger
-from utils.databases.main_db import MainDataBase, MakerActionsTable
 from utils.databases.access_db import AccessDataBase
 from utils.utilities import *
-
+from utils.database_orm import methods as orm_methods
 import datetime
 from typing import Literal
 
@@ -15,18 +13,12 @@ class Main(commands.Cog):
     def __init__(self, bot: commands.Bot) -> None:
         super().__init__()
         self.bot = bot
-        self.db = MainDataBase()
-        self.maker_actions_db = MakerActionsTable()
         self.access_db = AccessDataBase()
+        self.methods = orm_methods
         self.log = Logger("cogs.main.py.log")
 
     @commands.Cog.listener(name=disnake.Event.ready)
     async def on_ready(self):
-        try:
-            await self.db.create_tables()
-        except Exception as error:
-            await self.log.critical(f"Не удалось инициализировать таблицы: {error}.")
-
         try:
             await self.access_db.add_command("addmaker")
             await self.access_db.add_command("deactivate")
@@ -66,7 +58,9 @@ class Main(commands.Cog):
                     return
 
             try:
-                is_maker_exists = await self.db.is_maker_exists(member.id)
+                is_maker_exists = self.methods.is_maker_exists(member.id)
+                if is_maker_exists:
+                    maker = self.methods.get_maker(discord_id=member.id)
             except Exception as error:
                 await self.log.error(
                     f"Не удалось проверить существует ли редактор: {error}."
@@ -77,29 +71,29 @@ class Main(commands.Cog):
                 )
                 return
 
-            if is_maker_exists:
+            if (is_maker_exists) and (not maker.account_status):
                 timestamp = datetime.datetime.now().isoformat()
 
                 try:
-                    await self.db.update_maker(
-                        discord_id=member.id, column="account_status", value=1
+                    self.methods.update_maker(
+                        discord_id=member.id, column_name="account_status", value=True
                     )
-                    await self.db.update_maker(
-                        discord_id=member.id, column="nickname", value=nickname
+                    self.methods.update_maker(
+                        discord_id=member.id, column_name="nickname", value=nickname
                     )
-                    await self.db.update_maker(
+                    self.methods.update_maker(
                         discord_id=member.id,
-                        column="appointment_datetime",
+                        column_name="appointment_datetime",
                         value=timestamp,
                     )
-                    await self.db.update_maker(
-                        discord_id=member.id, column="level", value=1
+                    self.methods.update_maker(
+                        discord_id=member.id, column_name="level", value="1"
                     )
-                    await self.db.update_maker(
-                        discord_id=member.id, column="status", value="new"
+                    self.methods.update_maker(
+                        discord_id=member.id, column_name="status", value="new"
                     )
-                    await self.db.update_maker(
-                        discord_id=member.id, column="warns", value=0
+                    self.methods.update_maker(
+                        discord_id=member.id, column_name="warns", value=0
                     )
                 except Exception as error:
                     await self.log.error(
@@ -124,7 +118,7 @@ class Main(commands.Cog):
                     return
 
                 try:
-                    maker = await self.db.get_maker(discord_id=member.id)
+                    maker = self.methods.get_maker(discord_id=member.id)
                 except Exception as error:
                     await self.log.error(
                         f"Не удалось найти редактора в базе данных: {error}."
@@ -136,7 +130,7 @@ class Main(commands.Cog):
                     return
 
                 try:
-                    author = await self.db.get_maker(discord_id=ctx.author.id)
+                    author = self.methods.get_maker(discord_id=ctx.author.id)
                 except Exception as error:
                     await self.log.error(
                         f"Не удалось найти исполнителя команды в базе данных: {error}."
@@ -148,13 +142,13 @@ class Main(commands.Cog):
                     return
 
                 if not author:
-                    author = "NULL"
+                    author = None
                 else:
-                    author = author[0]
+                    author = author.id
 
                 try:
-                    await self.maker_actions_db.add_maker_action(
-                        maker_id=maker[0],
+                    self.methods.add_maker_action(
+                        maker_id=maker.id,
                         made_by=author,
                         action="addmaker",
                         meta=nickname,
@@ -176,8 +170,15 @@ class Main(commands.Cog):
                     )
 
                 return
+
+            elif is_maker_exists:
+                await ctx.message.add_reaction("❗")
+                return await ctx.message.reply(
+                    content=f"**Редактор уже существует и его аккаунт активен.**"
+                )
+
             try:
-                await self.db.add_maker(discord_id=member.id, nickname=nickname)
+                self.methods.add_maker(discord_id=member.id, nickname=nickname)
             except Exception as error:
                 await self.log.error(
                     f"Произошла ошибка при попытке добавить редактора в базу данных: {error}."
@@ -201,7 +202,7 @@ class Main(commands.Cog):
                 return
 
             try:
-                maker = await self.db.get_maker(discord_id=member.id)
+                maker = self.methods.get_maker(discord_id=member.id)
             except Exception as error:
                 await self.log.error(
                     f"Не удалось найти редактора в базе данных: {error}."
@@ -213,7 +214,7 @@ class Main(commands.Cog):
                 return
 
             try:
-                author = await self.db.get_maker(discord_id=ctx.author.id)
+                author = self.methods.get_maker(discord_id=ctx.author.id)
             except Exception as error:
                 await self.log.error(
                     f"Не удалось найти исполнителя команды в базе данных: {error}."
@@ -225,13 +226,13 @@ class Main(commands.Cog):
                 return
 
             if not author:
-                author = "NULL"
+                author = None
             else:
-                author = author[0]
+                author = author.id
 
             try:
-                await self.maker_actions_db.add_maker_action(
-                    maker_id=maker[0],
+                self.methods.add_maker_action(
+                    maker_id=maker.id,
                     made_by=author,
                     action="addmaker",
                     meta=nickname,
@@ -280,7 +281,7 @@ class Main(commands.Cog):
                     return
 
             try:
-                is_maker_exists = await self.db.is_maker_exists(member.id)
+                is_maker_exists = self.methods.is_maker_exists(member.id)
             except Exception as error:
                 await self.log.error(
                     f"Не удалось проверить существует ли редактор: {error}."
@@ -299,7 +300,7 @@ class Main(commands.Cog):
                 return
 
             try:
-                await self.db.deactivate_maker(member.id)
+                self.methods.deactivate_maker(member.id)
             except Exception as error:
                 await self.log.error(
                     f"Произошла ошибка при попытке деактивировать аккаунт редактора: {error}."
@@ -311,7 +312,7 @@ class Main(commands.Cog):
                 return
 
             try:
-                maker = await self.db.get_maker(discord_id=member.id)
+                maker = self.methods.get_maker(discord_id=member.id)
             except Exception as error:
                 await self.log.error(
                     f"Не удалось найти редактора в базе данных: {error}."
@@ -323,7 +324,7 @@ class Main(commands.Cog):
                 return
 
             try:
-                author = await self.db.get_maker(discord_id=ctx.author.id)
+                author = self.methods.get_maker(discord_id=ctx.author.id)
             except Exception as error:
                 await self.log.error(
                     f"Не удалось найти исполнителя команды в базе данных: {error}."
@@ -335,13 +336,13 @@ class Main(commands.Cog):
                 return
 
             if not author:
-                author = "NULL"
+                author = None
             else:
-                author = author[0]
+                author = author.id
 
             try:
-                await self.maker_actions_db.add_maker_action(
-                    maker_id=maker[0],
+                self.methods.add_maker_action(
+                    maker_id=maker.id,
                     made_by=author,
                     action="deactivate",
                     reason=reason,
@@ -388,7 +389,7 @@ class Main(commands.Cog):
                     return
 
             try:
-                is_maker_exists = await self.db.is_maker_exists(member.id)
+                is_maker_exists = self.methods.is_maker_exists(member.id)
             except Exception as error:
                 await self.log.error(
                     f"Не удалось проверить существует ли редактор: {error}."
@@ -447,7 +448,7 @@ class Main(commands.Cog):
                     return
 
             try:
-                is_maker_exists = await self.db.is_maker_exists_by_id(id=id)
+                is_maker_exists = self.methods.is_maker_exists_by_id(id=id)
             except Exception as error:
                 await self.log.error(
                     f"Не удалось проверить существует ли редактор: {error}."
@@ -464,7 +465,7 @@ class Main(commands.Cog):
                 return
 
             try:
-                is_new_maker_exists = await self.db.is_maker_exists(member.id)
+                is_new_maker_exists = self.methods.is_maker_exists(member.id)
             except Exception as error:
                 await self.log.error(
                     f"Не удалось проверить существует ли редактор: {error}."
@@ -483,7 +484,7 @@ class Main(commands.Cog):
                 return
 
             try:
-                maker = await self.db.get_maker_by_id(id=id)
+                maker = self.methods.get_maker_by_id(id=id)
             except Exception as error:
                 await self.log.error(
                     f"Не удалось найти редактора в базе данных: {error}."
@@ -495,7 +496,7 @@ class Main(commands.Cog):
                 return
 
             try:
-                author = await self.db.get_maker(discord_id=ctx.author.id)
+                author = self.methods.get_maker(discord_id=ctx.author.id)
             except Exception as error:
                 await self.log.error(
                     f"Не удалось найти исполнителя команды в базе данных: {error}."
@@ -507,8 +508,8 @@ class Main(commands.Cog):
                 return
 
             try:
-                await self.db.update_maker_by_id(
-                    id=id, column="discord_id", value=member.id
+                self.methods.update_maker_by_id(
+                    id=id, column_name="discord_id", value=member.id
                 )
             except Exception as error:
                 await self.log.error(
@@ -521,13 +522,13 @@ class Main(commands.Cog):
                 return
 
             if not author:
-                author = "NULL"
+                author = None
             else:
-                author = author[0]
+                author = author.id
 
             try:
-                await self.maker_actions_db.add_maker_action(
-                    maker_id=maker[0],
+                self.methods.add_maker_action(
+                    maker_id=maker.id,
                     made_by=author,
                     action="setdiscord",
                     meta=member.id,
@@ -575,7 +576,7 @@ class Main(commands.Cog):
                     return
 
             try:
-                is_maker_exists = await self.db.is_maker_exists(member.id)
+                is_maker_exists = self.methods.is_maker_exists(member.id)
             except Exception as error:
                 await self.log.error(
                     f"Не удалось проверить существует ли редактор: {error}."
@@ -594,8 +595,8 @@ class Main(commands.Cog):
                 return
 
             try:
-                await self.db.update_maker(
-                    discord_id=member.id, column="nickname", value=nickname
+                self.methods.update_maker(
+                    discord_id=member.id, column_name="nickname", value=nickname
                 )
             except Exception as error:
                 await self.log.error(
@@ -608,7 +609,7 @@ class Main(commands.Cog):
                 return
 
             try:
-                maker = await self.db.get_maker(discord_id=member.id)
+                maker = self.methods.get_maker(discord_id=member.id)
             except Exception as error:
                 await self.log.error(
                     f"Не удалось найти редактора в базе данных: {error}."
@@ -620,7 +621,7 @@ class Main(commands.Cog):
                 return
 
             try:
-                author = await self.db.get_maker(discord_id=ctx.author.id)
+                author = self.methods.get_maker(discord_id=ctx.author.id)
             except Exception as error:
                 await self.log.error(
                     f"Не удалось найти исполнителя команды в базе данных: {error}."
@@ -632,13 +633,13 @@ class Main(commands.Cog):
                 return
 
             if not author:
-                author = "NULL"
+                author = None
             else:
-                author = author[0]
+                author = author.id
 
             try:
-                await self.maker_actions_db.add_maker_action(
-                    maker_id=maker[0],
+                self.methods.add_maker_action(
+                    maker_id=maker.id,
                     made_by=author,
                     action="setnickname",
                     meta=nickname,
@@ -663,7 +664,7 @@ class Main(commands.Cog):
         self,
         ctx: commands.Context,
         member: disnake.User,
-        level: Literal[-1, 1, 2, 3, 4],
+        level: Literal["-1", "1", "2", "3", "4"],
     ):
         async with ctx.typing():
             try:
@@ -687,7 +688,7 @@ class Main(commands.Cog):
                     return
 
             try:
-                is_maker_exists = await self.db.is_maker_exists(member.id)
+                is_maker_exists = self.methods.is_maker_exists(member.id)
             except Exception as error:
                 await self.log.error(
                     f"Не удалось проверить существует ли редактор: {error}."
@@ -706,8 +707,8 @@ class Main(commands.Cog):
                 return
 
             try:
-                await self.db.update_maker(
-                    discord_id=member.id, column="level", value=level
+                self.methods.update_maker(
+                    discord_id=member.id, column_name="level", value=level
                 )
             except Exception as error:
                 await self.log.error(
@@ -722,7 +723,7 @@ class Main(commands.Cog):
             level_title = await get_level_title(level)
 
             try:
-                maker = await self.db.get_maker(discord_id=member.id)
+                maker = self.methods.get_maker(discord_id=member.id)
             except Exception as error:
                 await self.log.error(
                     f"Не удалось найти редактора в базе данных: {error}."
@@ -734,7 +735,7 @@ class Main(commands.Cog):
                 return
 
             try:
-                author = await self.db.get_maker(discord_id=ctx.author.id)
+                author = self.methods.get_maker(discord_id=ctx.author.id)
             except Exception as error:
                 await self.log.error(
                     f"Не удалось найти исполнителя команды в базе данных: {error}."
@@ -746,13 +747,13 @@ class Main(commands.Cog):
                 return
 
             if not author:
-                author = "NULL"
+                author = None
             else:
-                author = author[0]
+                author = author.id
 
             try:
-                await self.maker_actions_db.add_maker_action(
-                    maker_id=maker[0],
+                self.methods.add_maker_action(
+                    maker_id=maker.id,
                     made_by=author,
                     action="setlevel",
                     meta=level,
@@ -803,7 +804,7 @@ class Main(commands.Cog):
                     return
 
             try:
-                is_maker_exists = await self.db.is_maker_exists(member.id)
+                is_maker_exists = self.methods.is_maker_exists(member.id)
             except Exception as error:
                 await self.log.error(
                     f"Не удалось проверить существует ли редактор: {error}."
@@ -822,8 +823,8 @@ class Main(commands.Cog):
                 return
 
             try:
-                await self.db.update_maker(
-                    discord_id=member.id, column="status", value=status
+                self.methods.update_maker(
+                    discord_id=member.id, column_name="status", value=status
                 )
             except Exception as error:
                 await self.log.error(
@@ -838,7 +839,7 @@ class Main(commands.Cog):
             status_title = await get_status_title(status)
 
             try:
-                maker = await self.db.get_maker(discord_id=member.id)
+                maker = self.methods.get_maker(discord_id=member.id)
             except Exception as error:
                 await self.log.error(
                     f"Не удалось найти редактора в базе данных: {error}."
@@ -850,7 +851,7 @@ class Main(commands.Cog):
                 return
 
             try:
-                author = await self.db.get_maker(discord_id=ctx.author.id)
+                author = self.methods.get_maker(discord_id=ctx.author.id)
             except Exception as error:
                 await self.log.error(
                     f"Не удалось найти исполнителя команды в базе данных: {error}."
@@ -862,13 +863,13 @@ class Main(commands.Cog):
                 return
 
             if not author:
-                author = "NULL"
+                author = None
             else:
-                author = author[0]
+                author = author.id
 
             try:
-                await self.maker_actions_db.add_maker_action(
-                    maker_id=maker[0],
+                self.methods.add_maker_action(
+                    maker_id=maker.id,
                     made_by=author,
                     action="setstatus",
                     meta=status,
@@ -918,7 +919,7 @@ class Main(commands.Cog):
                     return
 
             try:
-                is_maker_exists = await self.db.is_maker_exists(member.id)
+                is_maker_exists = self.methods.is_maker_exists(member.id)
             except Exception as error:
                 await self.log.error(
                     f"Не удалось проверить существует ли редактор: {error}."
@@ -937,7 +938,7 @@ class Main(commands.Cog):
                 return
 
             try:
-                maker = await self.db.get_maker(discord_id=member.id)
+                maker = self.methods.get_maker(discord_id=member.id)
             except Exception as error:
                 await self.log.error(
                     f"Не удалось найти редактора в базе данных: {error}."
@@ -949,7 +950,7 @@ class Main(commands.Cog):
                 return
 
             try:
-                author = await self.db.get_maker(discord_id=ctx.author.id)
+                author = self.methods.get_maker(discord_id=ctx.author.id)
             except Exception as error:
                 await self.log.error(
                     f"Не удалось найти исполнителя команды в базе данных: {error}."
@@ -960,13 +961,13 @@ class Main(commands.Cog):
                 )
                 return
 
-            maker_warns: int = maker[5]
+            maker_warns: int = maker.warns
 
             maker_warns_set_to: int = maker_warns + 1
 
             try:
-                await self.db.update_maker(
-                    discord_id=member.id, column="warns", value=maker_warns_set_to
+                self.methods.update_maker(
+                    discord_id=member.id, column_name="warns", value=maker_warns_set_to
                 )
             except Exception as error:
                 await self.log.error(
@@ -979,13 +980,13 @@ class Main(commands.Cog):
                 return
 
             if not author:
-                author = "NULL"
+                author = None
             else:
-                author = author[0]
+                author = author.id
 
             try:
-                await self.maker_actions_db.add_maker_action(
-                    maker_id=maker[0], made_by=author, action="warn", reason=reason
+                self.methods.add_maker_action(
+                    maker_id=maker.id, made_by=author, action="warn", reason=reason
                 )
                 action_write_success = True
             except Exception as error:
@@ -994,7 +995,7 @@ class Main(commands.Cog):
 
         await ctx.message.add_reaction("✅")
         await ctx.message.reply(
-            content=f"**Вы выдали выговор редактору <@{maker[1]}>. Причина: {reason}.**"
+            content=f"**Вы выдали выговор редактору <@{maker.discord_id}>. Причина: {reason}.**"
         )
 
         if not action_write_success:
@@ -1032,7 +1033,7 @@ class Main(commands.Cog):
                     return
 
             try:
-                is_maker_exists = await self.db.is_maker_exists(member.id)
+                is_maker_exists = self.methods.is_maker_exists(member.id)
             except Exception as error:
                 await self.log.error(
                     f"Не удалось проверить существует ли редактор: {error}."
@@ -1051,7 +1052,7 @@ class Main(commands.Cog):
                 return
 
             try:
-                maker = await self.db.get_maker(discord_id=member.id)
+                maker = self.methods.get_maker(discord_id=member.id)
             except Exception as error:
                 await self.log.error(
                     f"Не удалось найти редактора в базе данных: {error}."
@@ -1063,7 +1064,7 @@ class Main(commands.Cog):
                 return
 
             try:
-                author = await self.db.get_maker(discord_id=ctx.author.id)
+                author = self.methods.get_maker(discord_id=ctx.author.id)
             except Exception as error:
                 await self.log.error(
                     f"Не удалось найти исполнителя команды в базе данных: {error}."
@@ -1074,7 +1075,7 @@ class Main(commands.Cog):
                 )
                 return
 
-            maker_warns: int = maker[5]
+            maker_warns: int = maker.warns
 
             if maker_warns <= 0:
                 await ctx.message.add_reaction("❗")
@@ -1086,8 +1087,8 @@ class Main(commands.Cog):
             maker_warns_set_to: int = maker_warns - 1
 
             try:
-                await self.db.update_maker(
-                    discord_id=member.id, column="warns", value=maker_warns_set_to
+                self.methods.update_maker(
+                    discord_id=member.id, column_name="warns", value=maker_warns_set_to
                 )
             except Exception as error:
                 await self.log.error(
@@ -1100,13 +1101,13 @@ class Main(commands.Cog):
                 return
 
             if not author:
-                author = "NULL"
+                author = None
             else:
-                author = author[0]
+                author = author.id
 
             try:
-                await self.maker_actions_db.add_maker_action(
-                    maker_id=maker[0], made_by=author, action="unwarn", reason=reason
+                self.methods.add_maker_action(
+                    maker_id=maker.id, made_by=author, action="unwarn", reason=reason
                 )
                 action_write_success = True
             except Exception as error:
@@ -1115,7 +1116,7 @@ class Main(commands.Cog):
 
         await ctx.message.add_reaction("✅")
         await ctx.message.reply(
-            content=f"**Вы сняли выговор редактору <@{maker[1]}>. Причина: {reason}.**"
+            content=f"**Вы сняли выговор редактору <@{maker.discord_id}>. Причина: {reason}.**"
         )
 
         if not action_write_success:

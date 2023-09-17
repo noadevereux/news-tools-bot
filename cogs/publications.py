@@ -2,8 +2,8 @@ from typing import Literal
 import disnake
 from disnake.ext import commands
 from utils.logger import Logger
-from utils.databases.main_db import PublicationsTable, PubsActionsTable
 from utils.databases.access_db import AccessDataBase
+from utils.database_orm import methods
 from utils.access_checker import command_access_checker
 from utils.utilities import date_validator, get_publication_profile, get_status_title
 from json import dumps
@@ -13,20 +13,12 @@ class Publications(commands.Cog):
     def __init__(self, bot: commands.Bot) -> None:
         super().__init__()
         self.bot = bot
+        self.methods = methods
         self.log = Logger("cogs.publications.py.log")
-        self.db = PublicationsTable()
         self.access_db = AccessDataBase()
-        self.pubaction_db = PubsActionsTable()
 
     @commands.Cog.listener(name="on_ready")
     async def on_ready(self):
-        try:
-            await self.db.create_tables()
-        except Exception as error:
-            await self.log.critical(
-                f"Не удалось инициализировать таблицу публикаций: {error}."
-            )
-
         try:
             await self.access_db.add_command("createpub")
             await self.access_db.add_command("deletepub")
@@ -42,9 +34,7 @@ class Publications(commands.Cog):
             await self.log.critical(f"Не удалось инициализировать команды: {error}.")
 
     @commands.command(name="createpub")
-    async def create_pub(
-        self, ctx: commands.Context, id: int, date: str, amount_dp: int
-    ):
+    async def create_pub(self, ctx: commands.Context, id: int):
         async with ctx.typing():
             try:
                 access = await command_access_checker(
@@ -69,7 +59,9 @@ class Publications(commands.Cog):
                     return
 
             try:
-                is_publication_exists = await self.db.is_publication_exists(id=id)
+                is_publication_exists = self.methods.is_publication_exists(
+                    publication_id=id
+                )
             except Exception as error:
                 await self.log.error(
                     f"Не удалось проверить существует ли выпуск: {error}."
@@ -87,17 +79,8 @@ class Publications(commands.Cog):
                 )
                 return
 
-            is_date_valid = await date_validator(date_string=date)
-
-            if not is_date_valid:
-                await ctx.message.add_reaction("❗")
-                await ctx.message.reply(
-                    content="**Неверный формат даты. Укажите дату в формате `гггг-мм-дд`.**"
-                )
-                return
-
             try:
-                await self.db.add_publication(id=id, date=date, amount_dp=amount_dp)
+                self.methods.add_publication(publication_id=id)
             except Exception as error:
                 await self.log.error(
                     f"Произошла ошибка при попытке добавить выпуск в БД: {error}."
@@ -121,7 +104,7 @@ class Publications(commands.Cog):
                 return
 
             try:
-                made_by = await self.db.get_maker(discord_id=ctx.author.id)
+                made_by = self.methods.get_maker(discord_id=ctx.author.id)
             except Exception as error:
                 await self.log.error(
                     f"Не удалось найти исполнителя команды в базе данных: {error}."
@@ -133,16 +116,24 @@ class Publications(commands.Cog):
                 return
 
             if not made_by:
-                made_by = "NULL"
+                made_by = None
             else:
-                made_by = made_by[0]
+                made_by = made_by.id
 
             try:
-                await self.pubaction_db.add_pub_action(
-                    pub_id=id,
+                publication = self.methods.get_publication(publication_id=id)
+            except Exception as error:
+                await self.log.error(f"Не удалось получить выпуск: {error}.")
+                await ctx.message.add_reaction("❗")
+                return await ctx.message.reply(
+                    content="**Не удалось инициализировать выпуск.**"
+                )
+
+            try:
+                self.methods.add_pub_action(
+                    pub_id=publication.id,
                     made_by=made_by,
                     action="createpub",
-                    meta=dumps([date, amount_dp]),
                 )
                 action_written_success = True
             except Exception as error:
@@ -185,7 +176,9 @@ class Publications(commands.Cog):
                     return
 
             try:
-                is_publication_exists = await self.db.is_publication_exists(id=id)
+                is_publication_exists = self.methods.is_publication_exists(
+                    publication_id=id
+                )
             except Exception as error:
                 await self.log.error(
                     f"Не удалось проверить существует ли выпуск: {error}."
@@ -204,7 +197,16 @@ class Publications(commands.Cog):
                 return
 
             try:
-                await self.db.delete_publication(id=id)
+                publication = self.methods.get_publication(publication_id=id)
+            except Exception as error:
+                await self.log.error(f"Не удалось получить выпуск: {error}.")
+                await ctx.message.add_reaction("❗")
+                return await ctx.message.reply(
+                    content="**Не удалось инициализировать выпуск.**"
+                )
+
+            try:
+                self.methods.delete_publication(publication_id=id)
             except Exception as error:
                 await self.log.error(
                     f"Произошла ошибка при попытке удалить выпуск из БД: {error}."
@@ -216,7 +218,7 @@ class Publications(commands.Cog):
                 return
 
             try:
-                made_by = await self.db.get_maker(discord_id=ctx.author.id)
+                made_by = self.methods.get_maker(discord_id=ctx.author.id)
             except Exception as error:
                 await self.log.error(
                     f"Не удалось найти исполнителя команды в базе данных: {error}."
@@ -228,13 +230,13 @@ class Publications(commands.Cog):
                 return
 
             if not made_by:
-                made_by = "NULL"
+                made_by = None
             else:
-                made_by = made_by[0]
+                made_by = made_by.id
 
             try:
-                await self.pubaction_db.add_pub_action(
-                    pub_id=id, made_by=made_by, action="deletepub", meta=id
+                self.methods.add_pub_action(
+                    pub_id=publication.id, made_by=made_by, action="deletepub", meta=id
                 )
                 action_written_success = True
             except Exception as error:
@@ -277,7 +279,9 @@ class Publications(commands.Cog):
                     return
 
             try:
-                is_publication_exists = await self.db.is_publication_exists(id=id)
+                is_publication_exists = self.methods.is_publication_exists(
+                    publication_id=id
+                )
             except Exception as error:
                 await self.log.error(
                     f"Не удалось проверить существует ли выпуск: {error}."
@@ -336,7 +340,9 @@ class Publications(commands.Cog):
                     return
 
             try:
-                is_publication_exists = await self.db.is_publication_exists(id=id)
+                is_publication_exists = self.methods.is_publication_exists(
+                    publication_id=id
+                )
             except Exception as error:
                 await self.log.error(
                     f"Не удалось проверить существует ли выпуск: {error}."
@@ -355,8 +361,8 @@ class Publications(commands.Cog):
                 return
 
             try:
-                is_new_publication_exists = await self.db.is_publication_exists(
-                    id=new_id
+                is_new_publication_exists = self.methods.is_publication_exists(
+                    publication_id=new_id
                 )
             except Exception as error:
                 await self.log.error(
@@ -376,7 +382,18 @@ class Publications(commands.Cog):
                 return
 
             try:
-                await self.db.update_publication(id=id, column="id", value=new_id)
+                publication = self.methods.get_publication(publication_id=id)
+            except Exception as error:
+                await self.log.error(f"Не удалось получить выпуск: {error}.")
+                await ctx.message.add_reaction("❗")
+                return await ctx.message.reply(
+                    content="**Не удалось инициализировать выпуск.**"
+                )
+
+            try:
+                self.methods.update_publication(
+                    publication_id=id, column_name="publication_number", value=new_id
+                )
             except Exception as error:
                 await self.log.error(f"Не удалось обновить ID выпуска: {error}.")
                 await ctx.message.add_reaction("❗")
@@ -386,7 +403,7 @@ class Publications(commands.Cog):
                 return
 
             try:
-                made_by = await self.db.get_maker(discord_id=ctx.author.id)
+                made_by = self.methods.get_maker(discord_id=ctx.author.id)
             except Exception as error:
                 await self.log.error(
                     f"Не удалось найти исполнителя команды в базе данных: {error}."
@@ -398,13 +415,16 @@ class Publications(commands.Cog):
                 return
 
             if not made_by:
-                made_by = "NULL"
+                made_by = None
             else:
-                made_by = made_by[0]
+                made_by = made_by.id
 
             try:
-                await self.pubaction_db.add_pub_action(
-                    pub_id=new_id, made_by=made_by, action="setpub_id", meta=id
+                self.methods.add_pub_action(
+                    pub_id=publication.id,
+                    made_by=made_by,
+                    action="setpub_id",
+                    meta=f"[{id}, {new_id}]",
                 )
                 action_written_success = True
             except Exception as error:
@@ -449,7 +469,9 @@ class Publications(commands.Cog):
                     return
 
             try:
-                is_publication_exists = await self.db.is_publication_exists(id=id)
+                is_publication_exists = self.methods.is_publication_exists(
+                    publication_id=id
+                )
             except Exception as error:
                 await self.log.error(
                     f"Не удалось проверить существует ли выпуск: {error}."
@@ -477,7 +499,9 @@ class Publications(commands.Cog):
                 return
 
             try:
-                await self.db.update_publication(id=id, column="date", value=date)
+                self.methods.update_publication(
+                    publication_id=id, column_name="date", value=date
+                )
             except Exception as error:
                 await self.log.error(f"Не удалось обновить дату выпуска: {error}.")
                 await ctx.message.add_reaction("❗")
@@ -487,7 +511,7 @@ class Publications(commands.Cog):
                 return
 
             try:
-                made_by = await self.db.get_maker(discord_id=ctx.author.id)
+                made_by = self.methods.get_maker(discord_id=ctx.author.id)
             except Exception as error:
                 await self.log.error(
                     f"Не удалось найти исполнителя команды в базе данных: {error}."
@@ -499,13 +523,25 @@ class Publications(commands.Cog):
                 return
 
             if not made_by:
-                made_by = "NULL"
+                made_by = None
             else:
-                made_by = made_by[0]
+                made_by = made_by.id
 
             try:
-                await self.pubaction_db.add_pub_action(
-                    pub_id=id, made_by=made_by, action="setpub_date", meta=date
+                publication = self.methods.get_publication(publication_id=id)
+            except Exception as error:
+                await self.log.error(f"Не удалось получить выпуск: {error}.")
+                await ctx.message.add_reaction("❗")
+                return await ctx.message.reply(
+                    content="**Не удалось инициализировать выпуск.**"
+                )
+
+            try:
+                self.methods.add_pub_action(
+                    pub_id=publication.id,
+                    made_by=made_by,
+                    action="setpub_date",
+                    meta=date,
                 )
                 action_written_success = True
             except Exception as error:
@@ -550,7 +586,9 @@ class Publications(commands.Cog):
                     return
 
             try:
-                is_publication_exists = await self.db.is_publication_exists(id=id)
+                is_publication_exists = self.methods.is_publication_exists(
+                    publication_id=id
+                )
             except Exception as error:
                 await self.log.error(
                     f"Не удалось проверить существует ли выпуск: {error}."
@@ -569,7 +607,7 @@ class Publications(commands.Cog):
                 return
 
             try:
-                maker_db = await self.db.get_maker(discord_id=maker.id)
+                maker_db = self.methods.get_maker(discord_id=maker.id)
             except Exception as error:
                 await self.log.error(
                     f"Не удалось проверить существует ли редактор: {error}."
@@ -587,7 +625,7 @@ class Publications(commands.Cog):
                 )
                 return
 
-            if maker_db[7] == 0:
+            if maker_db.account_status == False:
                 await ctx.message.add_reaction("❗")
                 await ctx.message.reply(
                     content="**Аккаунт редактора деактивирован, невозможно указать его в качестве исполнителя.**"
@@ -595,8 +633,8 @@ class Publications(commands.Cog):
                 return
 
             try:
-                await self.db.update_publication(
-                    id=id, column="maker_id", value=maker_db[0]
+                self.methods.update_publication(
+                    publication_id=id, column_name="maker_id", value=maker_db.id
                 )
             except Exception as error:
                 await self.log.error(f"Не удалось обновить редактора выпуска: {error}.")
@@ -607,7 +645,7 @@ class Publications(commands.Cog):
                 return
 
             try:
-                made_by = await self.db.get_maker(discord_id=ctx.author.id)
+                made_by = self.methods.get_maker(discord_id=ctx.author.id)
             except Exception as error:
                 await self.log.error(
                     f"Не удалось найти исполнителя команды в базе данных: {error}."
@@ -619,16 +657,25 @@ class Publications(commands.Cog):
                 return
 
             if not made_by:
-                made_by = "NULL"
+                made_by = None
             else:
-                made_by = made_by[0]
+                made_by = made_by.id
 
             try:
-                await self.pubaction_db.add_pub_action(
-                    pub_id=id,
+                publication = self.methods.get_publication(publication_id=id)
+            except Exception as error:
+                await self.log.error(f"Не удалось получить выпуск: {error}.")
+                await ctx.message.add_reaction("❗")
+                return await ctx.message.reply(
+                    content="**Не удалось инициализировать выпуск.**"
+                )
+
+            try:
+                self.methods.add_pub_action(
+                    pub_id=publication.id,
                     made_by=made_by,
                     action="setpub_maker",
-                    meta=maker_db[0],
+                    meta=maker_db.id,
                 )
                 action_written_success = True
             except Exception as error:
@@ -639,7 +686,7 @@ class Publications(commands.Cog):
 
         await ctx.message.add_reaction("✅")
         await ctx.message.reply(
-            content=f"**Вы изменили редактора выпуска #{id} на <@{maker_db[1]}>.**"
+            content=f"**Вы изменили редактора выпуска #{id} на <@{maker_db.discord_id}>.**"
         )
 
         if not action_written_success:
@@ -678,7 +725,9 @@ class Publications(commands.Cog):
                     return
 
             try:
-                is_publication_exists = await self.db.is_publication_exists(id=id)
+                is_publication_exists = self.methods.is_publication_exists(
+                    publication_id=id
+                )
             except Exception as error:
                 await self.log.error(
                     f"Не удалось проверить существует ли выпуск: {error}."
@@ -697,7 +746,9 @@ class Publications(commands.Cog):
                 return
 
             try:
-                await self.db.update_publication(id=id, column="status", value=status)
+                self.methods.update_publication(
+                    publication_id=id, column_name="status", value=status
+                )
             except Exception as error:
                 await self.log.error(f"Не удалось обновить статус выпуска: {error}.")
                 await ctx.message.add_reaction("❗")
@@ -709,7 +760,7 @@ class Publications(commands.Cog):
             status_title = await get_status_title(status_kw=status)
 
             try:
-                made_by = await self.db.get_maker(discord_id=ctx.author.id)
+                made_by = self.methods.get_maker(discord_id=ctx.author.id)
             except Exception as error:
                 await self.log.error(
                     f"Не удалось найти исполнителя команды в базе данных: {error}."
@@ -721,13 +772,25 @@ class Publications(commands.Cog):
                 return
 
             if not made_by:
-                made_by = "NULL"
+                made_by = None
             else:
-                made_by = made_by[0]
+                made_by = made_by.id
 
             try:
-                await self.pubaction_db.add_pub_action(
-                    pub_id=id, made_by=made_by, action="setpub_status", meta=status
+                publication = self.methods.get_publication(publication_id=id)
+            except Exception as error:
+                await self.log.error(f"Не удалось получить выпуск: {error}.")
+                await ctx.message.add_reaction("❗")
+                return await ctx.message.reply(
+                    content="**Не удалось инициализировать выпуск.**"
+                )
+
+            try:
+                self.methods.add_pub_action(
+                    pub_id=publication.id,
+                    made_by=made_by,
+                    action="setpub_status",
+                    meta=status,
                 )
                 action_written_success = True
             except Exception as error:
@@ -777,7 +840,9 @@ class Publications(commands.Cog):
                     return
 
             try:
-                is_publication_exists = await self.db.is_publication_exists(id=id)
+                is_publication_exists = self.methods.is_publication_exists(
+                    publication_id=id
+                )
             except Exception as error:
                 await self.log.error(
                     f"Не удалось проверить существует ли выпуск: {error}."
@@ -796,8 +861,8 @@ class Publications(commands.Cog):
                 return
 
             try:
-                await self.db.update_publication(
-                    id=id, column="amount_dp", value=amount
+                self.methods.update_publication(
+                    publication_id=id, column_name="amount_dp", value=amount
                 )
             except Exception as error:
                 await self.log.error(
@@ -810,7 +875,7 @@ class Publications(commands.Cog):
                 return
 
             try:
-                made_by = await self.db.get_maker(discord_id=ctx.author.id)
+                made_by = self.methods.get_maker(discord_id=ctx.author.id)
             except Exception as error:
                 await self.log.error(
                     f"Не удалось найти исполнителя команды в базе данных: {error}."
@@ -822,13 +887,25 @@ class Publications(commands.Cog):
                 return
 
             if not made_by:
-                made_by = "NULL"
+                made_by = None
             else:
-                made_by = made_by[0]
+                made_by = made_by.id
 
             try:
-                await self.pubaction_db.add_pub_action(
-                    pub_id=id, made_by=made_by, action="setpub_amount", meta=amount
+                publication = self.methods.get_publication(publication_id=id)
+            except Exception as error:
+                await self.log.error(f"Не удалось получить выпуск: {error}.")
+                await ctx.message.add_reaction("❗")
+                return await ctx.message.reply(
+                    content="**Не удалось инициализировать выпуск.**"
+                )
+
+            try:
+                self.methods.add_pub_action(
+                    pub_id=publication.id,
+                    made_by=made_by,
+                    action="setpub_amount",
+                    meta=amount,
                 )
                 action_written_success = True
             except Exception as error:
@@ -875,7 +952,9 @@ class Publications(commands.Cog):
                     return
 
             try:
-                is_publication_exists = await self.db.is_publication_exists(id=id)
+                is_publication_exists = self.methods.is_publication_exists(
+                    publication_id=id
+                )
             except Exception as error:
                 await self.log.error(
                     f"Не удалось проверить существует ли выпуск: {error}."
@@ -894,7 +973,7 @@ class Publications(commands.Cog):
                 return
 
             try:
-                creator_db = await self.db.get_maker(discord_id=creator.id)
+                creator_db = self.methods.get_maker(discord_id=creator.id)
             except Exception as error:
                 await self.log.error(
                     f"Не удалось проверить существует ли редактор: {error}."
@@ -912,14 +991,14 @@ class Publications(commands.Cog):
                 )
                 return
 
-            if creator_db[7] == 0:
+            if not creator_db.account_status:
                 await ctx.message.add_reaction("❗")
                 await ctx.message.reply(
                     content="**Аккаунт редактора деактивирован, невозможно указать его в качестве автора информации.**"
                 )
                 return
 
-            if creator_db[3] < 2:
+            if int(creator_db.level) < 2:
                 await ctx.message.add_reaction("❗")
                 await ctx.message.reply(
                     content="**У редактора недостаточно прав для того чтобы быть автором информации.**"
@@ -927,8 +1006,10 @@ class Publications(commands.Cog):
                 return
 
             try:
-                await self.db.update_publication(
-                    id=id, column="information_creator", value=creator_db[0]
+                self.methods.update_publication(
+                    publication_id=id,
+                    column_name="information_creator_id",
+                    value=creator_db.id,
                 )
             except Exception as error:
                 await self.log.error(
@@ -941,7 +1022,7 @@ class Publications(commands.Cog):
                 return
 
             try:
-                made_by = await self.db.get_maker(discord_id=ctx.author.id)
+                made_by = self.methods.get_maker(discord_id=ctx.author.id)
             except Exception as error:
                 await self.log.error(
                     f"Не удалось найти исполнителя команды в базе данных: {error}."
@@ -953,16 +1034,25 @@ class Publications(commands.Cog):
                 return
 
             if not made_by:
-                made_by = "NULL"
+                made_by = None
             else:
-                made_by = made_by[0]
+                made_by = made_by.id
 
             try:
-                await self.pubaction_db.add_pub_action(
-                    pub_id=id,
+                publication = self.methods.get_publication(publication_id=id)
+            except Exception as error:
+                await self.log.error(f"Не удалось получить выпуск: {error}.")
+                await ctx.message.add_reaction("❗")
+                return await ctx.message.reply(
+                    content="**Не удалось инициализировать выпуск.**"
+                )
+
+            try:
+                self.methods.add_pub_action(
+                    pub_id=publication.id,
                     made_by=made_by,
                     action="setpub_infocreator",
-                    meta=creator_db[0],
+                    meta=creator_db.id,
                 )
                 action_written_success = True
             except Exception as error:
@@ -973,7 +1063,7 @@ class Publications(commands.Cog):
 
         await ctx.message.add_reaction("✅")
         await ctx.message.reply(
-            content=f"**Вы изменили автора информации к выпуску #{id} на <@{creator_db[1]}>.**"
+            content=f"**Вы изменили автора информации к выпуску #{id} на <@{creator_db.discord_id}>.**"
         )
 
         if not action_written_success:
@@ -1009,7 +1099,9 @@ class Publications(commands.Cog):
                     return
 
             try:
-                is_publication_exists = await self.db.is_publication_exists(id=id)
+                is_publication_exists = self.methods.is_publication_exists(
+                    publication_id=id
+                )
             except Exception as error:
                 await self.log.error(
                     f"Не удалось проверить существует ли выпуск: {error}."
@@ -1028,7 +1120,7 @@ class Publications(commands.Cog):
                 return
 
             try:
-                payer_db = await self.db.get_maker(discord_id=payer.id)
+                payer_db = self.methods.get_maker(discord_id=payer.id)
             except Exception as error:
                 await self.log.error(
                     f"Не удалось проверить существует ли редактор: {error}."
@@ -1046,14 +1138,14 @@ class Publications(commands.Cog):
                 )
                 return
 
-            if payer_db[7] == 0:
+            if payer_db.account_status == False:
                 await ctx.message.add_reaction("❗")
                 await ctx.message.reply(
                     content="**Аккаунт редактора деактивирован, невозможно указать его в качестве человека, который выплатил зарплату за выпуск.**"
                 )
                 return
 
-            if payer_db[3] < 2:
+            if int(payer_db.level) < 2:
                 await ctx.message.add_reaction("❗")
                 await ctx.message.reply(
                     content="**У редактора недостаточно прав для того чтобы быть человеком, который выплатил зарплату за выпуск.**"
@@ -1061,8 +1153,8 @@ class Publications(commands.Cog):
                 return
 
             try:
-                await self.db.update_publication(
-                    id=id, column="dp_paid_by", value=payer_db[0]
+                self.methods.update_publication(
+                    publication_id=id, column_name="salary_payer_id", value=payer_db.id
                 )
             except Exception as error:
                 await self.log.error(
@@ -1075,7 +1167,7 @@ class Publications(commands.Cog):
                 return
 
             try:
-                made_by = await self.db.get_maker(discord_id=ctx.author.id)
+                made_by = self.methods.get_maker(discord_id=ctx.author.id)
             except Exception as error:
                 await self.log.error(
                     f"Не удалось найти исполнителя команды в базе данных: {error}."
@@ -1087,16 +1179,25 @@ class Publications(commands.Cog):
                 return
 
             if not made_by:
-                made_by = "NULL"
+                made_by = None
             else:
-                made_by = made_by[0]
+                made_by = made_by.id
 
             try:
-                await self.pubaction_db.add_pub_action(
-                    pub_id=id,
+                publication = self.methods.get_publication(publication_id=id)
+            except Exception as error:
+                await self.log.error(f"Не удалось получить выпуск: {error}.")
+                await ctx.message.add_reaction("❗")
+                return await ctx.message.reply(
+                    content="**Не удалось инициализировать выпуск.**"
+                )
+
+            try:
+                self.methods.add_pub_action(
+                    pub_id=publication.id,
                     made_by=made_by,
                     action="setpub_salarypayer",
-                    meta=payer_db[0],
+                    meta=payer_db.id,
                 )
                 action_written_success = True
             except Exception as error:
@@ -1107,7 +1208,7 @@ class Publications(commands.Cog):
 
         await ctx.message.add_reaction("✅")
         await ctx.message.reply(
-            content=f"**Вы изменили человека, который выплатил зарплату за выпуск #{id} на <@{payer_db[1]}>.**"
+            content=f"**Вы изменили человека, который выплатил зарплату за выпуск #{id} на <@{payer_db.discord_id}>.**"
         )
 
         if not action_written_success:
