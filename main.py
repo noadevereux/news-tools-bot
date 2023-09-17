@@ -3,16 +3,18 @@ import disnake
 from disnake.ext import commands
 import os
 from config import PREFIX, TOKEN
-from utils.database_orm.methods import is_maker_exists
 from utils.logger import Logger
 from utils.database_orm.database import engine
 from utils.database_orm.orm_models import Base
+from utils.databases.access_db import AccessDataBase
 
 bot = commands.Bot(
     command_prefix=PREFIX,
     help_command=None,
     intents=disnake.Intents.all(),
 )
+
+access_db = AccessDataBase()
 
 log = Logger("main.py.log")
 
@@ -108,6 +110,7 @@ async def on_ready():
 
 
 if __name__ == "__main__":
+    run(access_db.create_table())
     Base.metadata.create_all(bind=engine)
     for file in os.listdir("cogs"):
         if (file.endswith(".py")) and (not file.startswith(".")):

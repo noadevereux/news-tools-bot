@@ -16,7 +16,6 @@ class AccessSetting(commands.Cog):
 
     @commands.Cog.listener(name="on_ready")
     async def on_ready(self):
-        await self.db.create_table()
         await self.db.add_command("access")
         await self.db.add_command("setaccess")
         await self.db.add_command("revokeaccess")

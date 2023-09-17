@@ -71,7 +71,7 @@ class Actions(commands.Cog):
                 datetime_start = datetime.datetime.fromisoformat(date_start)
 
                 for action in data:
-                    action_datetime = datetime.datetime.fromisoformat(action[5])
+                    action_datetime = action.timestamp
                     if datetime_start <= action_datetime:
                         sorted_data.append(action)
 
@@ -88,7 +88,7 @@ class Actions(commands.Cog):
                 datetime_start = datetime.datetime.fromisoformat(date_start)
                 datetime_end = datetime.datetime.fromisoformat(date_end)
                 for action in data:
-                    action_datetime = datetime.datetime.fromisoformat(action[5])
+                    action_datetime = action.timestamp
                     if (datetime_start <= action_datetime) and (
                         datetime_end >= action_datetime
                     ):
@@ -139,7 +139,7 @@ class Actions(commands.Cog):
                     )
                     return
 
-            data = await self.pubs_db.get_all_pub_actions()
+            data = methods.get_all_pub_actions()
             rand_id = randint(9999, 9999999999999999)
             if (not date_start) and (not date_end):
                 html_code = await html_pubs_actions_generator(data=data)
@@ -153,7 +153,7 @@ class Actions(commands.Cog):
                 datetime_start = datetime.datetime.fromisoformat(date_start)
 
                 for action in data:
-                    action_datetime = datetime.datetime.fromisoformat(action[5])
+                    action_datetime = action.timestamp
                     if datetime_start <= action_datetime:
                         sorted_data.append(action)
 
@@ -170,7 +170,7 @@ class Actions(commands.Cog):
                 datetime_start = datetime.datetime.fromisoformat(date_start)
                 datetime_end = datetime.datetime.fromisoformat(date_end)
                 for action in data:
-                    action_datetime = datetime.datetime.fromisoformat(action[5])
+                    action_datetime = action.timestamp
                     if (datetime_start <= action_datetime) and (
                         datetime_end >= action_datetime
                     ):

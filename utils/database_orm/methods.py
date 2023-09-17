@@ -169,6 +169,12 @@ def get_publication(publication_id: int) -> Publication | None:
     return publication
 
 
+def get_publication_by_id(id: int) -> Publication | None:
+    with SessionLocal() as session:
+        publication = session.query(Publication).filter_by(id=id).first()
+    return publication
+
+
 def get_all_publications() -> list[Publication] | None:
     with SessionLocal() as session:
         publications = session.query(Publication).all()

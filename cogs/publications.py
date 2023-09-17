@@ -6,7 +6,6 @@ from utils.databases.access_db import AccessDataBase
 from utils.database_orm import methods
 from utils.access_checker import command_access_checker
 from utils.utilities import date_validator, get_publication_profile, get_status_title
-from json import dumps
 
 
 class Publications(commands.Cog):
