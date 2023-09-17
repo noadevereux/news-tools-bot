@@ -2,7 +2,6 @@ import re
 import disnake
 from disnake.colour import Colour
 from disnake import Embed, User
-import datetime
 
 from .database_orm import methods
 

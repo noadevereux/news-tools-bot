@@ -1,42 +1,38 @@
 import ast
-import jinja2
-from utils.databases.main_db import MainDataBase, PublicationsTable
+from utils.database_orm import methods
+from utils.database_orm.orm_models import MakerAction, PublicationAction
 from utils.html.templates.logs_template import logs_template
 from utils.utilities import get_level_title, get_status_title
-from json import loads
-
-makers_db = MainDataBase()
-pubs_db = PublicationsTable()
 
 
 async def html_makers_actions_generator(
-    data: list[tuple], date_start: str = None, date_end: str = None
+    data: list[MakerAction], date_start: str = None, date_end: str = None
 ):
     actions = []
     for action in data:
-        action_id = action[0]
+        action_id = action.id
 
-        if action[1] == "NULL":
+        if not action.maker_id:
             maker_nickname = "неизвестно"
             maker_discord_id = "неизвестно"
         else:
-            maker = await makers_db.get_maker_by_id(id=action[1])
-            maker_nickname = maker[2]
-            maker_discord_id = maker[1]
-            maker_id = maker[0]
+            maker = methods.get_maker_by_id(id=action.maker_id)
+            maker_nickname = maker.nickname
+            maker_discord_id = maker.discord_id
+            maker_id = maker.id
 
-        if action[2] == "NULL":
+        if not action.made_by:
             madeby_nickname = "неизвестно"
             madeby_discord_id = "неизвестно"
         else:
-            made_by = await makers_db.get_maker_by_id(id=action[2])
-            madeby_nickname = made_by[2]
-            madeby_discord_id = made_by[1]
+            made_by = methods.get_maker_by_id(id=action.made_by)
+            madeby_nickname = made_by.nickname
+            madeby_discord_id = made_by.discord_id
 
-        datetime = action[5]
-        meta = action[4]
-        reason = action[6]
-        action_type = action[3]
+        datetime = action.timestamp
+        meta = action.meta
+        reason = action.reason
+        action_type = action.action
 
         if action_type == "addmaker":
             log = f"{madeby_nickname} [{madeby_discord_id}] зарегистрировал/активировал аккаунт редактору {meta} [{maker_discord_id}]"
@@ -74,45 +70,49 @@ async def html_makers_actions_generator(
 
 
 async def html_pubs_actions_generator(
-    data: list[tuple], date_start: str = None, date_end: str = None
+    data: list[PublicationAction], date_start: str = None, date_end: str = None
 ):
     actions = []
     for action in data:
-        action_id = action[0]
+        action_id = action.id
 
-        if action[1] == "NULL":
+        if not action.publication_id:
             pub_id = "неизвестно"
         else:
-            pub_id = action[1]
+            pub = methods.get_publication_by_id(id=action.publication_id)
+            if not pub:
+                pub_id = "неизвестно"
+            else:
+                pub_id = pub.publication_number
 
-        if action[2] == "NULL":
+        if not action.made_by:
             madeby_nickname = "неизвестно"
             madeby_discord_id = "неизвестно"
         else:
-            made_by = await makers_db.get_maker_by_id(id=action[2])
-            madeby_nickname = made_by[2]
-            madeby_discord_id = made_by[1]
+            made_by = methods.get_maker_by_id(id=action.made_by)
+            madeby_nickname = made_by.nickname
+            madeby_discord_id = made_by.discord_id
 
-        datetime = action[5]
-        meta = action[4]
-        reason = action[6]
-        action_type = action[3]
+        datetime = action.timestamp
+        meta = action.meta
+        reason = action.reason
+        action_type = action.action
 
         if action_type == "createpub":
-            meta_list = ast.literal_eval(meta)
-            date = meta_list[0]
-            amount_dp = meta_list[1]
-            log = f"{madeby_nickname} [{madeby_discord_id}] создал выпуск #{pub_id} с датой {date} и суммой DP {amount_dp}"
+            log = f"{madeby_nickname} [{madeby_discord_id}] создал выпуск #{pub_id}"
         elif action_type == "deletepub":
             log = f"{madeby_nickname} [{madeby_discord_id}] удалил выпуск #{meta}"
         elif action_type == "setpub_id":
-            log = f"{madeby_nickname} [{madeby_discord_id}] изменил ID выпуска #{meta} на #{pub_id}"
+            meta_list: list = ast.literal_eval(meta)
+            old_number = meta_list[0]
+            new_number = meta_list[1]
+            log = f"{madeby_nickname} [{madeby_discord_id}] изменил ID выпуска #{old_number} на #{new_number}"
         elif action_type == "setpub_date":
             log = f"{madeby_nickname} [{madeby_discord_id}] установил дату выпуска #{pub_id} на {meta}"
         elif action_type == "setpub_maker":
-            maker = await makers_db.get_maker_by_id(id=meta)
-            maker_nickname = maker[2]
-            maker_discord_id = maker[1]
+            maker = methods.get_maker_by_id(id=meta)
+            maker_nickname = maker.nickname
+            maker_discord_id = maker.discord_id
             log = f"{madeby_nickname} [{madeby_discord_id}] назначил автором выпуска #{pub_id} редактора {maker_nickname} [{maker_discord_id}]"
         elif action_type == "setpub_status":
             status_title = await get_status_title(status_kw=meta)
@@ -120,14 +120,14 @@ async def html_pubs_actions_generator(
         elif action_type == "setpub_amount":
             log = f"{madeby_nickname} [{madeby_discord_id}] установил кол-во DP на {meta} за выпуск #{pub_id}"
         elif action_type == "setpub_infocreator":
-            maker = await makers_db.get_maker_by_id(id=meta)
-            maker_nickname = maker[2]
-            maker_discord_id = maker[1]
+            maker = methods.get_maker_by_id(id=meta)
+            maker_nickname = maker.nickname
+            maker_discord_id = maker.discord_id
             log = f"{madeby_nickname} [{madeby_discord_id}] установил {maker_nickname} [{maker_discord_id}] автором информации к выпуску #{pub_id}"
         elif action_type == "setpub_salarypayer":
-            maker = await makers_db.get_maker_by_id(id=meta)
-            maker_nickname = maker[2]
-            maker_discord_id = maker[1]
+            maker = methods.get_maker_by_id(id=meta)
+            maker_nickname = maker.nickname
+            maker_discord_id = maker.discord_id
             log = f"{madeby_nickname} [{madeby_discord_id}] установил человека, выплатившего DP за выпуск #{pub_id} на {maker_nickname} [{maker_discord_id}]"
         else:
             log = "Ошибка в базе данных. Неизвестный тип действия."

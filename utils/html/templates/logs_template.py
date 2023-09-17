@@ -24,13 +24,13 @@ logs_template = jinja2.Template(
                       </tr>
                     </thead>
                     <tbody>
-                      {% for action in actions %}
+                      {% for action in actions -%}
                       <tr>
                         <th scope="row">{{ action[0] }}</th>
                         <td>{{ action[1] }}</td>
                         <td>{{ action[2] }}</td>
                       </tr>
-                      {% endfor %}
+                      {%- endfor -%}
                     </tbody>
                   </table>
             </div>
