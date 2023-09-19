@@ -1,7 +1,8 @@
 from asyncio.exceptions import CancelledError
 from fastapi.concurrency import asynccontextmanager
 import uvicorn
-from fastapi import APIRouter, FastAPI, Request
+from fastapi import APIRouter, FastAPI, Request, Depends
+from api.auth.auth_bearer import JWTBearer
 from disnake.ext import commands
 from config import MAKERS_CHAT_ID
 
@@ -25,7 +26,7 @@ async def lifespan(app: APIService):
     app.bot.loop.stop()
 
 
-@router.post("/bot-api/send-notify")
+@router.post("/bot-api/send-notify", dependencies=[Depends(JWTBearer())])
 async def index(request: Request, message: str):
     bot: commands.Bot = request.app.bot
     channel = bot.get_channel(MAKERS_CHAT_ID)
