@@ -13,7 +13,7 @@ class APIService(FastAPI):
 router = APIRouter()
 
 
-@router.get("/bot-api/send-notify")
+@router.post("/bot-api/send-notify")
 async def index(request: Request):
     bot: commands.Bot = request.app.bot
     ch = bot.get_channel(MAKERS_CHAT_ID)
