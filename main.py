@@ -118,4 +118,7 @@ if __name__ == "__main__":
                 bot.load_extension(f"cogs.{file[:-3]}")
             except Exception as error:
                 print(error)
-    bot.run(TOKEN)
+    try:
+        bot.run(TOKEN)
+    except RuntimeError:
+        pass
