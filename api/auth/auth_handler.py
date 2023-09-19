@@ -1,20 +1,14 @@
 import time
 from typing import Dict
-
 import jwt
-
 from config import JWT_ALGORITHM, JWT_SECRET
 
 
-def token_response(token: str):
-    return {"access_token": token}
-
-
-def sign_jwt(username: str) -> Dict[str, str]:
+def sign_jwt(username: str) -> str:
     payload = {"username": username, "expires": time.time() + (30 * 24 * 3600)}
     token = jwt.encode(payload, JWT_SECRET, algorithm=JWT_ALGORITHM)
 
-    return token_response(token)
+    return token
 
 
 def decode_jwt(token: str) -> dict:
