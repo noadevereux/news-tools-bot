@@ -27,7 +27,7 @@ async def lifespan(app: APIService):
 
 
 @router.post("/bot-api/send-notify", dependencies=[Depends(JWTBearer())])
-async def index(request: Request, message: str):
+async def send_notify(request: Request, message: str):
     bot: commands.Bot = request.app.bot
     channel = bot.get_channel(MAKERS_CHAT_ID)
     try:
