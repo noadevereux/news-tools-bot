@@ -23,7 +23,9 @@ async def send_notify(request: Request, message: str):
     channel = bot.get_channel(MAKERS_CHAT_ID)
 
     try:
-        await channel.send(content=message)
+        await channel.send(
+            content=message, allowed_mentions=disnake.AllowedMentions(users=False)
+        )
     except Exception as error:
         return {"status": "error", "code": "exception", "message": str(error)}
 
