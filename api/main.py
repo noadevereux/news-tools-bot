@@ -17,16 +17,6 @@ class APIService(FastAPI):
 router = APIRouter()
 
 
-@asynccontextmanager
-async def lifespan(app: APIService):
-    yield
-    try:
-        await app.bot.close()
-    except CancelledError:
-        pass
-    app.bot.loop.stop()
-
-
 @router.post("/send_notify", dependencies=[Depends(JWTBearer())], tags=["Notifies"])
 async def send_notify(request: Request, message: str):
     bot: commands.Bot = request.app.bot
@@ -60,6 +50,16 @@ async def send_dm_notify(request: Request, user_id: int, message: str):
         return {"status": "error", "code": "exception", "message": str(error)}
 
     return {"status": "ok", "user": user_id, "message": message}
+
+
+@asynccontextmanager
+async def lifespan(app: APIService):
+    yield
+    try:
+        await app.bot.close()
+    except CancelledError:
+        pass
+    app.bot.loop.stop()
 
 
 def make_app(bot):
