@@ -94,6 +94,7 @@ class MakerAction(Base):
             "setdiscord",
             "setlevel",
             "setstatus",
+            "setdate",
             "warn",
             "unwarn",
         ]
