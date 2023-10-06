@@ -15,19 +15,31 @@ async def html_makers_actions_generator(
         if not action.maker_id:
             maker_nickname = "неизвестно"
             maker_discord_id = "неизвестно"
+            maker_id = "неизвестно"
         else:
             maker = methods.get_maker_by_id(id=action.maker_id)
-            maker_nickname = maker.nickname
-            maker_discord_id = maker.discord_id
-            maker_id = maker.id
+
+            if maker:
+                maker_nickname = maker.nickname
+                maker_discord_id = maker.discord_id
+                maker_id = maker.id
+            else:
+                maker_nickname = "неизвестно"
+                maker_discord_id = "неизвестно"
+                maker_id = "неизвестно"
 
         if not action.made_by:
             madeby_nickname = "неизвестно"
             madeby_discord_id = "неизвестно"
         else:
             made_by = methods.get_maker_by_id(id=action.made_by)
-            madeby_nickname = made_by.nickname
-            madeby_discord_id = made_by.discord_id
+
+            if made_by:
+                madeby_nickname = made_by.nickname
+                madeby_discord_id = made_by.discord_id
+            else:
+                madeby_nickname = "неизвестно"
+                madeby_discord_id = "неизвестно"
 
         datetime = action.timestamp
         meta = action.meta
@@ -48,12 +60,14 @@ async def html_makers_actions_generator(
         elif action_type == "setstatus":
             status_title = await get_status_title(status_kw=meta)
             log = f"{madeby_nickname} [{madeby_discord_id}] установил редактору {maker_nickname} [{maker_discord_id}] статус {meta} [{status_title}]"
+        elif action_type == "setdate":
+            log = f"{madeby_nickname} [{madeby_discord_id}] установил редактору {maker_nickname} [{maker_discord_id}] дату постановления на {meta}"
         elif action_type == "warn":
             log = f"{madeby_nickname} [{madeby_discord_id}] выдал выговор редактору {maker_nickname} [{maker_discord_id}]. Причина: {reason}"
         elif action_type == "unwarn":
             log = f"{madeby_nickname} [{madeby_discord_id}] снял выговор редактору {maker_nickname} [{maker_discord_id}]. Причина: {reason}"
         else:
-            log = "Ошибка в базе данных. Неизвестный тип действия."
+            log = "<== Ошибка в базе данных. Неизвестный тип действия ==>"
 
         action_log = (action_id, log, datetime)
         actions.append(action_log)
