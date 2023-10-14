@@ -2,6 +2,7 @@ from typing import Literal
 from .orm_models import Maker, MakerAction, Publication, PublicationAction
 from .database import SessionLocal
 
+
 # BEGIN MAKERS METHODS
 
 
@@ -33,18 +34,18 @@ def deactivate_maker(discord_id: int) -> None:
 
 
 def update_maker(
-    discord_id: int,
-    column_name: Literal[
-        "id",
-        "discord_id",
-        "nickname",
-        "level",
-        "status",
-        "warns",
-        "appointment_datetime",
-        "account_status",
-    ],
-    value: str | int,
+        discord_id: int,
+        column_name: Literal[
+            "id",
+            "discord_id",
+            "nickname",
+            "level",
+            "status",
+            "warns",
+            "appointment_datetime",
+            "account_status",
+        ],
+        value: str | int,
 ) -> None:
     with SessionLocal() as session:
         maker = session.query(Maker).filter_by(discord_id=discord_id).first()
@@ -54,18 +55,18 @@ def update_maker(
 
 
 def update_maker_by_id(
-    id: int,
-    column_name: Literal[
-        "id",
-        "discord_id",
-        "nickname",
-        "level",
-        "status",
-        "warns",
-        "appointment_datetime",
-        "account_status",
-    ],
-    value: str | int,
+        id: int,
+        column_name: Literal[
+            "id",
+            "discord_id",
+            "nickname",
+            "level",
+            "status",
+            "warns",
+            "appointment_datetime",
+            "account_status",
+        ],
+        value: str | int,
 ) -> None:
     with SessionLocal() as session:
         maker = session.query(Maker).filter_by(id=id).first()
@@ -105,26 +106,28 @@ def get_publications_by_maker(id: int) -> list[Publication]:
 # BEGIN PUBLICATIONS METHODS
 
 
-def add_publication(publication_id: int) -> None:
+def add_publication(publication_id: int) -> Publication:
     new_publication = Publication(publication_number=publication_id)
     with SessionLocal() as session:
         session.add(new_publication)
         session.commit()
+        publication = session.query(Publication).filter_by(publication_number=publication_id).first()
+    return publication
 
 
 def update_publication(
-    publication_id: int,
-    column_name: Literal[
-        "id",
-        "publication_number",
-        "maker_id",
-        "date",
-        "information_creator_id",
-        "status",
-        "amount_dp",
-        "salary_payer_id",
-    ],
-    value: int | str,
+        publication_id: int,
+        column_name: Literal[
+            "id",
+            "publication_number",
+            "maker_id",
+            "date",
+            "information_creator_id",
+            "status",
+            "amount_dp",
+            "salary_payer_id",
+        ],
+        value: int | str | None,
 ) -> None:
     with SessionLocal() as session:
         publication = (
@@ -187,20 +190,20 @@ def get_all_publications() -> list[Publication] | None:
 
 
 def add_maker_action(
-    maker_id: int,
-    made_by: int,
-    action: Literal[
-        "addmaker",
-        "deactivate",
-        "setnickname",
-        "setdiscord",
-        "setlevel",
-        "setstatus",
-        "warn",
-        "unwarn",
-    ],
-    meta: str = None,
-    reason: str = None,
+        maker_id: int,
+        made_by: int,
+        action: Literal[
+            "addmaker",
+            "deactivate",
+            "setnickname",
+            "setdiscord",
+            "setlevel",
+            "setstatus",
+            "warn",
+            "unwarn",
+        ],
+        meta: str = None,
+        reason: str = None,
 ) -> None:
     new_action = MakerAction(
         maker_id=maker_id, made_by=made_by, action=action, meta=meta, reason=reason
@@ -236,21 +239,21 @@ def get_all_maker_actions() -> list[MakerAction]:
 
 
 def add_pub_action(
-    pub_id: int,
-    made_by: int,
-    action: Literal[
-        "createpub",
-        "deletepub",
-        "setpub_id",
-        "setpub_date",
-        "setpub_maker",
-        "setpub_status",
-        "setpub_amount",
-        "setpub_infocreator",
-        "setpub_salarypayer",
-    ],
-    meta: str = None,
-    reason: str = None,
+        pub_id: int,
+        made_by: int,
+        action: Literal[
+            "createpub",
+            "deletepub",
+            "setpub_id",
+            "setpub_date",
+            "setpub_maker",
+            "setpub_status",
+            "setpub_amount",
+            "setpub_infocreator",
+            "setpub_salarypayer",
+        ],
+        meta: str | int = None,
+        reason: str = None,
 ) -> None:
     new_action = PublicationAction(
         publication_id=pub_id, made_by=made_by, action=action, meta=meta, reason=reason
@@ -280,6 +283,5 @@ def get_all_pub_actions() -> list[PublicationAction]:
             .all()
         )
     return actions
-
 
 # END PUBLICATION ACTIONS METHODS
