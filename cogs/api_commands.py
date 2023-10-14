@@ -3,6 +3,7 @@ from disnake.ext import commands, tasks
 
 from api.main import start_server
 from api.auth.auth_handler import sign_jwt
+from config import DEV_GUILDS
 
 
 class API(commands.Cog):
@@ -14,7 +15,7 @@ class API(commands.Cog):
     async def on_ready(self):
         self.start_server.start()
 
-    @commands.slash_command(name="apitoken", description="[DEV] Получить токен для API")
+    @commands.slash_command(name="apitoken", description="[DEV] Получить токен для API", guild_ids=DEV_GUILDS)
     @commands.is_owner()
     async def api_token(
             self,

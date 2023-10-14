@@ -3,7 +3,7 @@ import os
 import disnake
 from disnake.ext import commands
 
-from config import TOKEN
+from config import TOKEN, DEV_GUILDS
 from utils.database.database import engine
 from utils.database.orm_models import Base
 from utils.logger import Logger
@@ -15,7 +15,7 @@ bot = commands.InteractionBot(
 log = Logger("main.py.log")
 
 
-@bot.slash_command(name="cog", description="[DEV] Управление модулями бота")
+@bot.slash_command(name="cog", description="[DEV] Управление модулями бота", guild_ids=DEV_GUILDS)
 @commands.is_owner()
 async def cog(
         interaction: disnake.ApplicationCommandInteraction
