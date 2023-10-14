@@ -4,9 +4,8 @@ from disnake.ext import commands
 import os
 from config import PREFIX, TOKEN
 from utils.logger import Logger
-from utils.database_orm.database import engine
-from utils.database_orm.orm_models import Base
-from utils.databases.access_db import AccessDataBase
+from utils.database.database import engine
+from utils.database.orm_models import Base
 
 bot = commands.Bot(
     command_prefix=PREFIX,
@@ -14,93 +13,94 @@ bot = commands.Bot(
     intents=disnake.Intents.all(),
 )
 
-access_db = AccessDataBase()
-
 log = Logger("main.py.log")
 
 
-@bot.command(name="loadcog")
+@bot.slash_command(name="cog", description="[DEV] Управление модулями бота")
 @commands.is_owner()
-async def load_cog(ctx: commands.Context, extension: str):
-    # Загрузка кога
+async def cog(
+        interaction: disnake.ApplicationCommandInteraction
+):
+    pass
+
+
+@cog.sub_command(name="load", description="[DEV] Загрузить модуль бота")
+async def cog_load(
+        interaction: disnake.ApplicationCommandInteraction,
+        extension: str = commands.Param(name="module", description="Название модуля")
+):
+    await interaction.response.defer(ephemeral=True)
+
     try:
         bot.load_extension(name=f"cogs.{extension}")
-        await ctx.message.add_reaction("✅")
-        await ctx.send(
-            content=f"{ctx.author.mention}, ког {extension} загружен.", delete_after=5
-        )
     except commands.errors.ExtensionNotFound:
-        await ctx.message.add_reaction("❗")
-        await ctx.send(
-            content=f"{ctx.author.mention}, ког {extension} не найден.", delete_after=5
+        return await interaction.edit_original_response(
+            content=f"Модуль {extension} не найден."
         )
     except commands.errors.ExtensionAlreadyLoaded:
-        await ctx.message.add_reaction("❗")
-        await ctx.send(
-            content=f"{ctx.author.mention}, ког {extension} уже загружен.",
-            delete_after=5,
+        return await interaction.edit_original_response(
+            content=f"Модуль {extension} уже загружен."
         )
-    except Exception as error:
-        await ctx.message.add_reaction("❗")
-        await ctx.send(
-            content=f"{ctx.author.mention}, произошла ошибка при загрузке кога {extension}, информация записана в лог."
+    except Exception as exception:
+        await interaction.edit_original_response(
+            content=f"Произошла ошибка при загрузке модуля {extension}, информация записана в лог."
         )
-        await log.error(error)
-        print(error)
+        return await log.error(exception)
+
+    return await interaction.edit_original_response(
+        content=f"Модуль {extension} загружен."
+    )
 
 
-@bot.command(name="reloadcog")
-@commands.is_owner()
-async def reload_cog(ctx: commands.Context, extension: str):
-    # Перезагрузка кога
+@cog.sub_command(name="reload", description="[DEV] Перезагрузить модуль бота")
+async def cog_reload(
+        interaction: disnake.ApplicationCommandInteraction,
+        extension: str = commands.Param(name="module", description="Название модуля")
+):
+    await interaction.response.defer(ephemeral=True)
+
     try:
         bot.reload_extension(name=f"cogs.{extension}")
-        await ctx.message.add_reaction("✅")
-        await ctx.send(
-            content=f"{ctx.author.mention}, ког {extension} перезагружен.",
-            delete_after=5,
-        )
     except commands.errors.ExtensionNotLoaded:
-        await ctx.message.add_reaction("❗")
-        await ctx.send(
-            content=f"{ctx.author.mention}, ког {extension} не загружен.",
-            delete_after=5,
+        return await interaction.edit_original_response(
+            content=f"Модуль {extension} не загружен."
         )
     except commands.errors.ExtensionNotFound:
-        await ctx.message.add_reaction("❗")
-        await ctx.send(
-            content=f"{ctx.author.mention}, ког {extension} не найден.", delete_after=5
+        return await interaction.edit_original_response(
+            content=f"Модуль {extension} не найден."
         )
-    except Exception as error:
-        await ctx.message.add_reaction("❗")
-        await ctx.send(
-            content=f"{ctx.author.mention}, произошла ошибка при перезагрузке кога {extension}, информация записана в лог."
+    except Exception as exception:
+        await interaction.edit_original_response(
+            content=f"Произошла ошибка при перезагрузке модуля {extension}, информация записана в лог."
         )
-        await log.error(error)
-        print(error)
+        return await log.error(exception)
+
+    return await interaction.edit_original_response(
+        content=f"Модуль {extension} перезагружен."
+    )
 
 
-@bot.command(name="unloadcog")
-@commands.is_owner()
-async def unload_cog(ctx: commands.Context, extension: str):
-    # Отгрузка кога
+@cog.sub_command(name="unload", description="[DEV] Выгрузить модуль бота")
+async def cog_unload(
+        interaction: disnake.ApplicationCommandInteraction,
+        extension: str = commands.Param(name="module", description="Название модуля")
+):
+    await interaction.response.defer(ephemeral=True)
+
     try:
         bot.unload_extension(name=f"cogs.{extension}")
-        await ctx.message.add_reaction("✅")
-        await ctx.send(
-            content=f"{ctx.author.mention}, ког {extension} отгружен.", delete_after=5
-        )
     except commands.errors.ExtensionNotLoaded:
-        await ctx.message.add_reaction("❗")
-        await ctx.send(
-            content=f"{ctx.author.mention}, ког {extension} не загружен.",
-            delete_after=5,
+        return await interaction.edit_original_response(
+            content=f"Модуль {extension} не загружен."
         )
     except commands.errors.ExtensionNotFound:
-        await ctx.message.add_reaction("❗")
-        await ctx.send(
-            content=f"{ctx.author.mention}, ког {extension} не найден.", delete_after=5
+        return await interaction.edit_original_response(
+            content=f"Модуль {extension} не найден."
         )
+
+    return await interaction.edit_original_response(
+        content=f"Модуль {extension} отгружен."
+    )
 
 
 @bot.listen(name="on_ready")
@@ -110,8 +110,8 @@ async def on_ready():
 
 
 if __name__ == "__main__":
-    run(access_db.create_table())
     Base.metadata.create_all(bind=engine)
+
     for file in os.listdir("cogs"):
         if (file.endswith(".py")) and (not file.startswith(".")):
             try:
