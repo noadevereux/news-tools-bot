@@ -1,10 +1,7 @@
 from os import getenv
 from dotenv import load_dotenv
 
-
 load_dotenv("./venv/.env")
-
-PREFIX = "/"
 
 TOKEN = getenv("TOKEN")
 
@@ -20,6 +17,5 @@ MAKERS_CHAT_ID = int(getenv("MAKERS_CHAT_ID"))
 
 JWT_SECRET = getenv("JWT_SECRET")
 JWT_ALGORITHM = getenv("JWT_ALGORITHM")
-
 
 # https://discord.com/api/oauth2/authorize?client_id=1089657230330183765&permissions=274878237888&scope=applications.commands%20bot
