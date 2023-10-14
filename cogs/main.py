@@ -4,8 +4,7 @@ import disnake
 from disnake.ext import commands
 from sqlalchemy.exc import IntegrityError
 
-from utils.database_orm import methods
-from utils.databases.access_db import AccessDataBase
+from utils.database import methods
 from utils.logger import Logger
 from utils.utilities import *
 
@@ -14,23 +13,7 @@ class Main(commands.Cog):
     def __init__(self, bot: commands.Bot) -> None:
         super().__init__()
         self.bot = bot
-        self.access_db = AccessDataBase()
         self.log = Logger("cogs.main.py.log")
-
-    @commands.Cog.listener(name=disnake.Event.ready)
-    async def on_ready(self):
-        try:
-            await self.access_db.add_command("addmaker")
-            await self.access_db.add_command("deactivate")
-            await self.access_db.add_command("setnickname")
-            await self.access_db.add_command("setdiscord")
-            await self.access_db.add_command("setlevel")
-            await self.access_db.add_command("setstatus")
-            await self.access_db.add_command("warn")
-            await self.access_db.add_command("unwarn")
-            await self.access_db.add_command("profile")
-        except Exception as error:
-            await self.log.critical(f"Не удалось инициализировать команды: {error}.")
 
     @commands.slash_command(name="maker", description="Управление редактором")
     async def maker(self, interaction: disnake.ApplicationCommandInteraction):
