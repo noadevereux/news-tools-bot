@@ -106,6 +106,13 @@ async def cog_unload(
 async def on_ready():
     print(f"[INFO] {bot.user} запущен.")
     await log.info("Запущена новая сессия.")
+    await bot.change_presence(
+        activity=disnake.Activity(
+            name="за Робохомячком и пытается стать таким же крутым",
+            type=disnake.ActivityType.watching
+        ),
+        status=disnake.Status.online
+    )
 
 
 if __name__ == "__main__":
