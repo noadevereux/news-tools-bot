@@ -1,11 +1,10 @@
 import datetime
-from typing import Literal
+
 import disnake
 from disnake.ext import commands
+
+from utils.database import methods
 from utils.logger import Logger
-from utils.databases.access_db import AccessDataBase
-from utils.database_orm import methods
-from utils.access_checker import command_access_checker
 from utils.utilities import date_validator, get_publication_profile, get_status_title
 
 
@@ -15,23 +14,6 @@ class Publications(commands.Cog):
         self.bot = bot
         self.methods = methods
         self.log = Logger("cogs.publications.py.log")
-        self.access_db = AccessDataBase()
-
-    @commands.Cog.listener(name="on_ready")
-    async def on_ready(self):
-        try:
-            await self.access_db.add_command("createpub")
-            await self.access_db.add_command("deletepub")
-            await self.access_db.add_command("pubprofile")
-            await self.access_db.add_command("setpub_id")
-            await self.access_db.add_command("setpub_date")
-            await self.access_db.add_command("setpub_maker")
-            await self.access_db.add_command("setpub_status")
-            await self.access_db.add_command("setpub_amount")
-            await self.access_db.add_command("setpub_infocreator")
-            await self.access_db.add_command("setpub_salarypayer")
-        except Exception as error:
-            await self.log.critical(f"Не удалось инициализировать команды: {error}.")
 
     @commands.slash_command(name="pubsetting", description="Настройка выпусков")
     async def pubsetting(self, interaction: disnake.ApplicationCommandInteraction):

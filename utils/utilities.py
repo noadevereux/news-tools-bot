@@ -3,7 +3,7 @@ import disnake
 from disnake.colour import Colour
 from disnake import Embed, User
 
-from .database_orm import methods
+from .database import methods
 
 
 async def get_level_title(levelnum: int) -> str:
