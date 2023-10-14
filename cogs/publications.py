@@ -1,3 +1,4 @@
+import datetime
 from typing import Literal
 import disnake
 from disnake.ext import commands
@@ -32,1187 +33,698 @@ class Publications(commands.Cog):
         except Exception as error:
             await self.log.critical(f"Не удалось инициализировать команды: {error}.")
 
-    @commands.command(name="createpub")
-    async def create_pub(self, ctx: commands.Context, id: int):
-        async with ctx.typing():
-            try:
-                access = await command_access_checker(
-                    ctx.guild, ctx.author, "createpub"
-                )
-            except Exception as error:
-                await self.log.error(
-                    f"Не удалось проверить доступ к команде /createpub: {error}."
-                )
-                await ctx.message.add_reaction("❗")
-                await ctx.message.reply(
-                    content="**Произошла ошибка, не удалось проверить доступ к команде.**"
-                )
-                return
-            if not access:
-                is_owner = await self.bot.is_owner(ctx.author)
-                if not is_owner:
-                    await ctx.message.add_reaction("❗")
-                    await ctx.message.reply(
-                        content="**У вас недостаточно прав для выполнения данной команды.**"
-                    )
-                    return
+    @commands.slash_command(name="pubsetting", description="Настройка выпусков")
+    async def pubsetting(self, interaction: disnake.ApplicationCommandInteraction):
+        pass
 
-            try:
-                is_publication_exists = self.methods.is_publication_exists(
-                    publication_id=id
-                )
-            except Exception as error:
-                await self.log.error(
-                    f"Не удалось проверить существует ли выпуск: {error}."
-                )
-                await ctx.message.add_reaction("❗")
-                await ctx.message.reply(
-                    content="**Произошла ошибка, не удалось проверить существует ли выпуск.**"
-                )
-                return
+    @pubsetting.sub_command(name="create", description="Создать выпуск")
+    async def pubsetting_create(
+            self,
+            interaction: disnake.ApplicationCommandInteraction,
+            pub_number: int = commands.Param(name="number", description="Номер выпуска")
+    ):
+        await interaction.response.defer()
 
-            if is_publication_exists:
-                await ctx.message.add_reaction("❗")
-                await ctx.message.reply(
-                    content="**Выпуск с таким номером уже существует.**"
-                )
-                return
+        interaction_author = methods.get_maker(interaction.author.id)
 
-            try:
-                self.methods.add_publication(publication_id=id)
-            except Exception as error:
-                await self.log.error(
-                    f"Произошла ошибка при попытке добавить выпуск в БД: {error}."
-                )
-                await ctx.message.add_reaction("❗")
-                await ctx.message.reply(
-                    content="**Произошла ошибка при попытке добавить выпуск.**"
-                )
-                return
-
-            try:
-                embed = await get_publication_profile(publication_id=id)
-            except Exception as error:
-                await self.log.error(
-                    f"Не удалось инициализировать информацию о выпуске: {error}."
-                )
-                await ctx.message.add_reaction("❗")
-                await ctx.message.reply(
-                    content="**Произошла ошибка, не удалось инициализировать информацию о выпуске.**"
-                )
-                return
-
-            try:
-                made_by = self.methods.get_maker(discord_id=ctx.author.id)
-            except Exception as error:
-                await self.log.error(
-                    f"Не удалось найти исполнителя команды в базе данных: {error}."
-                )
-                await ctx.message.add_reaction("❗")
-                await ctx.message.reply(
-                    content=f"**Произошла ошибка, вас не удалось найти в базе данных.**"
-                )
-                return
-
-            if not made_by:
-                made_by = None
-            else:
-                made_by = made_by.id
-
-            try:
-                publication = self.methods.get_publication(publication_id=id)
-            except Exception as error:
-                await self.log.error(f"Не удалось получить выпуск: {error}.")
-                await ctx.message.add_reaction("❗")
-                return await ctx.message.reply(
-                    content="**Не удалось инициализировать выпуск.**"
-                )
-
-            try:
-                self.methods.add_pub_action(
-                    pub_id=publication.id,
-                    made_by=made_by,
-                    action="createpub",
-                )
-                action_written_success = True
-            except Exception as error:
-                await self.log.error(
-                    f"Не удалось записать действие с публикацией: {error}."
-                )
-                action_written_success = False
-
-        await ctx.message.add_reaction("✅")
-        await ctx.message.reply(content="**Вы успешно создали выпуск**", embed=embed)
-
-        if not action_written_success:
-            await ctx.message.reply(
-                content="**Произошла ошибка во время записи действия в лог.**"
+        if not interaction_author:
+            return await interaction.edit_original_response(
+                content="**У вас недостаточно прав для выполнения данной команды.**"
             )
 
-    @commands.command(name="deletepub")
-    async def delete_pub(self, ctx: commands.Context, id: int):
-        async with ctx.typing():
-            try:
-                access = await command_access_checker(
-                    ctx.guild, ctx.author, "deletepub"
-                )
-            except Exception as error:
-                await self.log.error(
-                    f"Не удалось проверить доступ к команде /deletepub: {error}."
-                )
-                await ctx.message.add_reaction("❗")
-                await ctx.message.reply(
-                    content="**Произошла ошибка, не удалось проверить доступ к команде.**"
-                )
-                return
-            if not access:
-                is_owner = await self.bot.is_owner(ctx.author)
-                if not is_owner:
-                    await ctx.message.add_reaction("❗")
-                    await ctx.message.reply(
-                        content="**У вас недостаточно прав для выполнения данной команды.**"
-                    )
-                    return
-
-            try:
-                is_publication_exists = self.methods.is_publication_exists(
-                    publication_id=id
-                )
-            except Exception as error:
-                await self.log.error(
-                    f"Не удалось проверить существует ли выпуск: {error}."
-                )
-                await ctx.message.add_reaction("❗")
-                await ctx.message.reply(
-                    content="**Произошла ошибка, не удалось проверить существует ли выпуск.**"
-                )
-                return
-
-            if not is_publication_exists:
-                await ctx.message.add_reaction("❗")
-                await ctx.message.reply(
-                    content="**Выпуск с таким номером не существует.**"
-                )
-                return
-
-            try:
-                publication = self.methods.get_publication(publication_id=id)
-            except Exception as error:
-                await self.log.error(f"Не удалось получить выпуск: {error}.")
-                await ctx.message.add_reaction("❗")
-                return await ctx.message.reply(
-                    content="**Не удалось инициализировать выпуск.**"
-                )
-
-            try:
-                self.methods.delete_publication(publication_id=id)
-            except Exception as error:
-                await self.log.error(
-                    f"Произошла ошибка при попытке удалить выпуск из БД: {error}."
-                )
-                await ctx.message.add_reaction("❗")
-                await ctx.message.reply(
-                    content="**Произошла ошибка при попытке удалить выпуск.**"
-                )
-                return
-
-            try:
-                made_by = self.methods.get_maker(discord_id=ctx.author.id)
-            except Exception as error:
-                await self.log.error(
-                    f"Не удалось найти исполнителя команды в базе данных: {error}."
-                )
-                await ctx.message.add_reaction("❗")
-                await ctx.message.reply(
-                    content=f"**Произошла ошибка, вас не удалось найти в базе данных.**"
-                )
-                return
-
-            if not made_by:
-                made_by = None
-            else:
-                made_by = made_by.id
-
-            try:
-                self.methods.add_pub_action(
-                    pub_id=publication.id, made_by=made_by, action="deletepub", meta=id
-                )
-                action_written_success = True
-            except Exception as error:
-                await self.log.error(
-                    f"Не удалось записать действие с публикацией: {error}."
-                )
-                action_written_success = False
-
-        await ctx.message.add_reaction("✅")
-        await ctx.message.reply(content=f"**Вы успешно удалили выпуск #{id}**")
-
-        if not action_written_success:
-            await ctx.message.reply(
-                content="**Произошла ошибка во время записи действия в лог.**"
+        elif not interaction_author.account_status:
+            return await interaction.edit_original_response(
+                content="**У вас недостаточно прав для выполнения данной команды.**"
             )
 
-    @commands.command(name="pubprofile")
-    async def pub_profile(self, ctx: commands.Context, id: int):
-        async with ctx.typing():
-            try:
-                access = await command_access_checker(
-                    ctx.guild, ctx.author, "pubprofile"
-                )
-            except Exception as error:
-                await self.log.error(
-                    f"Не удалось проверить доступ к команде /pubprofile: {error}."
-                )
-                await ctx.message.add_reaction("❗")
-                await ctx.message.reply(
-                    content="**Произошла ошибка, не удалось проверить доступ к команде.**"
-                )
-                return
-            if not access:
-                is_owner = await self.bot.is_owner(ctx.author)
-                if not is_owner:
-                    await ctx.message.add_reaction("❗")
-                    await ctx.message.reply(
-                        content="**У вас недостаточно прав для выполнения данной команды.**"
-                    )
-                    return
+        elif int(interaction_author.level) < 2:
+            return await interaction.edit_original_response(
+                content="**У вас недостаточно прав для выполнения данной команды.**"
+            )
 
-            try:
-                is_publication_exists = self.methods.is_publication_exists(
-                    publication_id=id
-                )
-            except Exception as error:
-                await self.log.error(
-                    f"Не удалось проверить существует ли выпуск: {error}."
-                )
-                await ctx.message.add_reaction("❗")
-                await ctx.message.reply(
-                    content="**Произошла ошибка, не удалось проверить существует ли выпуск.**"
-                )
-                return
+        publication = methods.get_publication(pub_number)
 
-            if not is_publication_exists:
-                await ctx.message.add_reaction("❗")
-                await ctx.message.reply(
-                    content="**Выпуск с таким номером не существует.**"
-                )
-                return
+        if publication:
+            return await interaction.edit_original_response(
+                content=f"**Выпуск с номером `#{pub_number}` уже существует.**"
+            )
 
-            try:
-                embed = await get_publication_profile(publication_id=id)
-            except Exception as error:
-                await self.log.error(
-                    f"Не удалось инициализировать информацию о выпуске: {error}."
-                )
-                await ctx.message.add_reaction("❗")
-                await ctx.message.reply(
-                    content="**Произошла ошибка, не удалось инициализировать информацию о выпуске.**"
-                )
-                return
+        new_publication = methods.add_publication(pub_number)
 
-            await ctx.message.add_reaction("✅")
-            await ctx.message.reply(embed=embed)
-
-    @commands.command(name="setpub_id")
-    async def set_pub_id(self, ctx: commands.Context, id: int, new_id: int):
-        async with ctx.typing():
-            try:
-                access = await command_access_checker(
-                    ctx.guild, ctx.author, "setpub_id"
-                )
-            except Exception as error:
-                await self.log.error(
-                    f"Не удалось проверить доступ к команде /setpub_id: {error}."
-                )
-                await ctx.message.add_reaction("❗")
-                await ctx.message.reply(
-                    content="**Произошла ошибка, не удалось проверить доступ к команде.**"
-                )
-                return
-            if not access:
-                is_owner = await self.bot.is_owner(ctx.author)
-                if not is_owner:
-                    await ctx.message.add_reaction("❗")
-                    await ctx.message.reply(
-                        content="**У вас недостаточно прав для выполнения данной команды.**"
-                    )
-                    return
-
-            try:
-                is_publication_exists = self.methods.is_publication_exists(
-                    publication_id=id
-                )
-            except Exception as error:
-                await self.log.error(
-                    f"Не удалось проверить существует ли выпуск: {error}."
-                )
-                await ctx.message.add_reaction("❗")
-                await ctx.message.reply(
-                    content="**Произошла ошибка, не удалось проверить существует ли выпуск.**"
-                )
-                return
-
-            if not is_publication_exists:
-                await ctx.message.add_reaction("❗")
-                await ctx.message.reply(
-                    content="**Выпуск с таким номером не существует.**"
-                )
-                return
-
-            try:
-                is_new_publication_exists = self.methods.is_publication_exists(
-                    publication_id=new_id
-                )
-            except Exception as error:
-                await self.log.error(
-                    f"Не удалось проверить существует ли выпуск: {error}."
-                )
-                await ctx.message.add_reaction("❗")
-                await ctx.message.reply(
-                    content="**Произошла ошибка, не удалось проверить существует ли выпуск.**"
-                )
-                return
-
-            if is_new_publication_exists:
-                await ctx.message.add_reaction("❗")
-                await ctx.message.reply(
-                    content="**Выпуск с таким номером уже существует.**"
-                )
-                return
-
-            try:
-                publication = self.methods.get_publication(publication_id=id)
-            except Exception as error:
-                await self.log.error(f"Не удалось получить выпуск: {error}.")
-                await ctx.message.add_reaction("❗")
-                return await ctx.message.reply(
-                    content="**Не удалось инициализировать выпуск.**"
-                )
-
-            try:
-                self.methods.update_publication(
-                    publication_id=id, column_name="publication_number", value=new_id
-                )
-            except Exception as error:
-                await self.log.error(f"Не удалось обновить ID выпуска: {error}.")
-                await ctx.message.add_reaction("❗")
-                await ctx.message.reply(
-                    content="**Произошла ошибка, не удалось обновить ID выпуска.**"
-                )
-                return
-
-            try:
-                made_by = self.methods.get_maker(discord_id=ctx.author.id)
-            except Exception as error:
-                await self.log.error(
-                    f"Не удалось найти исполнителя команды в базе данных: {error}."
-                )
-                await ctx.message.add_reaction("❗")
-                await ctx.message.reply(
-                    content=f"**Произошла ошибка, вас не удалось найти в базе данных.**"
-                )
-                return
-
-            if not made_by:
-                made_by = None
-            else:
-                made_by = made_by.id
-
-            try:
-                self.methods.add_pub_action(
-                    pub_id=publication.id,
-                    made_by=made_by,
-                    action="setpub_id",
-                    meta=f"[{id}, {new_id}]",
-                )
-                action_written_success = True
-            except Exception as error:
-                await self.log.error(
-                    f"Не удалось записать действие с публикацией: {error}."
-                )
-                action_written_success = False
-
-        await ctx.message.add_reaction("✅")
-        await ctx.message.reply(
-            content=f"**Вы изменили номер выпуска #{id}. Его новый номер: #{new_id}.**"
+        methods.add_pub_action(
+            pub_id=new_publication.id,
+            made_by=interaction_author.id,
+            action="createpub"
         )
 
-        if not action_written_success:
-            await ctx.message.reply(
-                content="**Произошла ошибка во время записи действия в лог.**"
+        embed = await get_publication_profile(new_publication.publication_number)
+
+        return await interaction.edit_original_response(
+            content=f"**Вы создали выпуск `#{new_publication.id}`.**",
+            embed=embed
+        )
+
+    @pubsetting.sub_command(name="delete", description="[DANGER] Удалить выпуск")
+    async def pubsetting_delete(
+            self,
+            interaction: disnake.ApplicationCommandInteraction,
+            pub_number: int = commands.Param(name="number", description="Номер выпуска")
+    ):
+        await interaction.response.defer()
+
+        interaction_author = methods.get_maker(interaction.author.id)
+
+        if not interaction_author:
+            return await interaction.edit_original_response(
+                content="**У вас недостаточно прав для выполнения данной команды.**"
             )
 
-    @commands.command(name="setpub_date")
-    async def set_pub_date(self, ctx: commands.Context, id: int, date: str):
-        async with ctx.typing():
-            try:
-                access = await command_access_checker(
-                    ctx.guild, ctx.author, "setpub_date"
-                )
-            except Exception as error:
-                await self.log.error(
-                    f"Не удалось проверить доступ к команде /setpub_date: {error}."
-                )
-                await ctx.message.add_reaction("❗")
-                await ctx.message.reply(
-                    content="**Произошла ошибка, не удалось проверить доступ к команде.**"
-                )
-                return
-            if not access:
-                is_owner = await self.bot.is_owner(ctx.author)
-                if not is_owner:
-                    await ctx.message.add_reaction("❗")
-                    await ctx.message.reply(
-                        content="**У вас недостаточно прав для выполнения данной команды.**"
-                    )
-                    return
+        elif not interaction_author.account_status:
+            return await interaction.edit_original_response(
+                content="**У вас недостаточно прав для выполнения данной команды.**"
+            )
 
-            try:
-                is_publication_exists = self.methods.is_publication_exists(
-                    publication_id=id
-                )
-            except Exception as error:
-                await self.log.error(
-                    f"Не удалось проверить существует ли выпуск: {error}."
-                )
-                await ctx.message.add_reaction("❗")
-                await ctx.message.reply(
-                    content="**Произошла ошибка, не удалось проверить существует ли выпуск.**"
-                )
-                return
+        elif int(interaction_author.level) < 3:
+            return await interaction.edit_original_response(
+                content="**У вас недостаточно прав для выполнения данной команды.**"
+            )
 
-            if not is_publication_exists:
-                await ctx.message.add_reaction("❗")
-                await ctx.message.reply(
-                    content="**Выпуск с таким номером не существует.**"
-                )
-                return
+        publication = methods.get_publication(pub_number)
 
-            is_date_valid = await date_validator(date_string=date)
+        if not publication:
+            return await interaction.edit_original_response(
+                content=f"**Выпуск с номером `#{pub_number}` итак не существует.**"
+            )
+
+        methods.delete_publication(pub_number)
+
+        methods.add_pub_action(
+            pub_id=publication.id,
+            made_by=interaction_author.id,
+            action="deletepub",
+            meta=publication.id
+        )
+
+        return await interaction.edit_original_response(
+            content=f"**Вы удалили выпуск с номером `#{publication.publication_number}` `[UID: {publication.id}]`.**"
+        )
+
+    @commands.slash_command(name="publication", description="Действия с выпусками")
+    async def publication(
+            self,
+            interaction: disnake.ApplicationCommandInteraction
+    ):
+        pass
+
+    @publication.sub_command(name="info", description="Посмотреть информацию о выпуске")
+    async def publication_info(
+            self,
+            interaction: disnake.ApplicationCommandInteraction,
+            pub_number: int = commands.Param(name="number", description="Номер выпуска")
+    ):
+        await interaction.response.defer()
+
+        interaction_author = methods.get_maker(interaction.author.id)
+
+        if not interaction_author:
+            return await interaction.edit_original_response(
+                content="**У вас недостаточно прав для выполнения данной команды.**"
+            )
+
+        elif not interaction_author.account_status:
+            return await interaction.edit_original_response(
+                content="**У вас недостаточно прав для выполнения данной команды.**"
+            )
+
+        publication = methods.get_publication(pub_number)
+
+        if not publication:
+            return await interaction.edit_original_response(
+                content=f"**Выпуск с номером `#{pub_number}` не существует.**"
+            )
+
+        embed = await get_publication_profile(pub_number)
+
+        return await interaction.edit_original_response(
+            embed=embed
+        )
+
+    @pubsetting.sub_command(name="number", description="Изменить номер выпуска")
+    async def pubsetting_setnumber(
+            self,
+            interaction: disnake.ApplicationCommandInteraction,
+            old_number: int = commands.Param(name="number", description="Текущий номер выпуска"),
+            new_number: int = commands.Param(name="new_number", description="Новый номер выпуска")
+    ):
+        await interaction.response.defer()
+
+        interaction_author = methods.get_maker(interaction.author.id)
+
+        if not interaction_author:
+            return await interaction.edit_original_response(
+                content="**У вас недостаточно прав для выполнения данной команды.**"
+            )
+
+        elif not interaction_author.account_status:
+            return await interaction.edit_original_response(
+                content="**У вас недостаточно прав для выполнения данной команды.**"
+            )
+
+        elif int(interaction_author.level) < 2:
+            return await interaction.edit_original_response(
+                content="**У вас недостаточно прав для выполнения данной команды.**"
+            )
+
+        elif old_number == new_number:
+            return await interaction.edit_original_response(
+                content="**Изменений не произошло, номера старого и нового выпусков совпадают.**"
+            )
+
+        publication = methods.get_publication(old_number)
+        new_publication = methods.get_publication(new_number)
+
+        if not publication:
+            return await interaction.edit_original_response(
+                content=f"**Выпуск с номером `#{old_number}` не существует.**"
+            )
+
+        elif new_publication:
+            embed = await get_publication_profile(new_number)
+            return await interaction.edit_original_response(
+                content=f"**Номер выпуска `#{new_number}` уже занят. Информация о выпуске:**",
+                embed=embed
+            )
+
+        methods.update_publication(
+            publication_id=publication.publication_number,
+            column_name="publication_number",
+            value=new_number
+        )
+
+        methods.add_pub_action(
+            pub_id=publication.id,
+            made_by=interaction_author.id,
+            action="setpub_id",
+            meta=f"[{old_number}, {new_number}]"
+        )
+
+        return await interaction.edit_original_response(
+            content=f"**Вы изменили номер выпуска с уникальным `ID: {publication.id}` с `#{old_number}` на `#{new_number}`.**"
+        )
+
+    @pubsetting.sub_command(name="date", description="Изменить дату публикации выпуска")
+    async def pubsetting_date(
+            self,
+            interaction: disnake.ApplicationCommandInteraction,
+            pub_number: int = commands.Param(name="number", description="Номер выпуска"),
+            date: str = commands.Param(default=None, name="date", description="Дата в формате ГГГГ-ММ-ДД")
+    ):
+        await interaction.response.defer()
+
+        interaction_author = methods.get_maker(interaction.author.id)
+
+        if not interaction_author:
+            return await interaction.edit_original_response(
+                content="**У вас недостаточно прав для выполнения данной команды.**"
+            )
+
+        elif not interaction_author.account_status:
+            return await interaction.edit_original_response(
+                content="**У вас недостаточно прав для выполнения данной команды.**"
+            )
+
+        elif int(interaction_author.level) < 2:
+            return await interaction.edit_original_response(
+                content="**У вас недостаточно прав для выполнения данной команды.**"
+            )
+
+        if date:
+            is_date_valid = await date_validator(date)
 
             if not is_date_valid:
-                await ctx.message.add_reaction("❗")
-                await ctx.message.reply(
-                    content="**Неверный формат даты. Укажите дату в формате `гггг-мм-дд`.**"
-                )
-                return
-
-            try:
-                self.methods.update_publication(
-                    publication_id=id, column_name="date", value=date
-                )
-            except Exception as error:
-                await self.log.error(f"Не удалось обновить дату выпуска: {error}.")
-                await ctx.message.add_reaction("❗")
-                await ctx.message.reply(
-                    content="**Произошла ошибка, не удалось обновить дату выпуска.**"
-                )
-                return
-
-            try:
-                made_by = self.methods.get_maker(discord_id=ctx.author.id)
-            except Exception as error:
-                await self.log.error(
-                    f"Не удалось найти исполнителя команды в базе данных: {error}."
-                )
-                await ctx.message.add_reaction("❗")
-                await ctx.message.reply(
-                    content=f"**Произошла ошибка, вас не удалось найти в базе данных.**"
-                )
-                return
-
-            if not made_by:
-                made_by = None
-            else:
-                made_by = made_by.id
-
-            try:
-                publication = self.methods.get_publication(publication_id=id)
-            except Exception as error:
-                await self.log.error(f"Не удалось получить выпуск: {error}.")
-                await ctx.message.add_reaction("❗")
-                return await ctx.message.reply(
-                    content="**Не удалось инициализировать выпуск.**"
+                return await interaction.edit_original_response(
+                    content="**Неверно указана дата. Укажите дату в формате `ГГГГ-ММ-ДД`, например `2023-01-15`.**"
                 )
 
-            try:
-                self.methods.add_pub_action(
-                    pub_id=publication.id,
-                    made_by=made_by,
-                    action="setpub_date",
-                    meta=date,
-                )
-                action_written_success = True
-            except Exception as error:
-                await self.log.error(
-                    f"Не удалось записать действие с публикацией: {error}."
-                )
-                action_written_success = False
+        publication = methods.get_publication(pub_number)
 
-        await ctx.message.add_reaction("✅")
-        await ctx.message.reply(
-            content=f"**Вы изменили дату выпуска #{id} на {date}.**"
-        )
-
-        if not action_written_success:
-            await ctx.message.reply(
-                content="**Произошла ошибка во время записи действия в лог.**"
+        if not publication:
+            return await interaction.edit_original_response(
+                content=f"**Выпуск с номером `#{pub_number}` не существует.**"
             )
 
-    @commands.command(name="setpub_maker")
-    async def set_pub_maker(self, ctx: commands.Context, id: int, maker: disnake.User):
-        async with ctx.typing():
-            try:
-                access = await command_access_checker(
-                    ctx.guild, ctx.author, "setpub_maker"
-                )
-            except Exception as error:
-                await self.log.error(
-                    f"Не удалось проверить доступ к команде /setpub_maker: {error}."
-                )
-                await ctx.message.add_reaction("❗")
-                await ctx.message.reply(
-                    content="**Произошла ошибка, не удалось проверить доступ к команде.**"
-                )
-                return
-            if not access:
-                is_owner = await self.bot.is_owner(ctx.author)
-                if not is_owner:
-                    await ctx.message.add_reaction("❗")
-                    await ctx.message.reply(
-                        content="**У вас недостаточно прав для выполнения данной команды.**"
-                    )
-                    return
-
-            try:
-                is_publication_exists = self.methods.is_publication_exists(
-                    publication_id=id
-                )
-            except Exception as error:
-                await self.log.error(
-                    f"Не удалось проверить существует ли выпуск: {error}."
-                )
-                await ctx.message.add_reaction("❗")
-                await ctx.message.reply(
-                    content="**Произошла ошибка, не удалось проверить существует ли выпуск.**"
-                )
-                return
-
-            if not is_publication_exists:
-                await ctx.message.add_reaction("❗")
-                await ctx.message.reply(
-                    content="**Выпуск с таким номером не существует.**"
-                )
-                return
-
-            try:
-                maker_db = self.methods.get_maker(discord_id=maker.id)
-            except Exception as error:
-                await self.log.error(
-                    f"Не удалось проверить существует ли редактор: {error}."
-                )
-                await ctx.message.add_reaction("❗")
-                await ctx.message.reply(
-                    content="**Произошла ошибка, не удалось проверить существует ли редактор.**"
-                )
-                return
-
-            if not maker_db:
-                await ctx.message.add_reaction("❗")
-                await ctx.message.reply(
-                    content="**Редактор не существует в базе данных**"
-                )
-                return
-
-            if maker_db.account_status == False:
-                await ctx.message.add_reaction("❗")
-                await ctx.message.reply(
-                    content="**Аккаунт редактора деактивирован, невозможно указать его в качестве исполнителя.**"
-                )
-                return
-
-            try:
-                self.methods.update_publication(
-                    publication_id=id, column_name="maker_id", value=maker_db.id
-                )
-            except Exception as error:
-                await self.log.error(f"Не удалось обновить редактора выпуска: {error}.")
-                await ctx.message.add_reaction("❗")
-                await ctx.message.reply(
-                    content="**Произошла ошибка, не удалось обновить редактора выпуска.**"
-                )
-                return
-
-            try:
-                made_by = self.methods.get_maker(discord_id=ctx.author.id)
-            except Exception as error:
-                await self.log.error(
-                    f"Не удалось найти исполнителя команды в базе данных: {error}."
-                )
-                await ctx.message.add_reaction("❗")
-                await ctx.message.reply(
-                    content=f"**Произошла ошибка, вас не удалось найти в базе данных.**"
-                )
-                return
-
-            if not made_by:
-                made_by = None
-            else:
-                made_by = made_by.id
-
-            try:
-                publication = self.methods.get_publication(publication_id=id)
-            except Exception as error:
-                await self.log.error(f"Не удалось получить выпуск: {error}.")
-                await ctx.message.add_reaction("❗")
-                return await ctx.message.reply(
-                    content="**Не удалось инициализировать выпуск.**"
+        if date:
+            if publication.date == datetime.date.fromisoformat(date):
+                return await interaction.edit_original_response(
+                    content=f"**Изменений не произошло, дата выпуска такая же, какую вы указали.**"
                 )
 
-            try:
-                self.methods.add_pub_action(
-                    pub_id=publication.id,
-                    made_by=made_by,
-                    action="setpub_maker",
-                    meta=maker_db.id,
-                )
-                action_written_success = True
-            except Exception as error:
-                await self.log.error(
-                    f"Не удалось записать действие с публикацией: {error}."
-                )
-                action_written_success = False
-
-        await ctx.message.add_reaction("✅")
-        await ctx.message.reply(
-            content=f"**Вы изменили редактора выпуска #{id} на <@{maker_db.discord_id}>.**"
-        )
-
-        if not action_written_success:
-            await ctx.message.reply(
-                content="**Произошла ошибка во время записи действия в лог.**"
+            methods.update_publication(
+                publication_id=pub_number,
+                column_name="date",
+                value=date
             )
 
-    @commands.command(name="setpub_status")
-    async def set_pub_status(
-        self,
-        ctx: commands.Context,
-        id: int,
-        status: Literal["in_process", "completed", "failed"],
+            methods.add_pub_action(
+                pub_id=publication.id,
+                made_by=interaction_author.id,
+                action="setpub_date",
+                meta=date
+            )
+
+            return await interaction.edit_original_response(
+                content=f"**Вы изменили дату выпуска `#{pub_number}` на `{date}`.**"
+            )
+        elif not date:
+            if not publication.date:
+                return await interaction.edit_original_response(
+                    content=f"**Изменений не произошло, дата выпуска итак не указана.**"
+                )
+
+            methods.update_publication(
+                publication_id=pub_number,
+                column_name="date",
+                value=None
+            )
+
+            methods.add_pub_action(
+                pub_id=publication.id,
+                made_by=interaction_author.id,
+                action="setpub_date",
+                meta="не указана"
+            )
+
+            return await interaction.edit_original_response(
+                content=f"**Вы очистили дату выпуска `#{pub_number}`.**"
+            )
+
+    @pubsetting.sub_command(name="maker", description="Изменить редактора выпуска")
+    async def pubsetting_maker(
+            self,
+            interaction: disnake.ApplicationCommandInteraction,
+            pub_number: int = commands.Param(name="number", description="Номер выпуска"),
+            member: disnake.User | disnake.Member = commands.Param(default=None, name="maker",
+                                                                   description="Редактор или его Discord ID")
     ):
-        async with ctx.typing():
-            try:
-                access = await command_access_checker(
-                    ctx.guild, ctx.author, "setpub_status"
-                )
-            except Exception as error:
-                await self.log.error(
-                    f"Не удалось проверить доступ к команде /setpub_status: {error}."
-                )
-                await ctx.message.add_reaction("❗")
-                await ctx.message.reply(
-                    content="**Произошла ошибка, не удалось проверить доступ к команде.**"
-                )
-                return
-            if not access:
-                is_owner = await self.bot.is_owner(ctx.author)
-                if not is_owner:
-                    await ctx.message.add_reaction("❗")
-                    await ctx.message.reply(
-                        content="**У вас недостаточно прав для выполнения данной команды.**"
-                    )
-                    return
+        await interaction.response.defer()
 
-            try:
-                is_publication_exists = self.methods.is_publication_exists(
-                    publication_id=id
-                )
-            except Exception as error:
-                await self.log.error(
-                    f"Не удалось проверить существует ли выпуск: {error}."
-                )
-                await ctx.message.add_reaction("❗")
-                await ctx.message.reply(
-                    content="**Произошла ошибка, не удалось проверить существует ли выпуск.**"
-                )
-                return
+        interaction_author = methods.get_maker(interaction.author.id)
 
-            if not is_publication_exists:
-                await ctx.message.add_reaction("❗")
-                await ctx.message.reply(
-                    content="**Выпуск с таким номером не существует.**"
-                )
-                return
-
-            try:
-                self.methods.update_publication(
-                    publication_id=id, column_name="status", value=status
-                )
-            except Exception as error:
-                await self.log.error(f"Не удалось обновить статус выпуска: {error}.")
-                await ctx.message.add_reaction("❗")
-                await ctx.message.reply(
-                    content="**Произошла ошибка, не удалось обновить статус выпуска.**"
-                )
-                return
-
-            status_title = await get_status_title(status_kw=status)
-
-            try:
-                made_by = self.methods.get_maker(discord_id=ctx.author.id)
-            except Exception as error:
-                await self.log.error(
-                    f"Не удалось найти исполнителя команды в базе данных: {error}."
-                )
-                await ctx.message.add_reaction("❗")
-                await ctx.message.reply(
-                    content=f"**Произошла ошибка, вас не удалось найти в базе данных.**"
-                )
-                return
-
-            if not made_by:
-                made_by = None
-            else:
-                made_by = made_by.id
-
-            try:
-                publication = self.methods.get_publication(publication_id=id)
-            except Exception as error:
-                await self.log.error(f"Не удалось получить выпуск: {error}.")
-                await ctx.message.add_reaction("❗")
-                return await ctx.message.reply(
-                    content="**Не удалось инициализировать выпуск.**"
-                )
-
-            try:
-                self.methods.add_pub_action(
-                    pub_id=publication.id,
-                    made_by=made_by,
-                    action="setpub_status",
-                    meta=status,
-                )
-                action_written_success = True
-            except Exception as error:
-                await self.log.error(
-                    f"Не удалось записать действие с публикацией: {error}."
-                )
-                action_written_success = False
-
-        await ctx.message.add_reaction("✅")
-        await ctx.message.reply(
-            content=f"**Вы изменили статус выпуска #{id} на `{status_title}`.**"
-        )
-
-        if not action_written_success:
-            await ctx.message.reply(
-                content="**Произошла ошибка во время записи действия в лог.**"
+        if not interaction_author:
+            return await interaction.edit_original_response(
+                content="**У вас недостаточно прав для выполнения данной команды.**"
             )
 
-    @commands.command(name="setpub_amount")
-    async def set_pub_amount(
-        self,
-        ctx: commands.Context,
-        id: int,
-        amount: int,
-    ):
-        async with ctx.typing():
-            try:
-                access = await command_access_checker(
-                    ctx.guild, ctx.author, "setpub_amount"
-                )
-            except Exception as error:
-                await self.log.error(
-                    f"Не удалось проверить доступ к команде /setpub_amount: {error}."
-                )
-                await ctx.message.add_reaction("❗")
-                await ctx.message.reply(
-                    content="**Произошла ошибка, не удалось проверить доступ к команде.**"
-                )
-                return
-            if not access:
-                is_owner = await self.bot.is_owner(ctx.author)
-                if not is_owner:
-                    await ctx.message.add_reaction("❗")
-                    await ctx.message.reply(
-                        content="**У вас недостаточно прав для выполнения данной команды.**"
-                    )
-                    return
-
-            try:
-                is_publication_exists = self.methods.is_publication_exists(
-                    publication_id=id
-                )
-            except Exception as error:
-                await self.log.error(
-                    f"Не удалось проверить существует ли выпуск: {error}."
-                )
-                await ctx.message.add_reaction("❗")
-                await ctx.message.reply(
-                    content="**Произошла ошибка, не удалось проверить существует ли выпуск.**"
-                )
-                return
-
-            if not is_publication_exists:
-                await ctx.message.add_reaction("❗")
-                await ctx.message.reply(
-                    content="**Выпуск с таким номером не существует.**"
-                )
-                return
-
-            try:
-                self.methods.update_publication(
-                    publication_id=id, column_name="amount_dp", value=amount
-                )
-            except Exception as error:
-                await self.log.error(
-                    f"Не удалось обновить зарплату за выпуск: {error}."
-                )
-                await ctx.message.add_reaction("❗")
-                await ctx.message.reply(
-                    content="**Произошла ошибка, не удалось обновить зарплату за выпуск.**"
-                )
-                return
-
-            try:
-                made_by = self.methods.get_maker(discord_id=ctx.author.id)
-            except Exception as error:
-                await self.log.error(
-                    f"Не удалось найти исполнителя команды в базе данных: {error}."
-                )
-                await ctx.message.add_reaction("❗")
-                await ctx.message.reply(
-                    content=f"**Произошла ошибка, вас не удалось найти в базе данных.**"
-                )
-                return
-
-            if not made_by:
-                made_by = None
-            else:
-                made_by = made_by.id
-
-            try:
-                publication = self.methods.get_publication(publication_id=id)
-            except Exception as error:
-                await self.log.error(f"Не удалось получить выпуск: {error}.")
-                await ctx.message.add_reaction("❗")
-                return await ctx.message.reply(
-                    content="**Не удалось инициализировать выпуск.**"
-                )
-
-            try:
-                self.methods.add_pub_action(
-                    pub_id=publication.id,
-                    made_by=made_by,
-                    action="setpub_amount",
-                    meta=amount,
-                )
-                action_written_success = True
-            except Exception as error:
-                await self.log.error(
-                    f"Не удалось записать действие с публикацией: {error}."
-                )
-                action_written_success = False
-
-        await ctx.message.add_reaction("✅")
-        await ctx.message.reply(
-            content=f"**Вы изменили зарплату за выпуск #{id} на {amount} DP.**"
-        )
-
-        if not action_written_success:
-            await ctx.message.reply(
-                content="**Произошла ошибка во время записи действия в лог.**"
+        elif not interaction_author.account_status:
+            return await interaction.edit_original_response(
+                content="**У вас недостаточно прав для выполнения данной команды.**"
             )
 
-    @commands.command(name="setpub_infocreator")
-    async def set_pub_infocreator(
-        self, ctx: commands.Context, id: int, creator: disnake.User
-    ):
-        async with ctx.typing():
-            try:
-                access = await command_access_checker(
-                    ctx.guild, ctx.author, "setpub_infocreator"
-                )
-            except Exception as error:
-                await self.log.error(
-                    f"Не удалось проверить доступ к команде /setpub_infocreator: {error}."
-                )
-                await ctx.message.add_reaction("❗")
-                await ctx.message.reply(
-                    content="**Произошла ошибка, не удалось проверить доступ к команде.**"
-                )
-                return
-            if not access:
-                is_owner = await self.bot.is_owner(ctx.author)
-                if not is_owner:
-                    await ctx.message.add_reaction("❗")
-                    await ctx.message.reply(
-                        content="**У вас недостаточно прав для выполнения данной команды.**"
-                    )
-                    return
-
-            try:
-                is_publication_exists = self.methods.is_publication_exists(
-                    publication_id=id
-                )
-            except Exception as error:
-                await self.log.error(
-                    f"Не удалось проверить существует ли выпуск: {error}."
-                )
-                await ctx.message.add_reaction("❗")
-                await ctx.message.reply(
-                    content="**Произошла ошибка, не удалось проверить существует ли выпуск.**"
-                )
-                return
-
-            if not is_publication_exists:
-                await ctx.message.add_reaction("❗")
-                await ctx.message.reply(
-                    content="**Выпуск с таким номером не существует.**"
-                )
-                return
-
-            try:
-                creator_db = self.methods.get_maker(discord_id=creator.id)
-            except Exception as error:
-                await self.log.error(
-                    f"Не удалось проверить существует ли редактор: {error}."
-                )
-                await ctx.message.add_reaction("❗")
-                await ctx.message.reply(
-                    content="**Произошла ошибка, не удалось проверить существует ли редактор.**"
-                )
-                return
-
-            if not creator_db:
-                await ctx.message.add_reaction("❗")
-                await ctx.message.reply(
-                    content="**Редактор не существует в базе данных**"
-                )
-                return
-
-            if not creator_db.account_status:
-                await ctx.message.add_reaction("❗")
-                await ctx.message.reply(
-                    content="**Аккаунт редактора деактивирован, невозможно указать его в качестве автора информации.**"
-                )
-                return
-
-            if int(creator_db.level) < 2:
-                await ctx.message.add_reaction("❗")
-                await ctx.message.reply(
-                    content="**У редактора недостаточно прав для того чтобы быть автором информации.**"
-                )
-                return
-
-            try:
-                self.methods.update_publication(
-                    publication_id=id,
-                    column_name="information_creator_id",
-                    value=creator_db.id,
-                )
-            except Exception as error:
-                await self.log.error(
-                    f"Не удалось обновить автора информации к выпуску: {error}."
-                )
-                await ctx.message.add_reaction("❗")
-                await ctx.message.reply(
-                    content="**Произошла ошибка, не удалось обновить автора информации к выпуску.**"
-                )
-                return
-
-            try:
-                made_by = self.methods.get_maker(discord_id=ctx.author.id)
-            except Exception as error:
-                await self.log.error(
-                    f"Не удалось найти исполнителя команды в базе данных: {error}."
-                )
-                await ctx.message.add_reaction("❗")
-                await ctx.message.reply(
-                    content=f"**Произошла ошибка, вас не удалось найти в базе данных.**"
-                )
-                return
-
-            if not made_by:
-                made_by = None
-            else:
-                made_by = made_by.id
-
-            try:
-                publication = self.methods.get_publication(publication_id=id)
-            except Exception as error:
-                await self.log.error(f"Не удалось получить выпуск: {error}.")
-                await ctx.message.add_reaction("❗")
-                return await ctx.message.reply(
-                    content="**Не удалось инициализировать выпуск.**"
-                )
-
-            try:
-                self.methods.add_pub_action(
-                    pub_id=publication.id,
-                    made_by=made_by,
-                    action="setpub_infocreator",
-                    meta=creator_db.id,
-                )
-                action_written_success = True
-            except Exception as error:
-                await self.log.error(
-                    f"Не удалось записать действие с публикацией: {error}."
-                )
-                action_written_success = False
-
-        await ctx.message.add_reaction("✅")
-        await ctx.message.reply(
-            content=f"**Вы изменили автора информации к выпуску #{id} на <@{creator_db.discord_id}>.**"
-        )
-
-        if not action_written_success:
-            await ctx.message.reply(
-                content="**Произошла ошибка во время записи действия в лог.**"
+        elif int(interaction_author.level) < 2:
+            return await interaction.edit_original_response(
+                content="**У вас недостаточно прав для выполнения данной команды.**"
             )
 
-    @commands.command(name="setpub_salarypayer")
-    async def set_pub_salarypayer(
-        self, ctx: commands.Context, id: int, payer: disnake.User
+        publication = methods.get_publication(pub_number)
+
+        if not publication:
+            return await interaction.edit_original_response(
+                content=f"**Выпуск с номером `#{pub_number}` не существует.**"
+            )
+
+        if member:
+            maker = methods.get_maker(member.id)
+
+            if publication.maker_id == maker.id:
+                return await interaction.edit_original_response(
+                    content=f"**Изменений не произошло, редактор выпуска установлен такой-же, какого вы указали.**"
+                )
+
+            if not maker:
+                return await interaction.edit_original_response(
+                    content=f"**Пользователь, которого вы указали не зарегистрирован в системе.**"
+                )
+            elif not maker.account_status:
+                return await interaction.edit_original_response(
+                    content=f"**Аккаунт редактора, которого вы указали, деактивирован.**"
+                )
+
+            methods.update_publication(
+                publication_id=pub_number,
+                column_name="maker_id",
+                value=maker.id
+            )
+
+            methods.add_pub_action(
+                pub_id=publication.id,
+                made_by=interaction_author.id,
+                action="setpub_maker",
+                meta=maker.id
+            )
+
+            return await interaction.edit_original_response(
+                content=f"**Вы изменили редактора выпуска `#{pub_number}` на {member.mention} `{maker.nickname}`.**"
+            )
+        elif not member:
+            if not publication.maker_id:
+                return await interaction.edit_original_response(
+                    content=f"**Изменений не произошло, редактор выпуска итак не указан.**"
+                )
+
+            methods.update_publication(
+                publication_id=pub_number,
+                column_name="maker_id",
+                value=None
+            )
+
+            methods.add_pub_action(
+                pub_id=publication.id,
+                made_by=interaction_author.id,
+                action="setpub_maker",
+                meta="не указан"
+            )
+
+            return await interaction.edit_original_response(
+                content=f"**Вы очистили редактора выпуска `#{pub_number}`.**"
+            )
+
+    @pubsetting.sub_command(name="status", description="Изменить статус выпуска")
+    async def pubsetting_status(
+            self,
+            interaction: disnake.ApplicationCommandInteraction,
+            pub_number: int = commands.Param(name="number", description="Номер выпуска"),
+            status: str = commands.Param(name="status", description="Статус выпуска", choices=[
+                disnake.OptionChoice(name="Сделан", value="completed"),
+                disnake.OptionChoice(name="Провален", value="failed"),
+                disnake.OptionChoice(name="В процессе", value="in_process")
+            ])
     ):
-        async with ctx.typing():
-            try:
-                access = await command_access_checker(
-                    ctx.guild, ctx.author, "setpub_salarypayer"
-                )
-            except Exception as error:
-                await self.log.error(
-                    f"Не удалось проверить доступ к команде /setpub_salarypayer: {error}."
-                )
-                await ctx.message.add_reaction("❗")
-                await ctx.message.reply(
-                    content="**Произошла ошибка, не удалось проверить доступ к команде.**"
-                )
-                return
-            if not access:
-                is_owner = await self.bot.is_owner(ctx.author)
-                if not is_owner:
-                    await ctx.message.add_reaction("❗")
-                    await ctx.message.reply(
-                        content="**У вас недостаточно прав для выполнения данной команды.**"
-                    )
-                    return
+        await interaction.response.defer()
 
-            try:
-                is_publication_exists = self.methods.is_publication_exists(
-                    publication_id=id
-                )
-            except Exception as error:
-                await self.log.error(
-                    f"Не удалось проверить существует ли выпуск: {error}."
-                )
-                await ctx.message.add_reaction("❗")
-                await ctx.message.reply(
-                    content="**Произошла ошибка, не удалось проверить существует ли выпуск.**"
-                )
-                return
+        interaction_author = methods.get_maker(interaction.author.id)
 
-            if not is_publication_exists:
-                await ctx.message.add_reaction("❗")
-                await ctx.message.reply(
-                    content="**Выпуск с таким номером не существует.**"
-                )
-                return
+        if not interaction_author:
+            return await interaction.edit_original_response(
+                content="**У вас недостаточно прав для выполнения данной команды.**"
+            )
 
-            try:
-                payer_db = self.methods.get_maker(discord_id=payer.id)
-            except Exception as error:
-                await self.log.error(
-                    f"Не удалось проверить существует ли редактор: {error}."
-                )
-                await ctx.message.add_reaction("❗")
-                await ctx.message.reply(
-                    content="**Произошла ошибка, не удалось проверить существует ли редактор.**"
-                )
-                return
+        elif not interaction_author.account_status:
+            return await interaction.edit_original_response(
+                content="**У вас недостаточно прав для выполнения данной команды.**"
+            )
 
-            if not payer_db:
-                await ctx.message.add_reaction("❗")
-                await ctx.message.reply(
-                    content="**Редактор не существует в базе данных**"
-                )
-                return
+        elif int(interaction_author.level) < 2:
+            return await interaction.edit_original_response(
+                content="**У вас недостаточно прав для выполнения данной команды.**"
+            )
 
-            if payer_db.account_status == False:
-                await ctx.message.add_reaction("❗")
-                await ctx.message.reply(
-                    content="**Аккаунт редактора деактивирован, невозможно указать его в качестве человека, который выплатил зарплату за выпуск.**"
-                )
-                return
+        publication = methods.get_publication(pub_number)
 
-            if int(payer_db.level) < 2:
-                await ctx.message.add_reaction("❗")
-                await ctx.message.reply(
-                    content="**У редактора недостаточно прав для того чтобы быть человеком, который выплатил зарплату за выпуск.**"
-                )
-                return
+        if not publication:
+            return await interaction.edit_original_response(
+                content=f"**Выпуск с номером `#{pub_number}` не существует.**"
+            )
 
-            try:
-                self.methods.update_publication(
-                    publication_id=id, column_name="salary_payer_id", value=payer_db.id
-                )
-            except Exception as error:
-                await self.log.error(
-                    f"Не удалось обновить человека, который выплатил зарплату за выпуск: {error}."
-                )
-                await ctx.message.add_reaction("❗")
-                await ctx.message.reply(
-                    content="**Произошла ошибка, не удалось обновить человека, который выплатил зарплату за выпуск.**"
-                )
-                return
+        elif publication.status == status:
+            return await interaction.edit_original_response(
+                content=f"**Изменений не произошло, у выпуска `#{pub_number}` уже указан статус, который вы указали.**"
+            )
 
-            try:
-                made_by = self.methods.get_maker(discord_id=ctx.author.id)
-            except Exception as error:
-                await self.log.error(
-                    f"Не удалось найти исполнителя команды в базе данных: {error}."
-                )
-                await ctx.message.add_reaction("❗")
-                await ctx.message.reply(
-                    content=f"**Произошла ошибка, вас не удалось найти в базе данных.**"
-                )
-                return
-
-            if not made_by:
-                made_by = None
-            else:
-                made_by = made_by.id
-
-            try:
-                publication = self.methods.get_publication(publication_id=id)
-            except Exception as error:
-                await self.log.error(f"Не удалось получить выпуск: {error}.")
-                await ctx.message.add_reaction("❗")
-                return await ctx.message.reply(
-                    content="**Не удалось инициализировать выпуск.**"
-                )
-
-            try:
-                self.methods.add_pub_action(
-                    pub_id=publication.id,
-                    made_by=made_by,
-                    action="setpub_salarypayer",
-                    meta=payer_db.id,
-                )
-                action_written_success = True
-            except Exception as error:
-                await self.log.error(
-                    f"Не удалось записать действие с публикацией: {error}."
-                )
-                action_written_success = False
-
-        await ctx.message.add_reaction("✅")
-        await ctx.message.reply(
-            content=f"**Вы изменили человека, который выплатил зарплату за выпуск #{id} на <@{payer_db.discord_id}>.**"
+        methods.update_publication(
+            publication_id=pub_number,
+            column_name="status",
+            value=status
         )
 
-        if not action_written_success:
-            await ctx.message.reply(
-                content="**Произошла ошибка во время записи действия в лог.**"
+        methods.add_pub_action(
+            pub_id=publication.id,
+            made_by=interaction_author.id,
+            action="setpub_status",
+            meta=status
+        )
+
+        status_title = await get_status_title(status)
+
+        return await interaction.edit_original_response(
+            content=f"**Вы установили выпуску `#{pub_number}` статус `{status_title}`**"
+        )
+
+    @pubsetting.sub_command(name="salary", description="Изменить зарплату за выпуск")
+    async def pubsetting_salary(
+            self,
+            interaction: disnake.ApplicationCommandInteraction,
+            pub_number: int = commands.Param(name="number", description="Номер выпуска"),
+            amount: int = commands.Param(default=None, name="salary", description="Сумма зарплаты за выпуск")
+    ):
+        await interaction.response.defer()
+
+        interaction_author = methods.get_maker(interaction.author.id)
+
+        if not interaction_author:
+            return await interaction.edit_original_response(
+                content="**У вас недостаточно прав для выполнения данной команды.**"
+            )
+
+        elif not interaction_author.account_status:
+            return await interaction.edit_original_response(
+                content="**У вас недостаточно прав для выполнения данной команды.**"
+            )
+
+        elif int(interaction_author.level) < 2:
+            return await interaction.edit_original_response(
+                content="**У вас недостаточно прав для выполнения данной команды.**"
+            )
+
+        publication = methods.get_publication(pub_number)
+
+        if not publication:
+            return await interaction.edit_original_response(
+                content=f"**Выпуск с номером `#{pub_number}` не существует.**"
+            )
+
+        if amount:
+            if publication.amount_dp == amount:
+                return await interaction.edit_original_response(
+                    content=f"**Изменений не произошло, зарплата за выпуск установлена такая же, какую вы указали.**"
+                )
+
+            methods.update_publication(
+                publication_id=pub_number,
+                column_name="amount_dp",
+                value=amount
+            )
+
+            methods.add_pub_action(
+                pub_id=publication.id,
+                made_by=interaction_author.id,
+                action="setpub_amount",
+                meta=amount
+            )
+
+            return await interaction.edit_original_response(
+                content=f"**Вы изменили зарплату за выпуск `#{pub_number}` на `{amount}`.**"
+            )
+        elif not amount:
+            if not publication.amount_dp:
+                return await interaction.edit_original_response(
+                    content=f"**Изменений не произошло, зарплата за выпуск итак не указана.**"
+                )
+
+            methods.update_publication(
+                publication_id=pub_number,
+                column_name="amount_dp",
+                value=None
+            )
+
+            methods.add_pub_action(
+                pub_id=publication.id,
+                made_by=interaction_author.id,
+                action="setpub_amount",
+                meta="не установлено"
+            )
+
+            return await interaction.edit_original_response(
+                content=f"**Вы очистили зарплату за выпуск `#{pub_number}`.**"
+            )
+
+    @pubsetting.sub_command(name="information_creator", description="Изменить автора информации к выпуску")
+    async def pubsetting_information_creator(
+            self,
+            interaction: disnake.ApplicationCommandInteraction,
+            pub_number: int = commands.Param(name="number", description="Номер выпуска"),
+            member: disnake.User | disnake.Member = commands.Param(default=None, name="creator",
+                                                                   description="Автор информации")
+    ):
+        await interaction.response.defer()
+
+        interaction_author = methods.get_maker(interaction.author.id)
+
+        if not interaction_author:
+            return await interaction.edit_original_response(
+                content="**У вас недостаточно прав для выполнения данной команды.**"
+            )
+
+        elif not interaction_author.account_status:
+            return await interaction.edit_original_response(
+                content="**У вас недостаточно прав для выполнения данной команды.**"
+            )
+
+        elif int(interaction_author.level) < 2:
+            return await interaction.edit_original_response(
+                content="**У вас недостаточно прав для выполнения данной команды.**"
+            )
+
+        publication = methods.get_publication(pub_number)
+
+        if not publication:
+            return await interaction.edit_original_response(
+                content=f"**Выпуск с номером `#{pub_number}` не существует.**"
+            )
+
+        if member:
+            creator = methods.get_maker(member.id)
+
+            if publication.information_creator_id == creator.id:
+                return await interaction.edit_original_response(
+                    content=f"**Изменений не произошло, автор информации выпуска установлен таким же, какого вы указали.**"
+                )
+
+            if not creator:
+                return await interaction.edit_original_response(
+                    content=f"**Пользователь, которого вы указали не зарегистрирован в системе.**"
+                )
+            elif not creator.account_status:
+                return await interaction.edit_original_response(
+                    content=f"**Аккаунт редактора, которого вы указали, деактивирован.**"
+                )
+
+            methods.update_publication(
+                publication_id=pub_number,
+                column_name="information_creator_id",
+                value=creator.id
+            )
+
+            methods.add_pub_action(
+                pub_id=publication.id,
+                made_by=interaction_author.id,
+                action="setpub_infocreator",
+                meta=creator.id
+            )
+
+            return await interaction.edit_original_response(
+                content=f"**Вы изменили автора информации к выпуску `#{pub_number}` на {member.mention} `{creator.nickname}`.**"
+            )
+        elif not member:
+            if not publication.information_creator_id:
+                return await interaction.edit_original_response(
+                    content=f"**Изменений не произошло, автор информации к выпуску итак не указан.**"
+                )
+
+            methods.update_publication(
+                publication_id=pub_number,
+                column_name="information_creator_id",
+                value=None
+            )
+
+            methods.add_pub_action(
+                pub_id=publication.id,
+                made_by=interaction_author.id,
+                action="setpub_infocreator",
+                meta="не указан"
+            )
+
+            return await interaction.edit_original_response(
+                content=f"**Вы очистили автора информации к выпуску `#{pub_number}`.**"
+            )
+
+    @pubsetting.sub_command(name="salary_payer", description="Изменить человека, который выплатил зарплату")
+    async def pubsetting_salary_payer(
+            self,
+            interaction: disnake.ApplicationCommandInteraction,
+            pub_number: int = commands.Param(name="number", description="Номер выпуска"),
+            member: disnake.User | disnake.Member = commands.Param(default=None, name="salary_payer",
+                                                                   description="Человек, который выплатил зарплату за выпуск")
+    ):
+        await interaction.response.defer()
+
+        interaction_author = methods.get_maker(interaction.author.id)
+
+        if not interaction_author:
+            return await interaction.edit_original_response(
+                content="**У вас недостаточно прав для выполнения данной команды.**"
+            )
+
+        elif not interaction_author.account_status:
+            return await interaction.edit_original_response(
+                content="**У вас недостаточно прав для выполнения данной команды.**"
+            )
+
+        elif int(interaction_author.level) < 2:
+            return await interaction.edit_original_response(
+                content="**У вас недостаточно прав для выполнения данной команды.**"
+            )
+
+        publication = methods.get_publication(pub_number)
+
+        if not publication:
+            return await interaction.edit_original_response(
+                content=f"**Выпуск с номером `#{pub_number}` не существует.**"
+            )
+
+        if member:
+            salary_payer = methods.get_maker(member.id)
+
+            if publication.salary_payer_id == salary_payer.id:
+                return await interaction.edit_original_response(
+                    content=f"**Изменений не произошло, человек, который выплати зарплату установлен таким же, какого вы указали.**"
+                )
+
+            if not salary_payer:
+                return await interaction.edit_original_response(
+                    content=f"**Пользователь, которого вы указали не зарегистрирован в системе.**"
+                )
+            elif not salary_payer.account_status:
+                return await interaction.edit_original_response(
+                    content=f"**Аккаунт редактора, которого вы указали, деактивирован.**"
+                )
+
+            methods.update_publication(
+                publication_id=pub_number,
+                column_name="salary_payer_id",
+                value=salary_payer.id
+            )
+
+            methods.add_pub_action(
+                pub_id=publication.id,
+                made_by=interaction_author.id,
+                action="setpub_salarypayer",
+                meta=salary_payer.id
+            )
+
+            return await interaction.edit_original_response(
+                content=f"**Вы изменили человека, который выплатил информацию за выпуск `#{pub_number}` на {member.mention} `{salary_payer.nickname}`.**"
+            )
+        elif not member:
+            if not publication.salary_payer_id:
+                return await interaction.edit_original_response(
+                    content=f"**Изменений не произошло, автор информации к выпуску итак не указан.**"
+                )
+
+            methods.update_publication(
+                publication_id=pub_number,
+                column_name="salary_payer_id",
+                value=None
+            )
+
+            methods.add_pub_action(
+                pub_id=publication.id,
+                made_by=interaction_author.id,
+                action="setpub_salarypayer",
+                meta="не указан"
+            )
+
+            return await interaction.edit_original_response(
+                content=f"**Вы очистили человека, который выплатил информацию за выпуск `#{pub_number}`.**"
             )
 
 
