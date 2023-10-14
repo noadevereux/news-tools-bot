@@ -1,16 +1,15 @@
-from asyncio import run
+import os
+
 import disnake
 from disnake.ext import commands
-import os
-from config import PREFIX, TOKEN
-from utils.logger import Logger
+
+from config import TOKEN
 from utils.database.database import engine
 from utils.database.orm_models import Base
+from utils.logger import Logger
 
-bot = commands.Bot(
-    command_prefix=PREFIX,
-    help_command=None,
-    intents=disnake.Intents.all(),
+bot = commands.InteractionBot(
+    intents=disnake.Intents.all()
 )
 
 log = Logger("main.py.log")
