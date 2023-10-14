@@ -126,7 +126,7 @@ async def get_publication_profile(publication_id: int) -> Embed:
     **Зарплата за выпуск: {amount_dp}**
 
     **Информацию для выпуска собрал: {information_creator}**
-    **DP выплатил: {dp_paid_by}**
+    **Зарплату выплатил: {dp_paid_by}**
     """
 
     embed = disnake.Embed(
