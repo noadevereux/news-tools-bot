@@ -13,7 +13,7 @@ class Main(commands.Cog):
     def __init__(self, bot: commands.Bot) -> None:
         super().__init__()
         self.bot = bot
-        self.log = Logger("cogs.main.py.log")
+        self.log = Logger("cogs.makers.py.log")
 
     @commands.slash_command(name="maker", description="Управление редактором")
     async def maker(self, interaction: disnake.ApplicationCommandInteraction):
