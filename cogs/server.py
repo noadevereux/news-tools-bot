@@ -1,8 +1,7 @@
 import disnake
 from disnake.ext import commands
+
 from config import DEV_GUILDS
-import os
-from asyncio import sleep
 from utils.models.keyboards import ConfirmReboot
 
 
