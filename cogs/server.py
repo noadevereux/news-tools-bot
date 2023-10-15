@@ -3,6 +3,7 @@ from disnake.ext import commands
 from config import DEV_GUILDS
 import os
 from asyncio import sleep
+from utils.models.keyboards import ConfirmReboot
 
 
 class Server(commands.Cog):
@@ -20,18 +21,10 @@ class Server(commands.Cog):
             self,
             interaction: disnake.ApplicationCommandInteraction
     ):
-        await interaction.send(
-            content=f"**Сервер будет перезагружен через 5 секунд. Примерно время перезагрузки составит 5 минут.**"
+        return await interaction.send(
+            content=f"**Вы уверены что хотите перезагрузить сервер?**",
+            view=ConfirmReboot(bot=self.bot, member=interaction.author)
         )
-        await self.bot.change_presence(
-            activity=disnake.Activity(
-                name="ПЕРЕЗАГРУЗКА СИСТЕМ",
-                type=disnake.ActivityType.listening
-            ),
-            status=disnake.Status.idle
-        )
-        await sleep(5.0)
-        return os.system("sudo reboot")
 
 
 def setup(bot: commands.InteractionBot):
