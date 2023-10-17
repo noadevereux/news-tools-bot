@@ -1,11 +1,10 @@
 import os
-
+import asyncio
 import disnake
-from disnake.ext import commands
+from disnake.ext import commands, tasks
 
 from config import TOKEN, DEV_GUILDS
-from utils.database.database import engine
-from utils.database.orm_models import Base
+from utils.database.orm_models import create_tables
 from utils.logger import Logger
 
 bot = commands.InteractionBot(
@@ -104,6 +103,7 @@ async def cog_unload(
 
 @bot.listen(name="on_ready")
 async def on_ready():
+    await create_db_tables.start()
     print(f"[INFO] {bot.user} запущен.")
     await log.info("Запущена новая сессия.")
     await bot.change_presence(
@@ -115,9 +115,12 @@ async def on_ready():
     )
 
 
-if __name__ == "__main__":
-    Base.metadata.create_all(bind=engine)
+@tasks.loop(count=1)
+async def create_db_tables():
+    await create_tables()
 
+
+async def main():
     for file in os.listdir("cogs"):
         if (file.endswith(".py")) and (not file.startswith(".")):
             try:
@@ -125,6 +128,14 @@ if __name__ == "__main__":
             except Exception as error:
                 print(error)
     try:
-        bot.run(TOKEN)
+        await bot.start(TOKEN)
     except RuntimeError:
+        pass
+
+
+if __name__ == "__main__":
+    loop = asyncio.get_event_loop()
+    try:
+        loop.run_until_complete(main())
+    except KeyboardInterrupt:
         pass
