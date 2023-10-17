@@ -1,3 +1,4 @@
+import asyncio
 import datetime
 
 import disnake
@@ -127,11 +128,18 @@ class Main(commands.Cog):
 
         timestamp = datetime.datetime.now().isoformat()
 
-        await methods.update_maker(
-            discord_id=member.id,
-            column_name="account_status",
-            value=True
-        )
+        tasks = [
+            methods.update_maker(
+                discord_id=member.id,
+                column_name="account_status",
+                value=True
+            ),
+            methods.update_maker(
+                discord_id=member.id,
+                column_name="appointment_datetime",
+                value=timestamp
+            )
+        ]
 
         if not maker.nickname == nickname:
             try:
@@ -145,39 +153,43 @@ class Main(commands.Cog):
                     content="**Указанный никнейм занят, выберите другой.**"
                 )
 
-        await methods.update_maker(
-            discord_id=member.id,
-            column_name="appointment_datetime",
-            value=timestamp
-        )
-
         if not maker.level == "1":
-            await methods.update_maker(
-                discord_id=member.id,
-                column_name="level",
-                value="1"
+            tasks.append(
+                methods.update_maker(
+                    discord_id=member.id,
+                    column_name="level",
+                    value="1"
+                )
             )
 
         if not maker.status == "new":
-            await methods.update_maker(
-                discord_id=member.id,
-                column_name="status",
-                value="new"
+            tasks.append(
+                methods.update_maker(
+                    discord_id=member.id,
+                    column_name="status",
+                    value="new"
+                )
             )
 
         if not maker.warns == 0:
-            await methods.update_maker(
-                discord_id=member.id,
-                column_name="warns",
-                value=0
+            tasks.append(
+                methods.update_maker(
+                    discord_id=member.id,
+                    column_name="warns",
+                    value=0
+                )
             )
 
-        await methods.add_maker_action(
-            maker_id=maker.id,
-            made_by=interaction_author.id,
-            action="addmaker",
-            meta=nickname
+        tasks.append(
+            methods.add_maker_action(
+                maker_id=maker.id,
+                made_by=interaction_author.id,
+                action="addmaker",
+                meta=nickname
+            )
         )
+
+        await asyncio.gather(*tasks)
 
         embed = await get_maker_profile(member)
 
