@@ -47,11 +47,11 @@ async def get_color_object(color_hex: str) -> Colour:
 
 
 async def get_maker_profile(user: User) -> Embed:
-    maker = methods.get_maker(discord_id=user.id)
+    maker = await methods.get_maker(discord_id=user.id)
 
     level = await get_level_title(maker.level)
     status = await get_status_title(maker.status)
-    publications_amount = methods.get_publications_by_maker(id=maker.id)
+    publications_amount = await methods.get_publications_by_maker(id=maker.id)
     if not publications_amount:
         publications_amount = 0
     else:
@@ -75,7 +75,7 @@ async def get_maker_profile(user: User) -> Embed:
         timestamp=maker.appointment_datetime,
     )
 
-    if maker.account_status == False:
+    if not maker.account_status:
         embed.set_author(name="🔴 АККАУНТ ДЕАКТИВИРОВАН 🔴")
 
     embed.set_thumbnail(user.display_avatar.url)
@@ -85,14 +85,14 @@ async def get_maker_profile(user: User) -> Embed:
 
 
 async def get_publication_profile(publication_id: int) -> Embed:
-    publication = methods.get_publication(publication_id=publication_id)
-    maker = methods.get_maker_by_id(id=publication.maker_id)
+    publication = await methods.get_publication(publication_id=publication_id)
+    maker = await methods.get_maker_by_id(id=publication.maker_id)
     if not maker:
         maker = "`не указан`"
     else:
         maker = f"<@{maker.discord_id}> `{maker.nickname}`"
 
-    information_creator = methods.get_maker_by_id(id=publication.information_creator_id)
+    information_creator = await methods.get_maker_by_id(id=publication.information_creator_id)
     if not information_creator:
         information_creator = "`не указан`"
     else:
@@ -100,7 +100,7 @@ async def get_publication_profile(publication_id: int) -> Embed:
             f"<@{information_creator.discord_id}> `{information_creator.nickname}`"
         )
 
-    dp_paid_by = methods.get_maker_by_id(id=publication.salary_payer_id)
+    dp_paid_by = await methods.get_maker_by_id(id=publication.salary_payer_id)
     if not dp_paid_by:
         dp_paid_by = "`не выплачено`"
     else:

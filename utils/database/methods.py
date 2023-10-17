@@ -1,39 +1,40 @@
 from typing import Literal
 from .orm_models import Maker, MakerAction, Publication, PublicationAction
 from .database import SessionLocal
+from sqlalchemy import select, desc
 
 
 # BEGIN MAKERS METHODS
 
-
-def is_maker_exists(discord_id: int) -> bool:
-    with SessionLocal() as session:
-        maker = session.query(Maker).filter_by(discord_id=discord_id).first()
-    return maker is not None
-
-
-def is_maker_exists_by_id(id: int) -> bool:
-    with SessionLocal() as session:
-        maker = session.query(Maker).filter_by(id=id).first()
-    return maker is not None
+async def is_maker_exists(discord_id: int) -> bool:
+    async with SessionLocal() as session:
+        maker = await session.execute(select(Maker).filter_by(discord_id=discord_id))
+    return maker.scalar() is not None
 
 
-def add_maker(discord_id: int, nickname: str) -> None:
+async def is_maker_exists_by_id(id: int) -> bool:
+    async with SessionLocal() as session:
+        maker = await session.execute(select(Maker).filter_by(id=id))
+        return maker.scalar() is not None
+
+
+async def add_maker(discord_id: int, nickname: str) -> None:
     new_maker = Maker(discord_id=discord_id, nickname=nickname)
-    with SessionLocal() as session:
+    async with SessionLocal() as session:
         session.add(new_maker)
-        session.commit()
+        await session.commit()
 
 
-def deactivate_maker(discord_id: int) -> None:
-    with SessionLocal() as session:
-        maker = session.query(Maker).filter_by(discord_id=discord_id).first()
+async def deactivate_maker(discord_id: int) -> None:
+    async with SessionLocal() as session:
+        maker = await session.execute(select(Maker).filter_by(discord_id=discord_id))
         if maker:
+            maker = maker.scalar()
             maker.account_status = False
-            session.commit()
+            await session.commit()
 
 
-def update_maker(
+async def update_maker(
         discord_id: int,
         column_name: Literal[
             "id",
@@ -47,14 +48,15 @@ def update_maker(
         ],
         value: str | int,
 ) -> None:
-    with SessionLocal() as session:
-        maker = session.query(Maker).filter_by(discord_id=discord_id).first()
+    async with SessionLocal() as session:
+        maker = await session.execute(select(Maker).filter_by(discord_id=discord_id))
         if maker:
+            maker = maker.scalar()
             setattr(maker, column_name, value)
-            session.commit()
+            await session.commit()
 
 
-def update_maker_by_id(
+async def update_maker_by_id(
         id: int,
         column_name: Literal[
             "id",
@@ -68,54 +70,54 @@ def update_maker_by_id(
         ],
         value: str | int,
 ) -> None:
-    with SessionLocal() as session:
-        maker = session.query(Maker).filter_by(id=id).first()
+    async with SessionLocal() as session:
+        maker = await session.execute(select(Maker).filter_by(id=id))
         if maker:
+            maker = maker.scalar()
             setattr(maker, column_name, value)
-            session.commit()
+            await session.commit()
 
 
-def get_all_makers() -> list[Maker] | None:
-    with SessionLocal() as session:
-        makers = session.query(Maker).all()
-    return makers
+async def get_all_makers() -> list[Maker] | None:
+    async with SessionLocal() as session:
+        makers = await session.execute(select(Maker))
+        return makers.scalars().all()
 
 
-def get_maker(discord_id: int) -> Maker | None:
-    with SessionLocal() as session:
-        maker = session.query(Maker).filter_by(discord_id=discord_id).first()
-    return maker
+async def get_maker(discord_id: int) -> Maker | None:
+    async with SessionLocal() as session:
+        maker = await session.execute(select(Maker).filter_by(discord_id=discord_id))
+        return maker.scalar()
 
 
-def get_maker_by_id(id: int) -> Maker | None:
-    with SessionLocal() as session:
-        maker = session.query(Maker).filter_by(id=id).first()
-    return maker
+async def get_maker_by_id(id: int) -> Maker | None:
+    async with SessionLocal() as session:
+        maker = await session.execute(select(Maker).filter_by(id=id))
+        return maker.scalar()
 
 
-def get_publications_by_maker(id: int) -> list[Publication]:
-    with SessionLocal() as session:
-        publications = (
-            session.query(Publication).filter_by(maker_id=id, status="completed").all()
+async def get_publications_by_maker(id: int) -> list[Publication]:
+    async with SessionLocal() as session:
+        publications = await session.execute(
+            select(Publication).filter_by(maker_id=id, status="completed")
         )
-    return publications
+        return publications.scalars().all()
 
 
 # END MAKERS METHODS
 
 # BEGIN PUBLICATIONS METHODS
 
-
-def add_publication(publication_id: int) -> Publication:
+async def add_publication(publication_id: int) -> Publication:
     new_publication = Publication(publication_number=publication_id)
-    with SessionLocal() as session:
+    async with SessionLocal() as session:
         session.add(new_publication)
-        session.commit()
-        publication = session.query(Publication).filter_by(publication_number=publication_id).first()
-    return publication
+        await session.commit()
+        publication = await session.execute(select(Publication).filter_by(publication_number=publication_id))
+        return publication.scalar()
 
 
-def update_publication(
+async def update_publication(
         publication_id: int,
         column_name: Literal[
             "id",
@@ -129,67 +131,52 @@ def update_publication(
         ],
         value: int | str | None,
 ) -> None:
-    with SessionLocal() as session:
-        publication = (
-            session.query(Publication)
-            .filter_by(publication_number=publication_id)
-            .first()
-        )
+    async with SessionLocal() as session:
+        publication = await session.execute(select(Publication).filter_by(publication_number=publication_id))
         if publication:
+            publication = publication.scalar()
             setattr(publication, column_name, value)
-            session.commit()
+            await session.commit()
 
 
-def delete_publication(publication_id: int) -> None:
-    with SessionLocal() as session:
-        publication = (
-            session.query(Publication)
-            .filter_by(publication_number=publication_id)
-            .first()
-        )
+async def delete_publication(publication_id: int) -> None:
+    async with SessionLocal() as session:
+        publication = await session.execute(select(Publication).filter_by(publication_number=publication_id))
         if publication:
+            publication = publication.scalar()
             session.delete(publication)
-            session.commit()
+            await session.commit()
 
 
-def is_publication_exists(publication_id: int) -> bool:
-    with SessionLocal() as session:
-        publication = (
-            session.query(Publication)
-            .filter_by(publication_number=publication_id)
-            .first()
-        )
-    return publication is not None
+async def is_publication_exists(publication_id: int) -> bool:
+    async with SessionLocal() as session:
+        publication = await session.execute(select(Publication).filter_by(publication_number=publication_id))
+        return publication.scalar() is not None
 
 
-def get_publication(publication_id: int) -> Publication | None:
-    with SessionLocal() as session:
-        publication = (
-            session.query(Publication)
-            .filter_by(publication_number=publication_id)
-            .first()
-        )
-    return publication
+async def get_publication(publication_id: int) -> Publication | None:
+    async with SessionLocal() as session:
+        publication = await session.execute(select(Publication).filter_by(publication_number=publication_id))
+        return publication.scalar()
 
 
-def get_publication_by_id(id: int) -> Publication | None:
-    with SessionLocal() as session:
-        publication = session.query(Publication).filter_by(id=id).first()
-    return publication
+async def get_publication_by_id(id: int) -> Publication | None:
+    async with SessionLocal() as session:
+        publication = await session.execute(select(Publication).filter_by(id=id))
+        return publication.scalar()
 
 
-def get_all_publications() -> list[Publication] | None:
-    with SessionLocal() as session:
-        publications = session.query(Publication).all()
-    return publications
+async def get_all_publications() -> list[Publication] | None:
+    async with SessionLocal() as session:
+        publications = await session.execute(select(Publication))
+        return publications.scalars().all()
 
 
 # END PUBLICATION METHODS
 
 # BEGIN MAKER ACTIONS METHODS
 
-
-def add_maker_action(
+async def add_maker_action(
         maker_id: int,
         made_by: int,
         action: Literal[
@@ -209,36 +196,30 @@ def add_maker_action(
         maker_id=maker_id, made_by=made_by, action=action, meta=meta, reason=reason
     )
 
-    with SessionLocal() as session:
+    async with SessionLocal() as session:
         session.add(new_action)
-        session.commit()
+        await session.commit()
 
 
-def get_makers_actions(maker_id: int) -> list[MakerAction]:
-    with SessionLocal() as session:
-        actions = (
-            session.query(MakerAction)
-            .filter_by(maker_id=maker_id)
-            .order_by(MakerAction.timestamp.desc())
-            .all()
+async def get_makers_actions(maker_id: int) -> list[MakerAction]:
+    async with SessionLocal() as session:
+        actions = await session.execute(
+            select(MakerAction).filter_by(maker_id=maker_id).order_by(MakerAction.timestamp.desc())
         )
-    return actions
+        return actions.scalars().all()
 
 
-def get_all_maker_actions() -> list[MakerAction]:
-    with SessionLocal() as session:
-        actions = (
-            session.query(MakerAction).order_by(MakerAction.timestamp.desc()).all()
-        )
-    return actions
+async def get_all_maker_actions() -> list[MakerAction]:
+    async with SessionLocal() as session:
+        actions = await session.execute(select(MakerAction).order_by(MakerAction.timestamp.desc()))
+        return actions.scalars().all()
 
 
 # END MAKER ACTIONS METHODS
 
 # BEGIN PUBLICATION ACTIONS METHODS
 
-
-def add_pub_action(
+async def add_pub_action(
         pub_id: int,
         made_by: int,
         action: Literal[
@@ -259,29 +240,22 @@ def add_pub_action(
         publication_id=pub_id, made_by=made_by, action=action, meta=meta, reason=reason
     )
 
-    with SessionLocal() as session:
+    async with SessionLocal() as session:
         session.add(new_action)
-        session.commit()
+        await session.commit()
 
 
-def get_pubs_actions(pub_id: int) -> list[PublicationAction]:
-    with SessionLocal() as session:
-        actions = (
-            session.query(PublicationAction)
-            .filter_by(publication_id=pub_id)
-            .order_by(PublicationAction.timestamp.desc())
-            .all()
+async def get_pubs_actions(pub_id: int) -> list[PublicationAction]:
+    async with SessionLocal() as session:
+        actions = await session.execute(
+            select(PublicationAction).filter_by(publication_id=pub_id).order_by(PublicationAction.timestamp.desc())
         )
-    return actions
+        return actions.scalars().all()
 
 
-def get_all_pub_actions() -> list[PublicationAction]:
-    with SessionLocal() as session:
-        actions = (
-            session.query(PublicationAction)
-            .order_by(PublicationAction.timestamp.desc())
-            .all()
-        )
-    return actions
+async def get_all_pub_actions() -> list[PublicationAction]:
+    async with SessionLocal() as session:
+        actions = await session.execute(select(PublicationAction).order_by(PublicationAction.timestamp.desc()))
+        return actions.scalars().all()
 
 # END PUBLICATION ACTIONS METHODS

@@ -1,9 +1,14 @@
 from typing import Literal
 from sqlalchemy import BigInteger, Column, Date, ForeignKey, TIMESTAMP, String
-from sqlalchemy.orm import relationship, Mapped, mapped_column
+from sqlalchemy.orm import relationship, Mapped, mapped_column, DeclarativeBase
 from sqlalchemy.sql import func
+from .database import engine
+from sqlalchemy.ext.asyncio import AsyncAttrs
+from datetime import datetime, date
 
-from .database import Base
+
+class Base(AsyncAttrs, DeclarativeBase):
+    pass
 
 
 class Publication(Base):
@@ -12,7 +17,7 @@ class Publication(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     publication_number: Mapped[int] = mapped_column(unique=True)
     maker_id: Mapped[int] = mapped_column(ForeignKey("makers.id"), nullable=True)
-    date = Column(Date(), nullable=True)
+    date: Mapped[date] = mapped_column(Date(), nullable=True)
     information_creator_id: Mapped[int] = mapped_column(
         ForeignKey("makers.id"), nullable=True
     )
@@ -55,7 +60,7 @@ class Maker(Base):
         server_default="new"
     )
     warns: Mapped[int] = mapped_column(server_default="0")
-    appointment_datetime = Column(TIMESTAMP(timezone=True), server_default=func.now())
+    appointment_datetime: Mapped[datetime] = mapped_column(TIMESTAMP(timezone=True), server_default=func.now())
     account_status: Mapped[bool] = mapped_column(server_default="1")
 
     publications_made = relationship(
@@ -100,7 +105,7 @@ class MakerAction(Base):
         ]
     ] = mapped_column()
     meta: Mapped[str] = mapped_column(String(255), nullable=True)
-    timestamp = Column(TIMESTAMP(timezone=True), server_default=func.now())
+    timestamp: Mapped[datetime] = mapped_column(TIMESTAMP(timezone=True), server_default=func.now())
     reason: Mapped[str] = mapped_column(String(255), nullable=True)
 
 
@@ -124,5 +129,10 @@ class PublicationAction(Base):
         ]
     ] = mapped_column()
     meta: Mapped[str] = mapped_column(String(255), nullable=True)
-    timestamp = Column(TIMESTAMP(timezone=True), server_default=func.now())
+    timestamp: Mapped[datetime] = mapped_column(TIMESTAMP(timezone=True), server_default=func.now())
     reason: Mapped[str] = mapped_column(String(255), nullable=True)
+
+
+async def create_tables():
+    async with engine.begin() as connection:
+        await connection.run_sync(Base.metadata.create_all)
