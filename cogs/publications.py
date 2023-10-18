@@ -3,10 +3,10 @@ import datetime
 import disnake
 from disnake.ext import commands
 
-from utils.database.methods import makers as maker_methods, publications as publication_methods, \
+from ext.database.methods import makers as maker_methods, publications as publication_methods, \
     publication_actions as action_methods
-from utils.logger import Logger
-from utils.utilities import date_validator, get_publication_profile, get_status_title
+from ext.logger import Logger
+from ext.utilities import date_validator, get_publication_profile, get_status_title
 
 
 class Publications(commands.Cog):

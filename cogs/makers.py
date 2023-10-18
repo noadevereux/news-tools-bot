@@ -5,9 +5,9 @@ import disnake
 from disnake.ext import commands
 from sqlalchemy.exc import IntegrityError
 
-from utils.database.methods import makers as maker_methods, maker_actions as action_methods
-from utils.logger import Logger
-from utils.utilities import *
+from ext.database.methods import makers as maker_methods, maker_actions as action_methods
+from ext.logger import Logger
+from ext.utilities import *
 
 
 class Main(commands.Cog):
