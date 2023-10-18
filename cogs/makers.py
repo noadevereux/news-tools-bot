@@ -5,7 +5,7 @@ import disnake
 from disnake.ext import commands
 from sqlalchemy.exc import IntegrityError
 
-from utils.database import methods
+from utils.database.methods import makers as maker_methods, maker_actions as action_methods
 from utils.logger import Logger
 from utils.utilities import *
 
@@ -30,7 +30,7 @@ class Main(commands.Cog):
     ):
         await interaction.response.defer()
 
-        interaction_author = await methods.get_maker(interaction.author.id)
+        interaction_author = await maker_methods.get_maker(interaction.author.id)
 
         if not interaction_author:
             return await interaction.edit_original_response(
@@ -47,7 +47,7 @@ class Main(commands.Cog):
                 content="**У вас недостаточно прав для выполнения данной команды.**"
             )
 
-        maker = await methods.get_maker(member.id)
+        maker = await maker_methods.get_maker(member.id)
 
         if maker and (not maker.account_status):
             return await interaction.edit_original_response(
@@ -60,15 +60,15 @@ class Main(commands.Cog):
             )
 
         try:
-            await methods.add_maker(discord_id=member.id, nickname=nickname)
+            await maker_methods.add_maker(discord_id=member.id, nickname=nickname)
         except IntegrityError:
             return await interaction.edit_original_response(
                 content="**Редактор с указанным никнеймом уже существует.**"
             )
 
-        maker = await methods.get_maker(member.id)
+        maker = await maker_methods.get_maker(member.id)
 
-        await methods.add_maker_action(
+        await action_methods.add_maker_action(
             maker_id=maker.id,
             made_by=interaction_author.id,
             action="addmaker",
@@ -92,7 +92,7 @@ class Main(commands.Cog):
     ):
         await interaction.response.defer()
 
-        interaction_author = await methods.get_maker(interaction.author.id)
+        interaction_author = await maker_methods.get_maker(interaction.author.id)
 
         if not interaction_author:
             return await interaction.edit_original_response(
@@ -109,7 +109,7 @@ class Main(commands.Cog):
                 content="**У вас недостаточно прав для выполнения данной команды.**"
             )
 
-        maker = await methods.get_maker(member.id)
+        maker = await maker_methods.get_maker(member.id)
 
         if not maker:
             return await interaction.edit_original_response(
@@ -129,12 +129,12 @@ class Main(commands.Cog):
         timestamp = datetime.datetime.now().isoformat()
 
         tasks = [
-            methods.update_maker(
+            maker_methods.update_maker(
                 discord_id=member.id,
                 column_name="account_status",
                 value=True
             ),
-            methods.update_maker(
+            maker_methods.update_maker(
                 discord_id=member.id,
                 column_name="appointment_datetime",
                 value=timestamp
@@ -143,7 +143,7 @@ class Main(commands.Cog):
 
         if not maker.nickname == nickname:
             try:
-                await methods.update_maker(
+                await maker_methods.update_maker(
                     discord_id=member.id,
                     column_name="nickname",
                     value=nickname
@@ -155,7 +155,7 @@ class Main(commands.Cog):
 
         if not maker.level == "1":
             tasks.append(
-                methods.update_maker(
+                maker_methods.update_maker(
                     discord_id=member.id,
                     column_name="level",
                     value="1"
@@ -164,7 +164,7 @@ class Main(commands.Cog):
 
         if not maker.status == "new":
             tasks.append(
-                methods.update_maker(
+                maker_methods.update_maker(
                     discord_id=member.id,
                     column_name="status",
                     value="new"
@@ -173,7 +173,7 @@ class Main(commands.Cog):
 
         if not maker.warns == 0:
             tasks.append(
-                methods.update_maker(
+                maker_methods.update_maker(
                     discord_id=member.id,
                     column_name="warns",
                     value=0
@@ -181,7 +181,7 @@ class Main(commands.Cog):
             )
 
         tasks.append(
-            methods.add_maker_action(
+            maker_methods.add_maker_action(
                 maker_id=maker.id,
                 made_by=interaction_author.id,
                 action="addmaker",
@@ -208,7 +208,7 @@ class Main(commands.Cog):
     ):
         await interaction.response.defer()
 
-        interaction_author = await methods.get_maker(interaction.author.id)
+        interaction_author = await maker_methods.get_maker(interaction.author.id)
 
         if not interaction_author:
             return await interaction.edit_original_response(
@@ -225,7 +225,7 @@ class Main(commands.Cog):
                 content="**У вас недостаточно прав для выполнения данной команды.**"
             )
 
-        maker = await methods.get_maker(member.id)
+        maker = await maker_methods.get_maker(member.id)
 
         if not maker:
             return await interaction.edit_original_response(
@@ -242,13 +242,13 @@ class Main(commands.Cog):
                 content="**Аккаунт редактора итак деактивирован.**"
             )
 
-        await methods.update_maker(
+        await maker_methods.update_maker(
             discord_id=member.id,
             column_name="account_status",
             value=False
         )
 
-        await methods.add_maker_action(
+        await action_methods.add_maker_action(
             maker_id=maker.id,
             made_by=interaction_author.id,
             action="deactivate",
@@ -268,7 +268,7 @@ class Main(commands.Cog):
     ):
         await interaction.response.defer()
 
-        interaction_author = await methods.get_maker(interaction.author.id)
+        interaction_author = await maker_methods.get_maker(interaction.author.id)
 
         if not interaction_author:
             return await interaction.edit_original_response(
@@ -282,7 +282,7 @@ class Main(commands.Cog):
         if not member:
             member = interaction.author
 
-        maker = await methods.get_maker(member.id)
+        maker = await maker_methods.get_maker(member.id)
 
         if not maker:
             return await interaction.edit_original_response(
@@ -305,7 +305,7 @@ class Main(commands.Cog):
     ):
         await interaction.response.defer()
 
-        interaction_author = await methods.get_maker(interaction.author.id)
+        interaction_author = await maker_methods.get_maker(interaction.author.id)
 
         if not interaction_author:
             return await interaction.edit_original_response(
@@ -327,7 +327,7 @@ class Main(commands.Cog):
                 content="**Изменений не произошло, вы указали двух одинаковых пользователей.**"
             )
 
-        maker = await methods.get_maker(member.id)
+        maker = await maker_methods.get_maker(member.id)
 
         if not maker:
             return await interaction.edit_original_response(
@@ -339,18 +339,18 @@ class Main(commands.Cog):
                 content="**У вас недостаточно прав чтобы сделать это.**"
             )
 
-        if await methods.is_maker_exists(new_member.id):
+        if await maker_methods.is_maker_exists(new_member.id):
             return await interaction.edit_original_response(
                 content="**Пользователь, которого вы указали, уже привязан к какому-то аккаунту.**"
             )
 
-        await methods.update_maker(
+        await maker_methods.update_maker(
             discord_id=member.id,
             column_name="discord_id",
             value=new_member.id
         )
 
-        await methods.add_maker_action(
+        await action_methods.add_maker_action(
             maker_id=maker.id,
             made_by=interaction_author.id,
             action="setdiscord",
@@ -371,7 +371,7 @@ class Main(commands.Cog):
     ):
         await interaction.response.defer()
 
-        interaction_author = await methods.get_maker(interaction.author.id)
+        interaction_author = await maker_methods.get_maker(interaction.author.id)
 
         if not interaction_author:
             return await interaction.edit_original_response(
@@ -388,7 +388,7 @@ class Main(commands.Cog):
                 content="**У вас недостаточно прав для выполнения данной команды.**"
             )
 
-        maker = await methods.get_maker(member.id)
+        maker = await maker_methods.get_maker(member.id)
 
         if not maker:
             return await interaction.edit_original_response(
@@ -405,13 +405,13 @@ class Main(commands.Cog):
                 content="**Изменений не произошло, никнейм, который вы указали, итак принадлежит редактору.**"
             )
 
-        await methods.update_maker(
+        await maker_methods.update_maker(
             discord_id=member.id,
             column_name="nickname",
             value=nickname
         )
 
-        await methods.add_maker_action(
+        await action_methods.add_maker_action(
             maker_id=maker.id,
             made_by=interaction_author.id,
             action="setnickname",
@@ -442,7 +442,7 @@ class Main(commands.Cog):
     ):
         await interaction.response.defer()
 
-        interaction_author = await methods.get_maker(interaction.author.id)
+        interaction_author = await maker_methods.get_maker(interaction.author.id)
 
         if not interaction_author:
             return await interaction.edit_original_response(
@@ -464,7 +464,7 @@ class Main(commands.Cog):
                 content="**Вы не можете установить редактору должность, которая равна или выше вашей.**"
             )
 
-        maker = await methods.get_maker(member.id)
+        maker = await maker_methods.get_maker(member.id)
 
         if not maker:
             return await interaction.edit_original_response(
@@ -481,13 +481,13 @@ class Main(commands.Cog):
                 content="**Изменений не произошло, должность, которую вы указали, итак принадлежит редактору.**"
             )
 
-        await methods.update_maker(
+        await maker_methods.update_maker(
             discord_id=member.id,
             column_name="level",
             value=level
         )
 
-        await methods.add_maker_action(
+        await action_methods.add_maker_action(
             maker_id=maker.id,
             made_by=interaction_author.id,
             action="setlevel",
@@ -518,7 +518,7 @@ class Main(commands.Cog):
     ):
         await interaction.response.defer()
 
-        interaction_author = await methods.get_maker(interaction.author.id)
+        interaction_author = await maker_methods.get_maker(interaction.author.id)
 
         if not interaction_author:
             return await interaction.edit_original_response(
@@ -535,7 +535,7 @@ class Main(commands.Cog):
                 content="**У вас недостаточно прав для выполнения данной команды.**"
             )
 
-        maker = await methods.get_maker(member.id)
+        maker = await maker_methods.get_maker(member.id)
 
         if not maker:
             return await interaction.edit_original_response(
@@ -552,13 +552,13 @@ class Main(commands.Cog):
                 content="**Изменений не произошло, статус, который вы указали, уже установлен редактору.**"
             )
 
-        await methods.update_maker(
+        await maker_methods.update_maker(
             discord_id=member.id,
             column_name="status",
             value=status
         )
 
-        await methods.add_maker_action(
+        await action_methods.add_maker_action(
             maker_id=maker.id,
             made_by=interaction_author.id,
             action="setstatus",
@@ -581,7 +581,7 @@ class Main(commands.Cog):
     ):
         await interaction.response.defer()
 
-        interaction_author = await methods.get_maker(interaction.author.id)
+        interaction_author = await maker_methods.get_maker(interaction.author.id)
 
         if not interaction_author:
             return await interaction.edit_original_response(
@@ -598,7 +598,7 @@ class Main(commands.Cog):
                 content="**У вас недостаточно прав для выполнения данной команды.**"
             )
 
-        maker = await methods.get_maker(member.id)
+        maker = await maker_methods.get_maker(member.id)
 
         if not maker:
             return await interaction.edit_original_response(
@@ -610,13 +610,13 @@ class Main(commands.Cog):
                 content="**У вас недостаточно прав чтобы сделать это.**"
             )
 
-        await methods.update_maker(
+        await maker_methods.update_maker(
             discord_id=member.id,
             column_name="warns",
             value=(maker.warns + 1)
         )
 
-        await methods.add_maker_action(
+        await action_methods.add_maker_action(
             maker_id=maker.id,
             made_by=interaction_author.id,
             action="warn",
@@ -637,7 +637,7 @@ class Main(commands.Cog):
     ):
         await interaction.response.defer()
 
-        interaction_author = await methods.get_maker(interaction.author.id)
+        interaction_author = await maker_methods.get_maker(interaction.author.id)
 
         if not interaction_author:
             return await interaction.edit_original_response(
@@ -654,7 +654,7 @@ class Main(commands.Cog):
                 content="**У вас недостаточно прав для выполнения данной команды.**"
             )
 
-        maker = await methods.get_maker(member.id)
+        maker = await maker_methods.get_maker(member.id)
 
         if not maker:
             return await interaction.edit_original_response(
@@ -671,13 +671,13 @@ class Main(commands.Cog):
                 content="**Вы не можете установить отрицательное кол-во выговоров редактору.**"
             )
 
-        await methods.update_maker(
+        await maker_methods.update_maker(
             discord_id=member.id,
             column_name="warns",
             value=(maker.warns - 1)
         )
 
-        await methods.add_maker_action(
+        await action_methods.add_maker_action(
             maker_id=maker.id,
             made_by=interaction_author.id,
             action="unwarn",
