@@ -2,7 +2,7 @@ import disnake
 from disnake.ext import commands
 
 from config import CHIEF_ROLE_ID, MAKER_ROLE_ID, MAKERS_CHAT_ID
-from utils.models.keyboards import ConfirmRoleAction
+from ext.models.keyboards import ConfirmRoleAction
 
 
 class Notifier(commands.Cog):
@@ -17,7 +17,7 @@ class Notifier(commands.Cog):
         makers_channel = after.guild.get_channel(MAKERS_CHAT_ID)
 
         async for entry in after.guild.audit_logs(
-            limit=1, action=disnake.AuditLogAction.member_role_update
+                limit=1, action=disnake.AuditLogAction.member_role_update
         ):
             if (not maker_role in before.roles) and (maker_role in after.roles):
                 if entry.user.bot:

@@ -2,7 +2,7 @@ import disnake
 from disnake.ext import commands
 
 from config import DEV_GUILDS
-from utils.models.keyboards import ConfirmReboot
+from ext.models.keyboards import ConfirmReboot
 
 
 class Server(commands.Cog):
