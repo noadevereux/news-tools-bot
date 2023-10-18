@@ -684,7 +684,7 @@ class Publications(commands.Cog):
             )
 
             return await interaction.edit_original_response(
-                content=f"**Вы изменили человека, который выплатил информацию за выпуск `#{pub_number}` на {member.mention} `{salary_payer.nickname}`.**"
+                content=f"**Вы изменили человека, который выплатил зарплату за выпуск `#{pub_number}` на {member.mention} `{salary_payer.nickname}`.**"
             )
         elif not member:
             if not publication.salary_payer_id:
@@ -706,7 +706,7 @@ class Publications(commands.Cog):
             )
 
             return await interaction.edit_original_response(
-                content=f"**Вы очистили человека, который выплатил информацию за выпуск `#{pub_number}`.**"
+                content=f"**Вы очистили человека, который выплатил зарплату за выпуск `#{pub_number}`.**"
             )
 
 
