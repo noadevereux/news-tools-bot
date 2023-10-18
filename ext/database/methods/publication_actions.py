@@ -3,7 +3,7 @@ from typing import Literal
 from sqlalchemy import select
 
 from ..database import SessionLocal
-from ..orm_models import PublicationAction
+from ..models import PublicationAction
 
 
 async def add_pub_action(

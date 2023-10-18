@@ -3,7 +3,7 @@ from typing import Literal
 from sqlalchemy import select
 
 from ..database import SessionLocal
-from ..orm_models import MakerAction
+from ..models import MakerAction
 
 
 async def add_maker_action(

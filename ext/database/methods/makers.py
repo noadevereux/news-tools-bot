@@ -3,7 +3,7 @@ from typing import Literal
 from sqlalchemy import select
 
 from ..database import SessionLocal
-from ..orm_models import Maker, Publication
+from ..models import Maker, Publication
 
 
 async def is_maker_exists(discord_id: int) -> bool:
