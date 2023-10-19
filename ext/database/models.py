@@ -108,7 +108,7 @@ class Guild(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     discord_id: Mapped[int] = mapped_column(BigInteger, unique=True)
     guild_name: Mapped[str] = mapped_column(String(255), unique=True)
-    roles_list: Mapped[list[int]] = mapped_column(JSON, default="[]")
+    roles_list: Mapped[list[int]] = mapped_column(JSON, default=[])
     is_notifies_enabled: Mapped[bool] = mapped_column(server_default="1")
     channel_id: Mapped[int] = mapped_column(BigInteger, nullable=True, server_default=None)
     is_admin_guild: Mapped[bool] = mapped_column(server_default="0")
