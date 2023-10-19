@@ -6,8 +6,8 @@ from ..database import SessionLocal
 from ..models import Guild
 
 
-async def add_guild(discord_id: int, guild_title: str) -> None:
-    guild = Guild(discord_id=discord_id, guild_title=guild_title)
+async def add_guild(discord_id: int, guild_name: str) -> None:
+    guild = Guild(discord_id=discord_id, guild_name=guild_name)
     async with SessionLocal() as session:
         session.add(guild)
         await session.commit()
