@@ -6,9 +6,9 @@ from ..database import SessionLocal
 from ..models import Maker, Publication
 
 
-async def is_maker_exists(discord_id: int) -> bool:
+async def is_maker_exists(guild_id: int, discord_id: int) -> bool:
     async with SessionLocal() as session:
-        maker = await session.execute(select(Maker).filter_by(discord_id=discord_id))
+        maker = await session.execute(select(Maker).filter_by(guild_id=guild_id, discord_id=discord_id))
     return maker.scalar() is not None
 
 
@@ -18,29 +18,23 @@ async def is_maker_exists_by_id(id: int) -> bool:
         return maker.scalar() is not None
 
 
-async def add_maker(discord_id: int, nickname: str) -> None:
-    new_maker = Maker(discord_id=discord_id, nickname=nickname)
+async def add_maker(guild_id: int, discord_id: int, nickname: str) -> None:
+    new_maker = Maker(guild_id=guild_id, discord_id=discord_id, nickname=nickname)
     async with SessionLocal() as session:
         session.add(new_maker)
         await session.commit()
 
 
-async def deactivate_maker(discord_id: int) -> None:
-    async with SessionLocal() as session:
-        maker = await session.execute(select(Maker).filter_by(discord_id=discord_id))
-        if maker:
-            maker = maker.scalar()
-            maker.account_status = False
-            await session.commit()
-
-
 async def update_maker(
+        guild_id: int,
         discord_id: int,
         column_name: Literal[
             "id",
+            "guild_id",
             "discord_id",
             "nickname",
             "level",
+            "post_name",
             "status",
             "warns",
             "appointment_datetime",
@@ -49,7 +43,7 @@ async def update_maker(
         value: str | int,
 ) -> None:
     async with SessionLocal() as session:
-        maker = await session.execute(select(Maker).filter_by(discord_id=discord_id))
+        maker = await session.execute(select(Maker).filter_by(guild_id=guild_id, discord_id=discord_id))
         if maker:
             maker = maker.scalar()
             setattr(maker, column_name, value)
@@ -60,9 +54,11 @@ async def update_maker_by_id(
         id: int,
         column_name: Literal[
             "id",
+            "guild_id",
             "discord_id",
             "nickname",
             "level",
+            "post_name",
             "status",
             "warns",
             "appointment_datetime",
@@ -78,15 +74,15 @@ async def update_maker_by_id(
             await session.commit()
 
 
-async def get_all_makers() -> list[Maker] | None:
+async def get_all_makers(guild_id: int) -> list[Maker] | None:
     async with SessionLocal() as session:
-        makers = await session.execute(select(Maker))
+        makers = await session.execute(select(Maker).filter_by(guild_id=guild_id))
         return makers.scalars().all()
 
 
-async def get_maker(discord_id: int) -> Maker | None:
+async def get_maker(guild_id: int, discord_id: int) -> Maker | None:
     async with SessionLocal() as session:
-        maker = await session.execute(select(Maker).filter_by(discord_id=discord_id))
+        maker = await session.execute(select(Maker).filter_by(guild_id=guild_id, discord_id=discord_id))
         return maker.scalar()
 
 
