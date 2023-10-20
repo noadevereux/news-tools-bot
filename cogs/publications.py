@@ -62,7 +62,7 @@ class Publications(commands.Cog):
         embed = await get_publication_profile(new_publication.publication_number)
 
         return await interaction.edit_original_response(
-            content=f"**Вы создали выпуск `#{new_publication.id}`.**",
+            content=f"**Вы создали выпуск `#{new_publication.publication_number}`.**",
             embed=embed
         )
 
