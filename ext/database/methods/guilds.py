@@ -53,7 +53,7 @@ async def update_guild(
             "is_admin_guild",
             "is_active"
         ],
-        value: str | int | bool | list
+        value
 ) -> None:
     async with SessionLocal() as session:
         guild = await session.execute(select(Guild).filter_by(discord_id=discord_id))
@@ -75,7 +75,7 @@ async def update_guild_by_id(
             "is_admin_guild",
             "is_active"
         ],
-        value: str | int | bool | list
+        value
 ) -> None:
     async with SessionLocal() as session:
         guild = await session.execute(select(Guild).filter_by(id=id))
