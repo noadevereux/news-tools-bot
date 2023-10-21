@@ -3,7 +3,7 @@ import disnake
 from disnake.colour import Colour
 from disnake import Embed, User
 
-from .database.methods import makers as maker_methods, publications as publication_methods
+from .database.methods import makers as maker_methods, publications as publication_methods, guilds as guild_methods
 
 
 async def get_level_title(levelnum: int) -> str:
@@ -131,6 +131,62 @@ async def get_publication_profile(publication_id: int) -> Embed:
 
     embed = disnake.Embed(
         title=f"Информация о выпуске `[#{publication.publication_number}]`",
+        description=embed_description,
+        color=0x2B2D31,
+    )
+    return embed
+
+
+async def get_guild_profile(discord_id: int):
+    guild = await guild_methods.get_guild(discord_id=discord_id)
+
+    roles = ""
+    roles_amount = len(guild.roles_list)
+    iteration = 1
+    for role in guild.roles_list:
+        if iteration < roles_amount:
+            roles += f"`{role}`, "
+        else:
+            roles += f"`{role}`."
+        iteration += 1
+    if roles == "":
+        roles = "`нет`"
+
+    if guild.channel_id:
+        channel_id = f"<#{guild.channel_id}> (`{guild.channel_id}`)"
+    else:
+        channel_id = "`нет`"
+
+    if guild.is_notifies_enabled:
+        is_notifies_enabled = "включены"
+    else:
+        is_notifies_enabled = "отключены"
+
+    if guild.is_admin_guild:
+        admin_guild = "да"
+    else:
+        admin_guild = "нет"
+
+    if guild.is_active:
+        active = "активен"
+    else:
+        active = "деактивирован"
+
+    embed_description = f"""\
+**ID сервера: `{guild.id}`**
+**Discord ID сервера: `{guild.discord_id}`**
+**Имя сервера: `{guild.guild_name}`**
+
+**ID подключённых ролей: {roles}**
+**Подключённый канал: {channel_id}**
+
+**Статус уведомлений: `{is_notifies_enabled}`**
+**Административный доступ: `{admin_guild}`**
+**Статус сервера: `{active}`**
+    """
+
+    embed = disnake.Embed(
+        title=f"Информация о сервере `{guild.guild_name}`",
         description=embed_description,
         color=0x2B2D31,
     )
