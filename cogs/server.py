@@ -4,6 +4,8 @@ from disnake.ext import commands
 from config import DEV_GUILDS
 from ext.models.keyboards import ConfirmReboot
 
+from ext.models.checks import is_guild_admin
+
 
 class Server(commands.Cog):
     def __init__(self, bot: commands.InteractionBot):
@@ -12,6 +14,7 @@ class Server(commands.Cog):
 
     @commands.slash_command(name="server", description="[DEV] Управление сервером", guild_ids=DEV_GUILDS)
     @commands.is_owner()
+    @is_guild_admin()
     async def server(self, interaction: disnake.ApplicationCommandInteraction):
         pass
 
