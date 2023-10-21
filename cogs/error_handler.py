@@ -55,7 +55,7 @@ class ErrorHandler(commands.Cog):
         else:
             if not has_been_responded:
                 await interaction.response.defer(ephemeral=True)
-            await interaction.edit_original_response(
+            return await interaction.edit_original_response(
                 embed=embed
             )
 
