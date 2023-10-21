@@ -1,6 +1,7 @@
 import disnake
 from disnake.ext import commands
 from ext.logger import Logger
+from datetime import datetime
 
 
 class ErrorHandler(commands.Cog):
@@ -15,14 +16,43 @@ class ErrorHandler(commands.Cog):
             interaction: disnake.ApplicationCommandInteraction,
             error: commands.CommandError
     ):
+        error_uid = await self.log.error(f"{error}")
+
+        embed = disnake.Embed(
+            title="Произошла ошибка",
+            description=f"""\
+**Во время выполнения команды `/{interaction.application_command.qualified_name}` произошла непредвиденная ошибка.**
+
+**Уникальный идентификатор ошибки:**
+```
+{error_uid}
+```
+
+**Сообщите разработчикам об ошибке приложив её уникальный идентификатор, чтобы они смогли решить её.**
+
+**Приносим свои извинения за доставленные неудобства.**
+""",
+            timestamp=datetime.now(),
+            colour=disnake.Colour.red()
+        )
+
+        embed.set_author(name=error_uid, icon_url=(interaction.guild.icon.url if not None else None))
+
         if isinstance(error, commands.errors.GuildNotFound):
-            print(1)
-            return await interaction.send(
-                content="**Сервер с указанным ID не найден. Возможно бот не добавлен на этот сервер или его не существует.**",
-                ephemeral=True
+            await interaction.response.defer(ephemeral=True)
+            return await interaction.edit_original_response(
+                content="**Сервер с указанным ID не найден. Возможно бот не добавлен на этот сервер или его не существует.**"
+            )
+        elif isinstance(error, commands.NotOwner):
+            await interaction.response.defer(ephemeral=True)
+            return await interaction.edit_original_response(
+                content="**Эта команда доступна только разработчикам.**"
             )
         else:
-            await self.log.error(f"{error}")
+            await interaction.response.defer(ephemeral=True)
+            await interaction.edit_original_response(
+                embed=embed
+            )
 
 
 def setup(bot: commands.InteractionBot):
