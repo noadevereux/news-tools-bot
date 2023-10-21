@@ -19,6 +19,8 @@ class ErrorHandler(commands.Cog):
         error_uid = await self.log.error(f"{error}")
 
         has_been_responded = interaction.response.is_done()
+        if not has_been_responded:
+            await interaction.response.defer(ephemeral=True)
 
         embed = disnake.Embed(
             title="Произошла ошибка",
@@ -29,7 +31,6 @@ class ErrorHandler(commands.Cog):
 ```
 {error_uid}
 ```
-
 **Сообщите разработчикам об ошибке приложив её уникальный идентификатор, чтобы они смогли решить её.**
 
 **Приносим свои извинения за доставленные неудобства.**
@@ -41,20 +42,18 @@ class ErrorHandler(commands.Cog):
         embed.set_author(name=error_uid, icon_url=(interaction.guild.icon.url if not None else None))
 
         if isinstance(error, commands.errors.GuildNotFound):
-            if not has_been_responded:
-                await interaction.response.defer(ephemeral=True)
             return await interaction.edit_original_response(
-                content="**Сервер с указанным ID не найден. Возможно бот не добавлен на этот сервер или его не существует.**"
+                content=f"**Сервер с ID `{error.argument}` не найден. Возможно бот не добавлен на этот сервер или его не существует.**"
             )
         elif isinstance(error, commands.NotOwner):
-            if not has_been_responded:
-                await interaction.response.defer(ephemeral=True)
             return await interaction.edit_original_response(
                 content="**Эта команда доступна только разработчикам.**"
             )
+        elif isinstance(error, commands.LargeIntConversionFailure):
+            return await interaction.edit_original_response(
+                content=f"**Один из параметров принимает только числовые значения, но получено `{error.argument}`.**"
+            )
         else:
-            if not has_been_responded:
-                await interaction.response.defer(ephemeral=True)
             return await interaction.edit_original_response(
                 embed=embed
             )
