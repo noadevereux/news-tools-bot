@@ -18,6 +18,8 @@ class ErrorHandler(commands.Cog):
     ):
         error_uid = await self.log.error(f"{error}")
 
+        has_been_responded = interaction.response.is_done()
+
         embed = disnake.Embed(
             title="Произошла ошибка",
             description=f"""\
@@ -39,17 +41,20 @@ class ErrorHandler(commands.Cog):
         embed.set_author(name=error_uid, icon_url=(interaction.guild.icon.url if not None else None))
 
         if isinstance(error, commands.errors.GuildNotFound):
-            await interaction.response.defer(ephemeral=True)
+            if not has_been_responded:
+                await interaction.response.defer(ephemeral=True)
             return await interaction.edit_original_response(
                 content="**Сервер с указанным ID не найден. Возможно бот не добавлен на этот сервер или его не существует.**"
             )
         elif isinstance(error, commands.NotOwner):
-            await interaction.response.defer(ephemeral=True)
+            if not has_been_responded:
+                await interaction.response.defer(ephemeral=True)
             return await interaction.edit_original_response(
                 content="**Эта команда доступна только разработчикам.**"
             )
         else:
-            await interaction.response.defer(ephemeral=True)
+            if not has_been_responded:
+                await interaction.response.defer(ephemeral=True)
             await interaction.edit_original_response(
                 embed=embed
             )
