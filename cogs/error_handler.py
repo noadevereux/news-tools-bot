@@ -3,6 +3,8 @@ from disnake.ext import commands
 from ext.logger import Logger
 from datetime import datetime
 
+from ext.models.errors import GuildNotExists, CommandCalledInDM
+
 
 class ErrorHandler(commands.Cog):
     def __init__(self, bot: commands.InteractionBot):
@@ -39,7 +41,10 @@ class ErrorHandler(commands.Cog):
             colour=disnake.Colour.red()
         )
 
-        embed.set_author(name=error_uid, icon_url=(interaction.guild.icon.url if not None else None))
+        if interaction.guild and interaction.guild.icon:
+            embed.set_author(name=error_uid, icon_url=interaction.guild.icon.url)
+        else:
+            embed.set_author(name=error_uid)
 
         if isinstance(error, commands.errors.GuildNotFound):
             return await interaction.edit_original_response(
@@ -52,6 +57,14 @@ class ErrorHandler(commands.Cog):
         elif isinstance(error, commands.LargeIntConversionFailure):
             return await interaction.edit_original_response(
                 content=f"**Один из параметров принимает только числовые значения, но получено `{error.argument}`.**"
+            )
+        elif isinstance(error, GuildNotExists):
+            return await interaction.edit_original_response(
+                content="**Этот сервер не зарегистрирован. Использовать команды на нем невомзожно.**"
+            )
+        elif isinstance(error, CommandCalledInDM):
+            return await interaction.edit_original_response(
+                content="**Эту команду нельзя использовать в личных сообщениях.**"
             )
         else:
             return await interaction.edit_original_response(
