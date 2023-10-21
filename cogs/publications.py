@@ -8,6 +8,8 @@ from ext.database.methods import makers as maker_methods, publications as public
 from ext.logger import Logger
 from ext.tools import validate_date, get_publication_profile, get_status_title
 
+from ext.models.checks import is_guild_exists
+
 
 class Publications(commands.Cog):
     def __init__(self, bot: commands.Bot) -> None:
@@ -16,6 +18,7 @@ class Publications(commands.Cog):
         self.log = Logger("cogs.publications.py.log")
 
     @commands.slash_command(name="pubsetting", description="Настройка выпусков")
+    @is_guild_exists()
     async def pubsetting(self, interaction: disnake.ApplicationCommandInteraction):
         pass
 
@@ -112,6 +115,7 @@ class Publications(commands.Cog):
         )
 
     @commands.slash_command(name="publication", description="Действия с выпусками")
+    @is_guild_exists()
     async def publication(
             self,
             interaction: disnake.ApplicationCommandInteraction

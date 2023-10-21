@@ -9,6 +9,8 @@ from ext.database.methods import makers as maker_methods, maker_actions as actio
 from ext.logger import Logger
 from ext.tools import *
 
+from ext.models.checks import is_guild_exists
+
 
 class Main(commands.Cog):
     def __init__(self, bot: commands.Bot) -> None:
@@ -17,6 +19,7 @@ class Main(commands.Cog):
         self.log = Logger("cogs.makers.py.log")
 
     @commands.slash_command(name="maker", description="Управление редактором")
+    @is_guild_exists()
     async def maker(self, interaction: disnake.ApplicationCommandInteraction):
         pass
 
@@ -260,6 +263,7 @@ class Main(commands.Cog):
         )
 
     @commands.slash_command(name="profile", description="Посмотреть профиль редактора")
+    @is_guild_exists()
     async def maker_profile(
             self,
             interaction: disnake.ApplicationCommandInteraction,

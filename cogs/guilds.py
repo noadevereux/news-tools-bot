@@ -5,7 +5,7 @@ from config import DEV_GUILDS
 from sqlalchemy.exc import IntegrityError
 from ext.tools import get_guild_profile
 
-from ext.models.checks import is_guild_exists
+from ext.models.checks import is_guild_admin
 
 
 class Guilds(commands.Cog):
@@ -15,7 +15,7 @@ class Guilds(commands.Cog):
 
     @commands.slash_command(name="guild_setting", description="[DEV] Настройка сервера", guild_ids=DEV_GUILDS)
     @commands.is_owner()
-    @is_guild_exists()
+    @is_guild_admin()
     async def guild(
             self,
             interaction: disnake.ApplicationCommandInteraction
