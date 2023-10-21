@@ -71,6 +71,7 @@ class Maker(Base):
     )
     warns: Mapped[int] = mapped_column(server_default="0")
     appointment_datetime: Mapped[datetime] = mapped_column(TIMESTAMP(timezone=True), server_default=func.now())
+    is_admin: Mapped[bool] = mapped_column(server_default="0")
     account_status: Mapped[bool] = mapped_column(server_default="1")
 
     guild_id_rel = relationship(
