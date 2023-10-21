@@ -6,7 +6,7 @@ from disnake.ext import commands
 from ext.database.methods import makers as maker_methods, publications as publication_methods, \
     publication_actions as action_methods
 from ext.logger import Logger
-from ext.utilities import date_validator, get_publication_profile, get_status_title
+from ext.tools import date_validator, get_publication_profile, get_status_title
 
 
 class Publications(commands.Cog):

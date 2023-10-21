@@ -7,7 +7,7 @@ from sqlalchemy.exc import IntegrityError
 
 from ext.database.methods import makers as maker_methods, maker_actions as action_methods
 from ext.logger import Logger
-from ext.utilities import *
+from ext.tools import *
 
 
 class Main(commands.Cog):
