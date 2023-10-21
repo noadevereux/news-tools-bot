@@ -193,7 +193,7 @@ async def get_guild_profile(discord_id: int):
     return embed
 
 
-async def date_validator(date_string: str):
+async def validate_date(date_string: str):
     date_pattern = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 
     if date_pattern.match(date_string):
