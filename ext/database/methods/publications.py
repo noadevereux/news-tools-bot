@@ -45,7 +45,7 @@ async def delete_publication(guild_id: int, publication_id: int) -> None:
             select(Publication).filter_by(guild_id=guild_id, publication_number=publication_id))
         if publication:
             publication = publication.scalar()
-            session.delete(publication)
+            await session.delete(publication)
             await session.commit()
 
 
