@@ -27,7 +27,7 @@ class API(commands.Cog):
     ):
         await interaction.response.defer(ephemeral=True)
 
-        token = sign_jwt(username)
+        token = await sign_jwt(username)
 
         return await interaction.edit_original_response(
             content=f"**JWT для пользователя {username}**\n**||```{token}```||**\n*Храните токен в безопасном месте, никому его не передавайте.*\n*Токен подлежит замене через 30 дней.*"
