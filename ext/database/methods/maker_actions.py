@@ -15,6 +15,7 @@ async def add_maker_action(
             "setnickname",
             "setdiscord",
             "setlevel",
+            "setpost",
             "setstatus",
             "warn",
             "unwarn",

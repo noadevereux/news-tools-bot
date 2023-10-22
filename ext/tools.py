@@ -6,23 +6,6 @@ from disnake import Embed, User
 from .database.methods import makers as maker_methods, publications as publication_methods, guilds as guild_methods
 
 
-async def get_level_title(levelnum: int) -> str:
-    levelnum = int(levelnum)
-    if levelnum == 1:
-        level = "Редактор"
-    elif levelnum == 2:
-        level = "Заместитель главного редактора"
-    elif levelnum == 3:
-        level = "Главный редактор"
-    elif levelnum == 4:
-        level = "Куратор"
-    elif levelnum == -1:
-        level = "Хранитель"
-    else:
-        level = "`Ошибка`"
-    return level
-
-
 async def get_status_title(status_kw: str) -> str:
     if status_kw == "new":
         status = "На испытательном сроке"
@@ -46,10 +29,11 @@ async def get_color_object(color_hex: str) -> Colour:
     return color
 
 
-async def get_maker_profile(user: User) -> Embed:
-    maker = await maker_methods.get_maker(discord_id=user.id)
+async def get_maker_profile(guild_id: int, user: User) -> Embed:
+    maker = await maker_methods.get_maker(guild_id=guild_id, discord_id=user.id)
 
-    level = await get_level_title(maker.level)
+    level = int(maker.level)
+    post = maker.post_name
     status = await get_status_title(maker.status)
     publications_amount = await maker_methods.get_publications_by_maker(id=maker.id)
     if not publications_amount:
@@ -61,12 +45,16 @@ async def get_maker_profile(user: User) -> Embed:
     **ID аккаунта: `{maker.id}`**
     **Discord: <@{maker.discord_id}>**
     **Никнейм: {maker.nickname}**
-    **Должность: {level}**
+    **Уровень доступа: {level}**
+    **Должность: {post}**
     **Статус: {status}**
 
     **Сделано выпусков: {publications_amount}**
     **Предупреждения: {maker.warns}**
     """
+
+    if maker.is_admin:
+        embed_description += "\n**🛡️ Пользователь обладает административным доступом.**"
 
     embed = Embed(
         title=f"Профиль редактора {user.display_name}",
@@ -84,8 +72,8 @@ async def get_maker_profile(user: User) -> Embed:
     return embed
 
 
-async def get_publication_profile(publication_id: int) -> Embed:
-    publication = await publication_methods.get_publication(publication_id=publication_id)
+async def get_publication_profile(guild_id: int, publication_id: int) -> Embed:
+    publication = await publication_methods.get_publication(guild_id=guild_id, publication_id=publication_id)
     maker = await maker_methods.get_maker_by_id(id=publication.maker_id)
     if not maker:
         maker = "`не указан`"
