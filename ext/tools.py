@@ -3,24 +3,7 @@ import disnake
 from disnake.colour import Colour
 from disnake import Embed, User
 
-from .database import methods
-
-
-async def get_level_title(levelnum: int) -> str:
-    levelnum = int(levelnum)
-    if levelnum == 1:
-        level = "Редактор"
-    elif levelnum == 2:
-        level = "Заместитель главного редактора"
-    elif levelnum == 3:
-        level = "Главный редактор"
-    elif levelnum == 4:
-        level = "Куратор"
-    elif levelnum == -1:
-        level = "Хранитель"
-    else:
-        level = "`Ошибка`"
-    return level
+from .database.methods import makers as maker_methods, publications as publication_methods, guilds as guild_methods
 
 
 async def get_status_title(status_kw: str) -> str:
@@ -46,12 +29,13 @@ async def get_color_object(color_hex: str) -> Colour:
     return color
 
 
-async def get_maker_profile(user: User) -> Embed:
-    maker = await methods.get_maker(discord_id=user.id)
+async def get_maker_profile(guild_id: int, user: User) -> Embed:
+    maker = await maker_methods.get_maker(guild_id=guild_id, discord_id=user.id)
 
-    level = await get_level_title(maker.level)
+    level = int(maker.level)
+    post = maker.post_name
     status = await get_status_title(maker.status)
-    publications_amount = await methods.get_publications_by_maker(id=maker.id)
+    publications_amount = await maker_methods.get_publications_by_maker(id=maker.id)
     if not publications_amount:
         publications_amount = 0
     else:
@@ -61,12 +45,16 @@ async def get_maker_profile(user: User) -> Embed:
     **ID аккаунта: `{maker.id}`**
     **Discord: <@{maker.discord_id}>**
     **Никнейм: {maker.nickname}**
-    **Должность: {level}**
+    **Уровень доступа: {level}**
+    **Должность: {post}**
     **Статус: {status}**
 
     **Сделано выпусков: {publications_amount}**
     **Предупреждения: {maker.warns}**
     """
+
+    if maker.is_admin:
+        embed_description += "\n**🛡️ Пользователь обладает административным доступом.**"
 
     embed = Embed(
         title=f"Профиль редактора {user.display_name}",
@@ -84,15 +72,15 @@ async def get_maker_profile(user: User) -> Embed:
     return embed
 
 
-async def get_publication_profile(publication_id: int) -> Embed:
-    publication = await methods.get_publication(publication_id=publication_id)
-    maker = await methods.get_maker_by_id(id=publication.maker_id)
+async def get_publication_profile(guild_id: int, publication_id: int) -> Embed:
+    publication = await publication_methods.get_publication(guild_id=guild_id, publication_id=publication_id)
+    maker = await maker_methods.get_maker_by_id(id=publication.maker_id)
     if not maker:
         maker = "`не указан`"
     else:
         maker = f"<@{maker.discord_id}> `{maker.nickname}`"
 
-    information_creator = await methods.get_maker_by_id(id=publication.information_creator_id)
+    information_creator = await maker_methods.get_maker_by_id(id=publication.information_creator_id)
     if not information_creator:
         information_creator = "`не указан`"
     else:
@@ -100,7 +88,7 @@ async def get_publication_profile(publication_id: int) -> Embed:
             f"<@{information_creator.discord_id}> `{information_creator.nickname}`"
         )
 
-    dp_paid_by = await methods.get_maker_by_id(id=publication.salary_payer_id)
+    dp_paid_by = await maker_methods.get_maker_by_id(id=publication.salary_payer_id)
     if not dp_paid_by:
         dp_paid_by = "`не выплачено`"
     else:
@@ -137,7 +125,63 @@ async def get_publication_profile(publication_id: int) -> Embed:
     return embed
 
 
-async def date_validator(date_string: str):
+async def get_guild_profile(discord_id: int):
+    guild = await guild_methods.get_guild(discord_id=discord_id)
+
+    roles = ""
+    roles_amount = len(guild.roles_list)
+    iteration = 1
+    for role in guild.roles_list:
+        if iteration < roles_amount:
+            roles += f"`{role}`, "
+        else:
+            roles += f"`{role}`."
+        iteration += 1
+    if roles == "":
+        roles = "`нет`"
+
+    if guild.channel_id:
+        channel_id = f"<#{guild.channel_id}> (`{guild.channel_id}`)"
+    else:
+        channel_id = "`нет`"
+
+    if guild.is_notifies_enabled:
+        is_notifies_enabled = "включены"
+    else:
+        is_notifies_enabled = "отключены"
+
+    if guild.is_admin_guild:
+        admin_guild = "да"
+    else:
+        admin_guild = "нет"
+
+    if guild.is_active:
+        active = "активен"
+    else:
+        active = "деактивирован"
+
+    embed_description = f"""\
+**ID сервера: `{guild.id}`**
+**Discord ID сервера: `{guild.discord_id}`**
+**Имя сервера: `{guild.guild_name}`**
+
+**ID подключённых ролей: {roles}**
+**Подключённый канал: {channel_id}**
+
+**Статус уведомлений: `{is_notifies_enabled}`**
+**Административный доступ: `{admin_guild}`**
+**Статус сервера: `{active}`**
+    """
+
+    embed = disnake.Embed(
+        title=f"Информация о сервере `{guild.guild_name}`",
+        description=embed_description,
+        color=0x2B2D31,
+    )
+    return embed
+
+
+async def validate_date(date_string: str):
     date_pattern = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 
     if date_pattern.match(date_string):

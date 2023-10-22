@@ -5,9 +5,15 @@ import disnake
 from disnake.ext import commands
 from sqlalchemy.exc import IntegrityError
 
-from utils.database import methods
-from utils.logger import Logger
-from utils.utilities import *
+from ext.database.methods import guilds as guild_methods
+from ext.database.methods import makers as maker_methods
+from ext.database.methods import maker_actions as action_methods
+from ext.logger import Logger
+from ext.tools import *
+
+from ext.models.checks import is_guild_exists
+
+from config import DEFAULT_POST_TITLES
 
 
 class Main(commands.Cog):
@@ -17,6 +23,7 @@ class Main(commands.Cog):
         self.log = Logger("cogs.makers.py.log")
 
     @commands.slash_command(name="maker", description="Управление редактором")
+    @is_guild_exists()
     async def maker(self, interaction: disnake.ApplicationCommandInteraction):
         pass
 
@@ -30,7 +37,12 @@ class Main(commands.Cog):
     ):
         await interaction.response.defer()
 
-        interaction_author = await methods.get_maker(interaction.author.id)
+        guild = await guild_methods.get_guild(discord_id=interaction.guild.id)
+
+        interaction_author = await maker_methods.get_maker(
+            guild_id=guild.id,
+            discord_id=interaction.author.id
+        )
 
         if not interaction_author:
             return await interaction.edit_original_response(
@@ -47,7 +59,10 @@ class Main(commands.Cog):
                 content="**У вас недостаточно прав для выполнения данной команды.**"
             )
 
-        maker = await methods.get_maker(member.id)
+        maker = await maker_methods.get_maker(
+            guild_id=guild.id,
+            discord_id=member.id
+        )
 
         if maker and (not maker.account_status):
             return await interaction.edit_original_response(
@@ -59,23 +74,20 @@ class Main(commands.Cog):
                 content="**Редактор уже зарегистрирован в системе и его аккаунт активен.**"
             )
 
-        try:
-            await methods.add_maker(discord_id=member.id, nickname=nickname)
-        except IntegrityError:
-            return await interaction.edit_original_response(
-                content="**Редактор с указанным никнеймом уже существует.**"
-            )
+        maker = await maker_methods.add_maker(
+            guild_id=guild.id,
+            discord_id=member.id,
+            nickname=nickname
+        )
 
-        maker = await methods.get_maker(member.id)
-
-        await methods.add_maker_action(
+        await action_methods.add_maker_action(
             maker_id=maker.id,
             made_by=interaction_author.id,
             action="addmaker",
             meta=nickname,
         )
 
-        embed = await get_maker_profile(member)
+        embed = await get_maker_profile(guild_id=guild.id, user=member)
 
         return await interaction.edit_original_response(
             content=f"**Вы зарегистрировали редактора {member.mention} `{nickname}` в системе.**",
@@ -92,7 +104,12 @@ class Main(commands.Cog):
     ):
         await interaction.response.defer()
 
-        interaction_author = await methods.get_maker(interaction.author.id)
+        guild = await guild_methods.get_guild(discord_id=interaction.guild.id)
+
+        interaction_author = await maker_methods.get_maker(
+            guild_id=guild.id,
+            discord_id=interaction.author.id
+        )
 
         if not interaction_author:
             return await interaction.edit_original_response(
@@ -109,14 +126,17 @@ class Main(commands.Cog):
                 content="**У вас недостаточно прав для выполнения данной команды.**"
             )
 
-        maker = await methods.get_maker(member.id)
+        maker = await maker_methods.get_maker(
+            guild_id=guild.id,
+            discord_id=member.id
+        )
 
         if not maker:
             return await interaction.edit_original_response(
                 content="**Редактор не зарегистрирован в системе. Используйте `/maker register` чтобы зарегистрировать редактора.**"
             )
 
-        elif int(interaction_author.level) <= int(maker.level) and (not int(interaction_author.level) >= 3):
+        elif int(interaction_author.level) <= int(maker.level) and not interaction_author.is_admin:
             return await interaction.edit_original_response(
                 content="**У вас недостаточно прав чтобы сделать это.**"
             )
@@ -129,12 +149,14 @@ class Main(commands.Cog):
         timestamp = datetime.datetime.now().isoformat()
 
         tasks = [
-            methods.update_maker(
+            maker_methods.update_maker(
+                guild_id=guild.id,
                 discord_id=member.id,
                 column_name="account_status",
                 value=True
             ),
-            methods.update_maker(
+            maker_methods.update_maker(
+                guild_id=guild.id,
                 discord_id=member.id,
                 column_name="appointment_datetime",
                 value=timestamp
@@ -142,38 +164,47 @@ class Main(commands.Cog):
         ]
 
         if not maker.nickname == nickname:
-            try:
-                await methods.update_maker(
-                    discord_id=member.id,
-                    column_name="nickname",
-                    value=nickname
-                )
-            except IntegrityError:
-                return await interaction.edit_original_response(
-                    content="**Указанный никнейм занят, выберите другой.**"
-                )
+            await maker_methods.update_maker(
+                guild_id=guild.id,
+                discord_id=member.id,
+                column_name="nickname",
+                value=nickname
+            )
 
         if not maker.level == "1":
             tasks.append(
-                methods.update_maker(
+                maker_methods.update_maker(
+                    guild_id=guild.id,
                     discord_id=member.id,
                     column_name="level",
                     value="1"
                 )
             )
 
-        if not maker.status == "new":
+        if not maker.post_name == DEFAULT_POST_TITLES.get(1):
             tasks.append(
-                methods.update_maker(
+                maker_methods.update_maker(
+                    guild_id=guild.id,
+                    discord_id=member.id,
+                    column_name="post_name",
+                    value=DEFAULT_POST_TITLES.get(1)
+                )
+            )
+
+        if not maker.status == "active":
+            tasks.append(
+                maker_methods.update_maker(
+                    guild_id=guild.id,
                     discord_id=member.id,
                     column_name="status",
-                    value="new"
+                    value="active"
                 )
             )
 
         if not maker.warns == 0:
             tasks.append(
-                methods.update_maker(
+                maker_methods.update_maker(
+                    guild_id=guild.id,
                     discord_id=member.id,
                     column_name="warns",
                     value=0
@@ -181,7 +212,7 @@ class Main(commands.Cog):
             )
 
         tasks.append(
-            methods.add_maker_action(
+            action_methods.add_maker_action(
                 maker_id=maker.id,
                 made_by=interaction_author.id,
                 action="addmaker",
@@ -191,7 +222,7 @@ class Main(commands.Cog):
 
         await asyncio.gather(*tasks)
 
-        embed = await get_maker_profile(member)
+        embed = await get_maker_profile(guild_id=guild.id, user=member)
 
         return await interaction.edit_original_response(
             content=f"**Вы активировали аккаунт редактора {member.mention} `{nickname}`.**",
@@ -208,7 +239,12 @@ class Main(commands.Cog):
     ):
         await interaction.response.defer()
 
-        interaction_author = await methods.get_maker(interaction.author.id)
+        guild = await guild_methods.get_guild(discord_id=interaction.guild.id)
+
+        interaction_author = await maker_methods.get_maker(
+            guild_id=guild.id,
+            discord_id=interaction.author.id
+        )
 
         if not interaction_author:
             return await interaction.edit_original_response(
@@ -225,14 +261,17 @@ class Main(commands.Cog):
                 content="**У вас недостаточно прав для выполнения данной команды.**"
             )
 
-        maker = await methods.get_maker(member.id)
+        maker = await maker_methods.get_maker(
+            guild_id=guild.id,
+            discord_id=member.id
+        )
 
         if not maker:
             return await interaction.edit_original_response(
                 content="**Редактор не зарегистрирован в системе.**"
             )
 
-        elif int(interaction_author.level) <= int(maker.level) and (not int(interaction_author.level) >= 3):
+        elif int(interaction_author.level) <= int(maker.level) and not interaction_author.is_admin:
             return await interaction.edit_original_response(
                 content="**У вас недостаточно прав чтобы сделать это.**"
             )
@@ -242,13 +281,24 @@ class Main(commands.Cog):
                 content="**Аккаунт редактора итак деактивирован.**"
             )
 
-        await methods.update_maker(
-            discord_id=member.id,
-            column_name="account_status",
-            value=False
-        )
+        tasks = [
+            maker_methods.update_maker(
+                guild_id=guild.id,
+                discord_id=member.id,
+                column_name="account_status",
+                value=False
+            ),
+            maker_methods.update_maker(
+                guild_id=guild.id,
+                discord_id=member.id,
+                column_name="level",
+                value="0"
+            )
+        ]
 
-        await methods.add_maker_action(
+        await asyncio.gather(*tasks)
+
+        await action_methods.add_maker_action(
             maker_id=maker.id,
             made_by=interaction_author.id,
             action="deactivate",
@@ -260,6 +310,7 @@ class Main(commands.Cog):
         )
 
     @commands.slash_command(name="profile", description="Посмотреть профиль редактора")
+    @is_guild_exists()
     async def maker_profile(
             self,
             interaction: disnake.ApplicationCommandInteraction,
@@ -268,7 +319,12 @@ class Main(commands.Cog):
     ):
         await interaction.response.defer()
 
-        interaction_author = await methods.get_maker(interaction.author.id)
+        guild = await guild_methods.get_guild(discord_id=interaction.guild.id)
+
+        interaction_author = await maker_methods.get_maker(
+            guild_id=guild.id,
+            discord_id=interaction.author.id
+        )
 
         if not interaction_author:
             return await interaction.edit_original_response(
@@ -282,14 +338,17 @@ class Main(commands.Cog):
         if not member:
             member = interaction.author
 
-        maker = await methods.get_maker(member.id)
+        maker = await maker_methods.get_maker(
+            guild_id=guild.id,
+            discord_id=member.id
+        )
 
         if not maker:
             return await interaction.edit_original_response(
                 content="**Пользователь, которого вы указали, не зарегистрирован в системе.**"
             )
 
-        embed = await get_maker_profile(member)
+        embed = await get_maker_profile(guild_id=guild.id, user=member)
 
         return await interaction.edit_original_response(
             embed=embed
@@ -305,7 +364,12 @@ class Main(commands.Cog):
     ):
         await interaction.response.defer()
 
-        interaction_author = await methods.get_maker(interaction.author.id)
+        guild = await guild_methods.get_guild(discord_id=interaction.guild.id)
+
+        interaction_author = await maker_methods.get_maker(
+            guild_id=guild.id,
+            discord_id=interaction.author.id
+        )
 
         if not interaction_author:
             return await interaction.edit_original_response(
@@ -327,30 +391,34 @@ class Main(commands.Cog):
                 content="**Изменений не произошло, вы указали двух одинаковых пользователей.**"
             )
 
-        maker = await methods.get_maker(member.id)
+        maker = await maker_methods.get_maker(
+            guild_id=guild.id,
+            discord_id=member.id
+        )
 
         if not maker:
             return await interaction.edit_original_response(
                 content="**Редактор не зарегистрирован в системе.**"
             )
 
-        elif int(interaction_author.level) <= int(maker.level) and (not int(interaction_author.level) >= 3):
+        elif int(interaction_author.level) <= int(maker.level) and not interaction_author.is_admin:
             return await interaction.edit_original_response(
                 content="**У вас недостаточно прав чтобы сделать это.**"
             )
 
-        if await methods.is_maker_exists(new_member.id):
+        if await maker_methods.is_maker_exists(guild_id=guild.id, discord_id=new_member.id):
             return await interaction.edit_original_response(
                 content="**Пользователь, которого вы указали, уже привязан к какому-то аккаунту.**"
             )
 
-        await methods.update_maker(
+        await maker_methods.update_maker(
+            guild_id=guild.id,
             discord_id=member.id,
             column_name="discord_id",
             value=new_member.id
         )
 
-        await methods.add_maker_action(
+        await action_methods.add_maker_action(
             maker_id=maker.id,
             made_by=interaction_author.id,
             action="setdiscord",
@@ -371,7 +439,12 @@ class Main(commands.Cog):
     ):
         await interaction.response.defer()
 
-        interaction_author = await methods.get_maker(interaction.author.id)
+        guild = await guild_methods.get_guild(discord_id=interaction.guild.id)
+
+        interaction_author = await maker_methods.get_maker(
+            guild_id=guild.id,
+            discord_id=interaction.author.id
+        )
 
         if not interaction_author:
             return await interaction.edit_original_response(
@@ -388,14 +461,17 @@ class Main(commands.Cog):
                 content="**У вас недостаточно прав для выполнения данной команды.**"
             )
 
-        maker = await methods.get_maker(member.id)
+        maker = await maker_methods.get_maker(
+            guild_id=guild.id,
+            discord_id=member.id
+        )
 
         if not maker:
             return await interaction.edit_original_response(
                 content="**Редактор не зарегистрирован в системе.**"
             )
 
-        elif int(interaction_author.level) <= int(maker.level) and (not int(interaction_author.level) >= 3):
+        elif int(interaction_author.level) <= int(maker.level) and not interaction_author.is_admin:
             return await interaction.edit_original_response(
                 content="**У вас недостаточно прав чтобы сделать это.**"
             )
@@ -405,13 +481,14 @@ class Main(commands.Cog):
                 content="**Изменений не произошло, никнейм, который вы указали, итак принадлежит редактору.**"
             )
 
-        await methods.update_maker(
+        await maker_methods.update_maker(
+            guild_id=guild.id,
             discord_id=member.id,
             column_name="nickname",
             value=nickname
         )
 
-        await methods.add_maker_action(
+        await action_methods.add_maker_action(
             maker_id=maker.id,
             made_by=interaction_author.id,
             action="setnickname",
@@ -422,7 +499,7 @@ class Main(commands.Cog):
             content=f"**Вы изменили никнейм редактора {member.mention} с `{maker.nickname}` на `{nickname}`.**"
         )
 
-    @maker.sub_command(name="setlevel", description="Изменить должность редактора")
+    @maker.sub_command(name="setlevel", description="Изменить уровень доступа редактора")
     async def maker_setlevel(
             self,
             interaction: disnake.ApplicationCommandInteraction,
@@ -430,19 +507,24 @@ class Main(commands.Cog):
                                                                    description="Редактор или его Discord ID"),
             level: str = commands.Param(
                 name="level",
-                description="Должность",
+                description="Уровень доступа",
                 choices=[
-                    disnake.OptionChoice(name="Куратор", value="4"),
-                    disnake.OptionChoice(name="Главный редактор", value="3"),
-                    disnake.OptionChoice(name="Заместитель главного редактора", value="2"),
-                    disnake.OptionChoice(name="Редактор", value="1"),
-                    disnake.OptionChoice(name="Хранитель", value="-1")
+                    disnake.OptionChoice(name="5", value="5"),
+                    disnake.OptionChoice(name="4", value="4"),
+                    disnake.OptionChoice(name="3", value="3"),
+                    disnake.OptionChoice(name="2", value="2"),
+                    disnake.OptionChoice(name="1", value="1"),
                 ]
             )
     ):
         await interaction.response.defer()
 
-        interaction_author = await methods.get_maker(interaction.author.id)
+        guild = await guild_methods.get_guild(discord_id=interaction.guild.id)
+
+        interaction_author = await maker_methods.get_maker(
+            guild_id=guild.id,
+            discord_id=interaction.author.id
+        )
 
         if not interaction_author:
             return await interaction.edit_original_response(
@@ -459,46 +541,152 @@ class Main(commands.Cog):
                 content="**У вас недостаточно прав для выполнения данной команды.**"
             )
 
-        elif int(interaction_author.level) <= int(level) and (not int(interaction_author.level) >= 3):
+        elif int(interaction_author.level) <= int(level) and not interaction_author.is_admin:
             return await interaction.edit_original_response(
-                content="**Вы не можете установить редактору должность, которая равна или выше вашей.**"
+                content="**Вы не можете установить редактору уровень доступа, который равнен или выше вашего.**"
             )
 
-        maker = await methods.get_maker(member.id)
+        maker = await maker_methods.get_maker(
+            guild_id=guild.id,
+            discord_id=member.id
+        )
 
         if not maker:
             return await interaction.edit_original_response(
                 content="**Редактор не зарегистрирован в системе.**"
             )
 
-        elif int(interaction_author.level) <= int(maker.level) and (not int(interaction_author.level) >= 3):
+        elif int(interaction_author.level) <= int(maker.level) and not interaction_author.is_admin:
             return await interaction.edit_original_response(
                 content="**У вас недостаточно прав чтобы сделать это.**"
             )
 
         elif maker.level == level:
             return await interaction.edit_original_response(
-                content="**Изменений не произошло, должность, которую вы указали, итак принадлежит редактору.**"
+                content="**Изменений не произошло, уровень, который вы указали, итак установлен редактору.**"
             )
 
-        await methods.update_maker(
+        tasks = [maker_methods.update_maker(
+            guild_id=guild.id,
             discord_id=member.id,
             column_name="level",
             value=level
-        )
+        ), maker_methods.update_maker(
+            guild_id=guild.id,
+            discord_id=member.id,
+            column_name="post_name",
+            value=DEFAULT_POST_TITLES.get(int(level))
+        )]
 
-        await methods.add_maker_action(
+        await asyncio.gather(*tasks)
+
+        await action_methods.add_maker_action(
             maker_id=maker.id,
             made_by=interaction_author.id,
             action="setlevel",
             meta=level
         )
 
-        level_title = await get_level_title(int(level))
-
         return await interaction.edit_original_response(
-            content=f"**Вы назначили редактору {member.mention} `{maker.nickname}` должность `{level_title}`.**"
+            content=f"**Вы установили редактору {member.mention} `{maker.nickname}` уровень `{level}`.**"
         )
+
+    @maker.sub_command(name="setpost", description="Установить редактору должность")
+    async def maker_setpost(
+            self,
+            interaction: disnake.ApplicationCommandInteraction,
+            member: disnake.User | disnake.Member = commands.Param(name="maker",
+                                                                   description="Редактор или его Discord ID"),
+            post: str = commands.Param(default=None, name="post", description="Должность редактора")
+    ):
+        await interaction.response.defer()
+
+        guild = await guild_methods.get_guild(discord_id=interaction.guild.id)
+
+        interaction_author = await maker_methods.get_maker(
+            guild_id=guild.id,
+            discord_id=interaction.author.id
+        )
+
+        if not interaction_author:
+            return await interaction.edit_original_response(
+                content="**У вас недостаточно прав для выполнения данной команды.**"
+            )
+
+        elif not interaction_author.account_status:
+            return await interaction.edit_original_response(
+                content="**У вас недостаточно прав для выполнения данной команды.**"
+            )
+
+        elif int(interaction_author.level) < 2:
+            return await interaction.edit_original_response(
+                content="**У вас недостаточно прав для выполнения данной команды.**"
+            )
+
+        maker = await maker_methods.get_maker(
+            guild_id=guild.id,
+            discord_id=member.id
+        )
+
+        if not maker:
+            return await interaction.edit_original_response(
+                content="**Редактор не зарегистрирован в системе.**"
+            )
+
+        elif int(interaction_author.level) <= int(maker.level) and not interaction_author.is_admin:
+            return await interaction.edit_original_response(
+                content="**У вас недостаточно прав чтобы сделать это.**"
+            )
+
+        if post:
+
+            if maker.post_name == post:
+                return await interaction.edit_original_response(
+                    content="**Изменений не произошло, должность, которую вы указали, итак принадлежит редактору.**"
+                )
+
+            await maker_methods.update_maker(
+                guild_id=guild.id,
+                discord_id=member.id,
+                column_name="post_name",
+                value=post
+            )
+
+            await action_methods.add_maker_action(
+                maker_id=maker.id,
+                made_by=interaction_author.id,
+                action="setpost",
+                meta=post
+            )
+
+            return await interaction.edit_original_response(
+                content=f"**Вы установили редактору {member.mention} `{maker.nickname}` должность `{post}`.**"
+            )
+
+        elif not post:
+
+            if maker.post_name == DEFAULT_POST_TITLES.get(int(maker.level)):
+                return await interaction.edit_original_response(
+                    content=f"**Изменений не произошло, у редактора итак установлена стандартная должность.**"
+                )
+
+            await maker_methods.update_maker(
+                guild_id=guild.id,
+                discord_id=member.id,
+                column_name="post_name",
+                value=DEFAULT_POST_TITLES.get(int(maker.level))
+            )
+
+            await action_methods.add_maker_action(
+                maker_id=maker.id,
+                made_by=interaction_author.id,
+                action="setpost",
+                meta=DEFAULT_POST_TITLES.get(int(maker.level))
+            )
+
+            return await interaction.edit_original_response(
+                content=f"**Вы установили редактору {member.mention} `{maker.nickname}` стандартную должность `{DEFAULT_POST_TITLES.get(int(maker.level))}`.**"
+            )
 
     @maker.sub_command(name="setstatus", description="Изменить статус редактора")
     async def maker_setstatus(
@@ -512,13 +700,17 @@ class Main(commands.Cog):
                 choices=[
                     disnake.OptionChoice(name="Активен", value="active"),
                     disnake.OptionChoice(name="Неактивен", value="inactive"),
-                    disnake.OptionChoice(name="На испытательном сроке", value="new")
                 ]
             )
     ):
         await interaction.response.defer()
 
-        interaction_author = await methods.get_maker(interaction.author.id)
+        guild = await guild_methods.get_guild(discord_id=interaction.guild.id)
+
+        interaction_author = await maker_methods.get_maker(
+            guild_id=guild.id,
+            discord_id=interaction.author.id
+        )
 
         if not interaction_author:
             return await interaction.edit_original_response(
@@ -535,14 +727,17 @@ class Main(commands.Cog):
                 content="**У вас недостаточно прав для выполнения данной команды.**"
             )
 
-        maker = await methods.get_maker(member.id)
+        maker = await maker_methods.get_maker(
+            guild_id=guild.id,
+            discord_id=member.id
+        )
 
         if not maker:
             return await interaction.edit_original_response(
                 content="**Редактор не зарегистрирован в системе.**"
             )
 
-        elif int(interaction_author.level) <= int(maker.level) and (not int(interaction_author.level) >= 3):
+        elif int(interaction_author.level) <= int(maker.level) and not interaction_author.is_admin:
             return await interaction.edit_original_response(
                 content="**У вас недостаточно прав чтобы сделать это.**"
             )
@@ -552,13 +747,14 @@ class Main(commands.Cog):
                 content="**Изменений не произошло, статус, который вы указали, уже установлен редактору.**"
             )
 
-        await methods.update_maker(
+        await maker_methods.update_maker(
+            guild_id=guild.id,
             discord_id=member.id,
             column_name="status",
             value=status
         )
 
-        await methods.add_maker_action(
+        await action_methods.add_maker_action(
             maker_id=maker.id,
             made_by=interaction_author.id,
             action="setstatus",
@@ -581,7 +777,12 @@ class Main(commands.Cog):
     ):
         await interaction.response.defer()
 
-        interaction_author = await methods.get_maker(interaction.author.id)
+        guild = await guild_methods.get_guild(discord_id=interaction.guild.id)
+
+        interaction_author = await maker_methods.get_maker(
+            guild_id=guild.id,
+            discord_id=interaction.author.id
+        )
 
         if not interaction_author:
             return await interaction.edit_original_response(
@@ -598,25 +799,29 @@ class Main(commands.Cog):
                 content="**У вас недостаточно прав для выполнения данной команды.**"
             )
 
-        maker = await methods.get_maker(member.id)
+        maker = await maker_methods.get_maker(
+            guild_id=guild.id,
+            discord_id=member.id
+        )
 
         if not maker:
             return await interaction.edit_original_response(
                 content="**Редактор не зарегистрирован в системе.**"
             )
 
-        elif int(interaction_author.level) <= int(maker.level) and (not int(interaction_author.level) >= 3):
+        elif int(interaction_author.level) <= int(maker.level) and not interaction_author.is_admin:
             return await interaction.edit_original_response(
                 content="**У вас недостаточно прав чтобы сделать это.**"
             )
 
-        await methods.update_maker(
+        await maker_methods.update_maker(
+            guild_id=guild.id,
             discord_id=member.id,
             column_name="warns",
             value=(maker.warns + 1)
         )
 
-        await methods.add_maker_action(
+        await action_methods.add_maker_action(
             maker_id=maker.id,
             made_by=interaction_author.id,
             action="warn",
@@ -637,7 +842,12 @@ class Main(commands.Cog):
     ):
         await interaction.response.defer()
 
-        interaction_author = await methods.get_maker(interaction.author.id)
+        guild = await guild_methods.get_guild(discord_id=interaction.guild.id)
+
+        interaction_author = await maker_methods.get_maker(
+            guild_id=guild.id,
+            discord_id=interaction.author.id
+        )
 
         if not interaction_author:
             return await interaction.edit_original_response(
@@ -654,14 +864,17 @@ class Main(commands.Cog):
                 content="**У вас недостаточно прав для выполнения данной команды.**"
             )
 
-        maker = await methods.get_maker(member.id)
+        maker = await maker_methods.get_maker(
+            guild_id=guild.id,
+            discord_id=member.id
+        )
 
         if not maker:
             return await interaction.edit_original_response(
                 content="**Редактор не зарегистрирован в системе.**"
             )
 
-        elif int(interaction_author.level) <= int(maker.level) and (not int(interaction_author.level) >= 3):
+        elif int(interaction_author.level) <= int(maker.level) and not interaction_author.is_admin:
             return await interaction.edit_original_response(
                 content="**У вас недостаточно прав чтобы сделать это.**"
             )
@@ -671,13 +884,14 @@ class Main(commands.Cog):
                 content="**Вы не можете установить отрицательное кол-во выговоров редактору.**"
             )
 
-        await methods.update_maker(
+        await maker_methods.update_maker(
+            guild_id=guild.id,
             discord_id=member.id,
             column_name="warns",
             value=(maker.warns - 1)
         )
 
-        await methods.add_maker_action(
+        await action_methods.add_maker_action(
             maker_id=maker.id,
             made_by=interaction_author.id,
             action="unwarn",

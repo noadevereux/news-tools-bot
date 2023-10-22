@@ -20,4 +20,13 @@ MAKERS_CHAT_ID = int(getenv("MAKERS_CHAT_ID"))
 JWT_SECRET = getenv("JWT_SECRET")
 JWT_ALGORITHM = getenv("JWT_ALGORITHM")
 
+DEFAULT_POST_TITLES = {
+    0: None,
+    1: "Редактор",
+    2: "Заместитель главного редактора",
+    3: "Главный редактор",
+    4: "Куратор",
+    5: "Руководитель"
+}
+
 # https://discord.com/api/oauth2/authorize?client_id=1089657230330183765&permissions=274878237888&scope=applications.commands%20bot

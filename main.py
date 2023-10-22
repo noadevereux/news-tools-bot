@@ -4,8 +4,8 @@ import disnake
 from disnake.ext import commands, tasks
 
 from config import TOKEN, DEV_GUILDS
-from utils.database.orm_models import create_tables
-from utils.logger import Logger
+from ext.database.models import create_tables
+from ext.logger import Logger
 
 bot = commands.InteractionBot(
     intents=disnake.Intents.all()

@@ -1,5 +1,5 @@
 from typing import Literal
-from sqlalchemy import BigInteger, Column, Date, ForeignKey, TIMESTAMP, String
+from sqlalchemy import BigInteger, Date, ForeignKey, TIMESTAMP, String, JSON
 from sqlalchemy.orm import relationship, Mapped, mapped_column, DeclarativeBase
 from sqlalchemy.sql import func
 from .database import engine
@@ -15,7 +15,8 @@ class Publication(Base):
     __tablename__ = "publications"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    publication_number: Mapped[int] = mapped_column(unique=True)
+    guild_id: Mapped[int] = mapped_column(ForeignKey("guilds.id"))
+    publication_number: Mapped[int] = mapped_column()
     maker_id: Mapped[int] = mapped_column(ForeignKey("makers.id"), nullable=True)
     date: Mapped[date] = mapped_column(Date(), nullable=True)
     information_creator_id: Mapped[int] = mapped_column(
@@ -48,20 +49,37 @@ class Publication(Base):
         primaryjoin="Publication.salary_payer_id == Maker.id",
     )
 
+    guild_id_rel = relationship(
+        "Guild",
+        back_populates="publications",
+        foreign_keys=[guild_id],
+        primaryjoin="Publication.guild_id == Guild.id"
+    )
+
 
 class Maker(Base):
     __tablename__ = "makers"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    discord_id: Mapped[int] = mapped_column(BigInteger, unique=True)
-    nickname: Mapped[str] = mapped_column(String(255), unique=True)
-    level: Mapped[Literal["-1", "1", "2", "3", "4"]] = mapped_column(server_default="1")
+    guild_id: Mapped[int] = mapped_column(ForeignKey("guilds.id"))
+    discord_id: Mapped[int] = mapped_column(BigInteger)
+    nickname: Mapped[str] = mapped_column(String(255))
+    level: Mapped[Literal["0", "1", "2", "3", "4", "5"]] = mapped_column(server_default="1")
+    post_name: Mapped[str] = mapped_column(String(255), nullable=True, server_default="Редактор")
     status: Mapped[Literal["new", "active", "inactive"]] = mapped_column(
-        server_default="new"
+        server_default="active"
     )
     warns: Mapped[int] = mapped_column(server_default="0")
     appointment_datetime: Mapped[datetime] = mapped_column(TIMESTAMP(timezone=True), server_default=func.now())
+    is_admin: Mapped[bool] = mapped_column(server_default="0")
     account_status: Mapped[bool] = mapped_column(server_default="1")
+
+    guild_id_rel = relationship(
+        "Guild",
+        back_populates="makers",
+        foreign_keys=[guild_id],
+        primaryjoin="Maker.guild_id == Guild.id"
+    )
 
     publications_made = relationship(
         "Publication",
@@ -82,6 +100,33 @@ class Maker(Base):
         back_populates="salary_payer_rel",
         foreign_keys=[Publication.salary_payer_id],
         primaryjoin="Maker.id == Publication.salary_payer_id",
+    )
+
+
+class Guild(Base):
+    __tablename__ = "guilds"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    discord_id: Mapped[int] = mapped_column(BigInteger, unique=True)
+    guild_name: Mapped[str] = mapped_column(String(255), unique=True)
+    roles_list: Mapped[list[int]] = mapped_column(JSON, default=[])
+    is_notifies_enabled: Mapped[bool] = mapped_column(server_default="1")
+    channel_id: Mapped[int] = mapped_column(BigInteger, nullable=True, server_default=None)
+    is_admin_guild: Mapped[bool] = mapped_column(server_default="0")
+    is_active: Mapped[bool] = mapped_column(server_default="1")
+
+    publications = relationship(
+        "Publication",
+        back_populates="guild_id_rel",
+        foreign_keys=[Publication.guild_id],
+        primaryjoin="Guild.id == Publication.guild_id"
+    )
+
+    makers = relationship(
+        "Maker",
+        back_populates="guild_id_rel",
+        foreign_keys=[Maker.guild_id],
+        primaryjoin="Guild.id == Maker.guild_id"
     )
 
 

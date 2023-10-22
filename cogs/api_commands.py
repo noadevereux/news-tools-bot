@@ -5,6 +5,8 @@ from api.main import start_server
 from api.auth.auth_handler import sign_jwt
 from config import DEV_GUILDS
 
+from ext.models.checks import is_guild_admin
+
 
 class API(commands.Cog):
     def __init__(self, bot: commands.Bot) -> None:
@@ -17,6 +19,7 @@ class API(commands.Cog):
 
     @commands.slash_command(name="apitoken", description="[DEV] Получить токен для API", guild_ids=DEV_GUILDS)
     @commands.is_owner()
+    @is_guild_admin()
     async def api_token(
             self,
             interaction: disnake.ApplicationCommandInteraction,
@@ -24,7 +27,7 @@ class API(commands.Cog):
     ):
         await interaction.response.defer(ephemeral=True)
 
-        token = sign_jwt(username)
+        token = await sign_jwt(username)
 
         return await interaction.edit_original_response(
             content=f"**JWT для пользователя {username}**\n**||```{token}```||**\n*Храните токен в безопасном месте, никому его не передавайте.*\n*Токен подлежит замене через 30 дней.*"
