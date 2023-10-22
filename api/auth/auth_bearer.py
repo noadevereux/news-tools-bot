@@ -22,12 +22,12 @@ class JWTBearer(HTTPBearer):
             raise HTTPException(status_code=403, detail="Unathorized.")
 
     def verify_jwt(self, jwtoken: str) -> bool:
-        isTokenValid: bool = False
+        is_token_valid: bool = False
 
         try:
             payload = decode_jwt(jwtoken)
         except:
             payload = None
         if payload:
-            isTokenValid = True
-        return isTokenValid
+            is_token_valid = True
+        return is_token_valid
