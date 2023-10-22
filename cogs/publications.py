@@ -3,7 +3,7 @@ import datetime
 import disnake
 from disnake.ext import commands
 
-from ext.database.methods import makers as maker_methods, publications as publication_methods, \
+from ext.database.methods import guilds as guild_methods, makers as maker_methods, publications as publication_methods, \
     publication_actions as action_methods
 from ext.logger import Logger
 from ext.tools import validate_date, get_publication_profile, get_status_title
@@ -30,7 +30,12 @@ class Publications(commands.Cog):
     ):
         await interaction.response.defer()
 
-        interaction_author = await maker_methods.get_maker(interaction.author.id)
+        guild = await guild_methods.get_guild(discord_id=interaction.guild.id)
+
+        interaction_author = await maker_methods.get_maker(
+            guild_id=guild.id,
+            discord_id=interaction.author.id
+        )
 
         if not interaction_author:
             return await interaction.edit_original_response(
@@ -47,14 +52,20 @@ class Publications(commands.Cog):
                 content="**У вас недостаточно прав для выполнения данной команды.**"
             )
 
-        publication = await publication_methods.get_publication(pub_number)
+        publication = await publication_methods.get_publication(
+            guild_id=guild.id,
+            publication_id=pub_number
+        )
 
         if publication:
             return await interaction.edit_original_response(
                 content=f"**Выпуск с номером `#{pub_number}` уже существует.**"
             )
 
-        new_publication = await publication_methods.add_publication(pub_number)
+        new_publication = await publication_methods.add_publication(
+            guild_id=guild.id,
+            publication_id=pub_number
+        )
 
         await action_methods.add_pub_action(
             pub_id=new_publication.id,
@@ -62,7 +73,10 @@ class Publications(commands.Cog):
             action="createpub"
         )
 
-        embed = await get_publication_profile(new_publication.publication_number)
+        embed = await get_publication_profile(
+            guild_id=guild.id,
+            publication_id=new_publication.publication_number
+        )
 
         return await interaction.edit_original_response(
             content=f"**Вы создали выпуск `#{new_publication.id}`.**",
@@ -77,7 +91,12 @@ class Publications(commands.Cog):
     ):
         await interaction.response.defer()
 
-        interaction_author = await maker_methods.get_maker(interaction.author.id)
+        guild = await guild_methods.get_guild(discord_id=interaction.guild.id)
+
+        interaction_author = await maker_methods.get_maker(
+            guild_id=guild.id,
+            discord_id=interaction.author.id
+        )
 
         if not interaction_author:
             return await interaction.edit_original_response(
@@ -94,14 +113,20 @@ class Publications(commands.Cog):
                 content="**У вас недостаточно прав для выполнения данной команды.**"
             )
 
-        publication = await publication_methods.get_publication(pub_number)
+        publication = await publication_methods.get_publication(
+            guild_id=guild.id,
+            publication_id=pub_number
+        )
 
         if not publication:
             return await interaction.edit_original_response(
                 content=f"**Выпуск с номером `#{pub_number}` итак не существует.**"
             )
 
-        await publication_methods.delete_publication(pub_number)
+        await publication_methods.delete_publication(
+            guild_id=guild.id,
+            publication_id=pub_number
+        )
 
         await action_methods.add_pub_action(
             pub_id=publication.id,
@@ -130,7 +155,12 @@ class Publications(commands.Cog):
     ):
         await interaction.response.defer()
 
-        interaction_author = await maker_methods.get_maker(interaction.author.id)
+        guild = await guild_methods.get_guild(discord_id=interaction.guild.id)
+
+        interaction_author = await maker_methods.get_maker(
+            guild_id=guild.id,
+            discord_id=interaction.author.id
+        )
 
         if not interaction_author:
             return await interaction.edit_original_response(
@@ -142,14 +172,20 @@ class Publications(commands.Cog):
                 content="**У вас недостаточно прав для выполнения данной команды.**"
             )
 
-        publication = await publication_methods.get_publication(pub_number)
+        publication = await publication_methods.get_publication(
+            guild_id=guild.id,
+            publication_id=pub_number
+        )
 
         if not publication:
             return await interaction.edit_original_response(
                 content=f"**Выпуск с номером `#{pub_number}` не существует.**"
             )
 
-        embed = await get_publication_profile(pub_number)
+        embed = await get_publication_profile(
+            guild_id=guild.id,
+            publication_id=pub_number
+        )
 
         return await interaction.edit_original_response(
             embed=embed
@@ -164,7 +200,12 @@ class Publications(commands.Cog):
     ):
         await interaction.response.defer()
 
-        interaction_author = await maker_methods.get_maker(interaction.author.id)
+        guild = await guild_methods.get_guild(discord_id=interaction.guild.id)
+
+        interaction_author = await maker_methods.get_maker(
+            guild_id=guild.id,
+            discord_id=interaction.author.id
+        )
 
         if not interaction_author:
             return await interaction.edit_original_response(
@@ -186,8 +227,14 @@ class Publications(commands.Cog):
                 content="**Изменений не произошло, номера старого и нового выпусков совпадают.**"
             )
 
-        publication = await publication_methods.get_publication(old_number)
-        new_publication = await publication_methods.get_publication(new_number)
+        publication = await publication_methods.get_publication(
+            guild_id=guild.id,
+            publication_id=old_number
+        )
+        new_publication = await publication_methods.get_publication(
+            guild_id=guild.id,
+            publication_id=new_number
+        )
 
         if not publication:
             return await interaction.edit_original_response(
@@ -195,7 +242,10 @@ class Publications(commands.Cog):
             )
 
         elif new_publication:
-            embed = await get_publication_profile(new_number)
+            embed = await get_publication_profile(
+                guild_id=guild.id,
+                publication_id=new_number
+            )
             return await interaction.edit_original_response(
                 content=f"**Номер выпуска `#{new_number}` уже занят. Информация о выпуске:**",
                 embed=embed
@@ -227,7 +277,12 @@ class Publications(commands.Cog):
     ):
         await interaction.response.defer()
 
-        interaction_author = await maker_methods.get_maker(interaction.author.id)
+        guild = await guild_methods.get_guild(discord_id=interaction.guild.id)
+
+        interaction_author = await maker_methods.get_maker(
+            guild_id=guild.id,
+            discord_id=interaction.author.id
+        )
 
         if not interaction_author:
             return await interaction.edit_original_response(
@@ -245,14 +300,17 @@ class Publications(commands.Cog):
             )
 
         if date:
-            is_date_valid = await is_date_valid(date)
+            is_date_valid = await validate_date(date)
 
             if not is_date_valid:
                 return await interaction.edit_original_response(
                     content="**Неверно указана дата. Укажите дату в формате `ГГГГ-ММ-ДД`, например `2023-01-15`.**"
                 )
 
-        publication = await publication_methods.get_publication(pub_number)
+        publication = await publication_methods.get_publication(
+            guild_id=guild.id,
+            publication_id=pub_number
+        )
 
         if not publication:
             return await interaction.edit_original_response(
@@ -314,7 +372,12 @@ class Publications(commands.Cog):
     ):
         await interaction.response.defer()
 
-        interaction_author = await maker_methods.get_maker(interaction.author.id)
+        guild = await guild_methods.get_guild(discord_id=interaction.guild.id)
+
+        interaction_author = await maker_methods.get_maker(
+            guild_id=guild.id,
+            discord_id=interaction.author.id
+        )
 
         if not interaction_author:
             return await interaction.edit_original_response(
@@ -331,7 +394,10 @@ class Publications(commands.Cog):
                 content="**У вас недостаточно прав для выполнения данной команды.**"
             )
 
-        publication = await publication_methods.get_publication(pub_number)
+        publication = await publication_methods.get_publication(
+            guild_id=guild.id,
+            publication_id=pub_number
+        )
 
         if not publication:
             return await interaction.edit_original_response(
@@ -339,7 +405,10 @@ class Publications(commands.Cog):
             )
 
         if member:
-            maker = await maker_methods.get_maker(member.id)
+            maker = await maker_methods.get_maker(
+                guild_id=guild.id,
+                discord_id=member.id
+            )
 
             if publication.maker_id == maker.id:
                 return await interaction.edit_original_response(
@@ -407,7 +476,12 @@ class Publications(commands.Cog):
     ):
         await interaction.response.defer()
 
-        interaction_author = await maker_methods.get_maker(interaction.author.id)
+        guild = await guild_methods.get_guild(discord_id=interaction.guild.id)
+
+        interaction_author = await maker_methods.get_maker(
+            guild_id=guild.id,
+            discord_id=interaction.author.id
+        )
 
         if not interaction_author:
             return await interaction.edit_original_response(
@@ -424,7 +498,10 @@ class Publications(commands.Cog):
                 content="**У вас недостаточно прав для выполнения данной команды.**"
             )
 
-        publication = await publication_methods.get_publication(pub_number)
+        publication = await publication_methods.get_publication(
+            guild_id=guild.id,
+            publication_id=pub_number
+        )
 
         if not publication:
             return await interaction.edit_original_response(
@@ -464,7 +541,12 @@ class Publications(commands.Cog):
     ):
         await interaction.response.defer()
 
-        interaction_author = await maker_methods.get_maker(interaction.author.id)
+        guild = await guild_methods.get_guild(discord_id=interaction.guild.id)
+
+        interaction_author = await maker_methods.get_maker(
+            guild_id=guild.id,
+            discord_id=interaction.author.id
+        )
 
         if not interaction_author:
             return await interaction.edit_original_response(
@@ -481,7 +563,10 @@ class Publications(commands.Cog):
                 content="**У вас недостаточно прав для выполнения данной команды.**"
             )
 
-        publication = await publication_methods.get_publication(pub_number)
+        publication = await publication_methods.get_publication(
+            guild_id=guild.id,
+            publication_id=pub_number
+        )
 
         if not publication:
             return await interaction.edit_original_response(
@@ -543,7 +628,12 @@ class Publications(commands.Cog):
     ):
         await interaction.response.defer()
 
-        interaction_author = await maker_methods.get_maker(interaction.author.id)
+        guild = await guild_methods.get_guild(discord_id=interaction.guild.id)
+
+        interaction_author = await maker_methods.get_maker(
+            guild_id=guild.id,
+            discord_id=interaction.author.id
+        )
 
         if not interaction_author:
             return await interaction.edit_original_response(
@@ -560,7 +650,10 @@ class Publications(commands.Cog):
                 content="**У вас недостаточно прав для выполнения данной команды.**"
             )
 
-        publication = await publication_methods.get_publication(pub_number)
+        publication = await publication_methods.get_publication(
+            guild_id=guild.id,
+            publication_id=pub_number
+        )
 
         if not publication:
             return await interaction.edit_original_response(
@@ -568,12 +661,10 @@ class Publications(commands.Cog):
             )
 
         if member:
-            creator = await maker_methods.get_maker(member.id)
-
-            if publication.information_creator_id == creator.id:
-                return await interaction.edit_original_response(
-                    content=f"**Изменений не произошло, автор информации выпуска установлен таким же, какого вы указали.**"
-                )
+            creator = await maker_methods.get_maker(
+                guild_id=guild.id,
+                discord_id=member.id
+            )
 
             if not creator:
                 return await interaction.edit_original_response(
@@ -582,6 +673,11 @@ class Publications(commands.Cog):
             elif not creator.account_status:
                 return await interaction.edit_original_response(
                     content=f"**Аккаунт редактора, которого вы указали, деактивирован.**"
+                )
+
+            if publication.information_creator_id == creator.id:
+                return await interaction.edit_original_response(
+                    content=f"**Изменений не произошло, автор информации выпуска установлен таким же, какого вы указали.**"
                 )
 
             await publication_methods.update_publication(
@@ -633,7 +729,12 @@ class Publications(commands.Cog):
     ):
         await interaction.response.defer()
 
-        interaction_author = await maker_methods.get_maker(interaction.author.id)
+        guild = await guild_methods.get_guild(discord_id=interaction.guild.id)
+
+        interaction_author = await maker_methods.get_maker(
+            guild_id=guild.id,
+            discord_id=interaction.author.id
+        )
 
         if not interaction_author:
             return await interaction.edit_original_response(
@@ -650,7 +751,10 @@ class Publications(commands.Cog):
                 content="**У вас недостаточно прав для выполнения данной команды.**"
             )
 
-        publication = await publication_methods.get_publication(pub_number)
+        publication = await publication_methods.get_publication(
+            guild_id=guild.id,
+            publication_id=pub_number
+        )
 
         if not publication:
             return await interaction.edit_original_response(
@@ -658,7 +762,10 @@ class Publications(commands.Cog):
             )
 
         if member:
-            salary_payer = await maker_methods.get_maker(member.id)
+            salary_payer = await maker_methods.get_maker(
+                guild_id=guild.id,
+                discord_id=member.id
+            )
 
             if publication.salary_payer_id == salary_payer.id:
                 return await interaction.edit_original_response(
