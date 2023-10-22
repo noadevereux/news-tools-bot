@@ -1,7 +1,7 @@
 import disnake
 from disnake.ext import commands
 from ..database.methods import guilds as guild_methods
-from .errors import GuildNotExists, CommandCalledInDM, GuildNotAdmin
+from .exceptions import GuildNotExists, CommandCalledInDM, GuildNotAdmin
 
 
 def is_guild_exists():
