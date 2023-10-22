@@ -18,11 +18,13 @@ async def is_maker_exists_by_id(id: int) -> bool:
         return maker.scalar() is not None
 
 
-async def add_maker(guild_id: int, discord_id: int, nickname: str) -> None:
+async def add_maker(guild_id: int, discord_id: int, nickname: str) -> Maker | None:
     new_maker = Maker(guild_id=guild_id, discord_id=discord_id, nickname=nickname)
     async with SessionLocal() as session:
         session.add(new_maker)
         await session.commit()
+        maker = await session.execute(select(Maker).filter_by(guild_id=guild_id, discord_id=discord_id))
+    return maker.scalar()
 
 
 async def update_maker(
