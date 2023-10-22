@@ -4,26 +4,45 @@ from disnake.ui import View, button, Button
 from asyncio import sleep
 from os import system
 
+from ext.database.methods import guilds as guild_methods, makers as maker_methods
+
 
 class ConfirmRoleAction(View):
-    def __init__(self, chief_role: disnake.Role) -> None:
+    def __init__(self) -> None:
         super().__init__(timeout=None)
-        self.chief_role = chief_role
 
     @button(label="Подтвердить действие", style=disnake.ButtonStyle.blurple, emoji="✅")
     async def confirm_action(
             self, button: Button, interaction: disnake.MessageInteraction
     ):
-        if (not self.chief_role in interaction.author.roles) and (
-                not interaction.author.guild_permissions.administrator
-        ):
-            await interaction.send(
+        guild = await guild_methods.get_guild(discord_id=interaction.guild.id)
+
+        if not guild:
+            return await interaction.send(
+                content="**Этот сервер не зарегистрирован в системе.**",
+                ephemeral=True,
+            )
+
+        interaction_author = await maker_methods.get_maker(guild_id=guild.id, discord_id=interaction.author.id)
+
+        if not interaction_author:
+            return await interaction.send(
                 content="**У вас недостаточно прав чтобы подтвердить это действие**",
                 ephemeral=True,
             )
-            return
+        if not interaction_author.account_status:
+            return await interaction.send(
+                content="**У вас недостаточно прав чтобы подтвердить это действие**",
+                ephemeral=True,
+            )
+        if not int(interaction_author.level) >= 3:
+            return await interaction.send(
+                content="**У вас недостаточно прав чтобы подтвердить это действие**",
+                ephemeral=True,
+            )
+
         await interaction.message.edit(
-            content=f"{interaction.message.content}\n{interaction.author.mention} подтвердил действие.",
+            content=f"{interaction.message.content}\n**`Подтвердил действие` -> {interaction.author.mention}**",
             components=[
                 Button(
                     style=disnake.ButtonStyle.blurple,

@@ -1,7 +1,7 @@
 import disnake
 from disnake.ext import commands
 
-from config import CHIEF_ROLE_ID, MAKER_ROLE_ID, MAKERS_CHAT_ID
+from ext.database.methods import guilds as guild_methods
 from ext.models.keyboards import ConfirmRoleAction
 
 
@@ -10,72 +10,39 @@ class Notifier(commands.Cog):
         super().__init__()
         self.bot = bot
 
-    @commands.Cog.listener(name="on_member_update")
-    async def role_given_notify(self, before: disnake.Member, after: disnake.Member):
-        maker_role = after.guild.get_role(MAKER_ROLE_ID)
-        chief_role = after.guild.get_role(CHIEF_ROLE_ID)
-        makers_channel = after.guild.get_channel(MAKERS_CHAT_ID)
+    @commands.Cog.listener(name=disnake.Event.audit_log_entry_create)
+    async def role_notify(self, entry: disnake.AuditLogEntry):
+        if not entry.action == disnake.AuditLogAction.member_role_update:
+            return
 
-        async for entry in after.guild.audit_logs(
-                limit=1, action=disnake.AuditLogAction.member_role_update
-        ):
-            if (not maker_role in before.roles) and (maker_role in after.roles):
-                if entry.user.bot:
-                    msg = await makers_channel.send(
-                        content=f"• {chief_role.mention} `WARNING` Пользователю {entry.target.mention} была выдана роль `{maker_role}` ботом {entry.user.mention}.",
-                        view=ConfirmRoleAction(chief_role=chief_role),
-                    )
-                else:
-                    msg = await makers_channel.send(
-                        content=f"• {chief_role.mention} `WARNING` Пользователю {entry.target.mention} была выдана роль `{maker_role}` модератором {entry.user.mention}.",
-                        view=ConfirmRoleAction(chief_role=chief_role),
-                    )
-                await msg.pin(reason=f"Действие требует подтверждения")
-                async for msg in makers_channel.history(limit=1):
-                    await msg.delete()
-            elif (maker_role in before.roles) and (not maker_role in after.roles):
-                if entry.user.bot:
-                    msg = await makers_channel.send(
-                        content=f"• {chief_role.mention} `WARNING` Пользователю {entry.target.mention} была снята роль `{maker_role}` ботом {entry.user.mention}.",
-                        view=ConfirmRoleAction(chief_role=chief_role),
-                    )
-                else:
-                    msg = await makers_channel.send(
-                        content=f"• {chief_role.mention} `WARNING` Пользователю {entry.target.mention} была снята роль `{maker_role}` модератором {entry.user.mention}.",
-                        view=ConfirmRoleAction(chief_role=chief_role),
-                    )
-                await msg.pin(reason=f"Действие требует подтверждения")
-                async for msg in makers_channel.history(limit=1):
-                    await msg.delete()
+        guild = await guild_methods.get_guild(discord_id=entry.guild.id)
 
-            if (not chief_role in before.roles) and (chief_role in after.roles):
-                if entry.user.bot:
-                    msg = await makers_channel.send(
-                        content=f"• {chief_role.mention} `WARNING` Пользователю {entry.target.mention} была выдана роль `{chief_role}` ботом {entry.user.mention}.",
-                        view=ConfirmRoleAction(chief_role=chief_role),
-                    )
-                else:
-                    msg = await makers_channel.send(
-                        content=f"• {chief_role.mention} `WARNING` Пользователю {entry.target.mention} была выдана роль `{chief_role}` модератором {entry.user.mention}.",
-                        view=ConfirmRoleAction(chief_role=chief_role),
-                    )
-                await msg.pin(reason=f"Действие требует подтверждения")
-                async for msg in makers_channel.history(limit=1):
-                    await msg.delete()
-            elif (chief_role in before.roles) and (not chief_role in after.roles):
-                if entry.user.bot:
-                    msg = await makers_channel.send(
-                        content=f"• {chief_role.mention} `WARNING` Пользователю {entry.target.mention} была снята роль `{chief_role}` ботом {entry.user.mention}.",
-                        view=ConfirmRoleAction(chief_role=chief_role),
-                    )
-                else:
-                    msg = await makers_channel.send(
-                        content=f"• {chief_role.mention} `WARNING` Пользователю {entry.target.mention} была снята роль `{chief_role}` модератором {entry.user.mention}.",
-                        view=ConfirmRoleAction(chief_role=chief_role),
-                    )
-                await msg.pin(reason=f"Действие требует подтверждения")
-                async for msg in makers_channel.history(limit=1):
-                    await msg.delete()
+        if not guild:
+            return
+        if not guild.is_notifies_enabled:
+            return
+
+        roles: list[disnake.Role] = [entry.guild.get_role(role_id) for role_id in guild.roles_list]
+        channel = entry.guild.get_channel(guild.channel_id)
+
+        if len(roles) == 0:
+            return
+        if not channel:
+            return
+
+        for role in roles:
+            if (role in entry.before.roles) and (role not in entry.after.roles):
+                message = await channel.send(
+                    content=f"**`[WARNING]` -> Модератор <@{entry.user.id}> снял роль <@&{role.id}> участнику <@{entry.target.id}>.**",
+                    view=ConfirmRoleAction()
+                )
+                await message.pin(reason="Действие требует подтверждения")
+            elif (role not in entry.before.roles) and (role in entry.after.roles):
+                message = await channel.send(
+                    content=f"**`[WARNING]` -> Модератор <@{entry.user.id}> выдал роль <@&{role.id}> участнику <@{entry.target.id}>.**",
+                    view=ConfirmRoleAction()
+                )
+                await message.pin(reason="Действие требует подтверждения")
 
 
 def setup(bot: commands.Bot):
