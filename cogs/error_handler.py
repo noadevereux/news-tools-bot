@@ -3,7 +3,7 @@ from disnake.ext import commands
 from ext.logger import Logger
 from datetime import datetime
 
-from ext.models.errors import GuildNotExists, CommandCalledInDM, GuildNotAdmin
+from ext.models.exceptions import GuildNotExists, CommandCalledInDM, GuildNotAdmin
 
 
 class ErrorHandler(commands.Cog):
