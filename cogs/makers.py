@@ -22,7 +22,7 @@ class Main(commands.Cog):
         self.bot = bot
         self.log = Logger("cogs.makers.py.log")
 
-    @commands.slash_command(name="maker", description="Управление редактором")
+    @commands.slash_command(name="maker", description="Управление редактором", dm_permission=False)
     @is_guild_exists()
     async def maker(self, interaction: disnake.ApplicationCommandInteraction):
         pass
@@ -309,7 +309,7 @@ class Main(commands.Cog):
             content=f"**Вы деактивировали аккаунт редактора {member.mention} `{maker.nickname}`. Причина: {reason}.**"
         )
 
-    @commands.slash_command(name="profile", description="Посмотреть профиль редактора")
+    @commands.slash_command(name="profile", description="Посмотреть профиль редактора", dm_permission=False)
     @is_guild_exists()
     async def maker_profile(
             self,

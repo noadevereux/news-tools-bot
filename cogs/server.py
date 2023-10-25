@@ -12,7 +12,8 @@ class Server(commands.Cog):
         super().__init__()
         self.bot = bot
 
-    @commands.slash_command(name="server", description="[DEV] Управление сервером", guild_ids=DEV_GUILDS)
+    @commands.slash_command(name="server", description="[DEV] Управление сервером", guild_ids=DEV_GUILDS,
+                            dm_permission=False)
     @commands.is_owner()
     @is_guild_admin()
     async def server(self, interaction: disnake.ApplicationCommandInteraction):
