@@ -18,7 +18,7 @@ class ErrorHandler(commands.Cog):
             interaction: disnake.ApplicationCommandInteraction,
             error: commands.CommandError
     ):
-        error_uid = await self.log.error(f"{error}")
+        error_uid = await self.log.error(log_message=error, exc=error)
 
         has_been_responded = interaction.response.is_done()
         if not has_been_responded:
