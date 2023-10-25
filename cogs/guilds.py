@@ -13,7 +13,8 @@ class Guilds(commands.Cog):
         super().__init__()
         self.bot = bot
 
-    @commands.slash_command(name="guild_setting", description="[DEV] Настройка сервера", guild_ids=DEV_GUILDS)
+    @commands.slash_command(name="guild_setting", description="[DEV] Настройка сервера", guild_ids=DEV_GUILDS,
+                            dm_permission=False)
     @commands.is_owner()
     @is_guild_admin()
     async def guild(

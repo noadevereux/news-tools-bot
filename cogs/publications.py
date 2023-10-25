@@ -17,7 +17,7 @@ class Publications(commands.Cog):
         self.bot = bot
         self.log = Logger("cogs.publications.py.log")
 
-    @commands.slash_command(name="pubsetting", description="Настройка выпусков")
+    @commands.slash_command(name="pubsetting", description="Настройка выпусков", dm_permission=False)
     @is_guild_exists()
     async def pubsetting(self, interaction: disnake.ApplicationCommandInteraction):
         pass
@@ -139,7 +139,7 @@ class Publications(commands.Cog):
             content=f"**Вы удалили выпуск с номером `#{publication.publication_number}` `[UID: {publication.id}]`.**"
         )
 
-    @commands.slash_command(name="publication", description="Действия с выпусками")
+    @commands.slash_command(name="publication", description="Действия с выпусками", dm_permission=False)
     @is_guild_exists()
     async def publication(
             self,
