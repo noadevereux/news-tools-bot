@@ -252,6 +252,7 @@ class Publications(commands.Cog):
             )
 
         await publication_methods.update_publication(
+            guild_id=guild.id,
             publication_id=publication.publication_number,
             column_name="publication_number",
             value=new_number
@@ -324,6 +325,7 @@ class Publications(commands.Cog):
                 )
 
             await publication_methods.update_publication(
+                guild_id=guild.id,
                 publication_id=pub_number,
                 column_name="date",
                 value=date
@@ -346,6 +348,7 @@ class Publications(commands.Cog):
                 )
 
             await publication_methods.update_publication(
+                guild_id=guild.id,
                 publication_id=pub_number,
                 column_name="date",
                 value=None
@@ -425,6 +428,7 @@ class Publications(commands.Cog):
                 )
 
             await publication_methods.update_publication(
+                guild_id=guild.id,
                 publication_id=pub_number,
                 column_name="maker_id",
                 value=maker.id
@@ -447,6 +451,7 @@ class Publications(commands.Cog):
                 )
 
             await publication_methods.update_publication(
+                guild_id=guild.id,
                 publication_id=pub_number,
                 column_name="maker_id",
                 value=None
@@ -514,6 +519,7 @@ class Publications(commands.Cog):
             )
 
         await publication_methods.update_publication(
+            guild_id=guild.id,
             publication_id=pub_number,
             column_name="status",
             value=status
@@ -580,6 +586,7 @@ class Publications(commands.Cog):
                 )
 
             await publication_methods.update_publication(
+                guild_id=guild.id,
                 publication_id=pub_number,
                 column_name="amount_dp",
                 value=amount
@@ -602,6 +609,7 @@ class Publications(commands.Cog):
                 )
 
             await publication_methods.update_publication(
+                guild_id=guild.id,
                 publication_id=pub_number,
                 column_name="amount_dp",
                 value=None
@@ -681,6 +689,7 @@ class Publications(commands.Cog):
                 )
 
             await publication_methods.update_publication(
+                guild_id=guild.id,
                 publication_id=pub_number,
                 column_name="information_creator_id",
                 value=creator.id
@@ -703,6 +712,7 @@ class Publications(commands.Cog):
                 )
 
             await publication_methods.update_publication(
+                guild_id=guild.id,
                 publication_id=pub_number,
                 column_name="information_creator_id",
                 value=None
@@ -782,6 +792,7 @@ class Publications(commands.Cog):
                 )
 
             await publication_methods.update_publication(
+                guild_id=guild.id,
                 publication_id=pub_number,
                 column_name="salary_payer_id",
                 value=salary_payer.id
@@ -804,6 +815,7 @@ class Publications(commands.Cog):
                 )
 
             await publication_methods.update_publication(
+                guild_id=guild.id,
                 publication_id=pub_number,
                 column_name="salary_payer_id",
                 value=None
