@@ -1,7 +1,4 @@
-"""
-Инструмент для логирования
-"""
-
+import traceback
 from aiofiles import open as aiopen
 from datetime import datetime
 import string
@@ -20,66 +17,78 @@ class Logger:
             random.choices(string.ascii_uppercase + string.digits + string.ascii_lowercase, k=string_length))
         return str(error_uid)
 
-    async def info(self, log: str | Exception):
-        """
-        Writes an info message into the log file.
-
-        Parameters
-        ----------
-        log: :class:`str`
-            Info message
-        """
+    async def info(self, log_message: str | Exception, exc: Exception = None):
         date_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         uid = await self.generate_uid()
-        async with aiopen(file=self.file, mode="a", encoding="utf-8") as file:
-            await file.write(f"[UID: {uid} ] {date_time} - INFO {log}\n")
-        print(log + "\n")
+
+        if exc:
+            traceback_str = "".join(
+                traceback.format_exception(type(exc), exc, exc.__traceback__)
+            )
+
+            async with aiopen(file=self.file, mode="a", encoding="utf-8") as file:
+                await file.write(f"[UID: {uid} ] {date_time} - INFO {log_message}\n{traceback_str}\n")
+        else:
+            async with aiopen(file=self.file, mode="a", encoding="utf-8") as file:
+                await file.write(f"[UID: {uid} ] {date_time} - INFO {log_message}\n")
+
+        print(f"{log_message}\n")
+
         return uid
 
-    async def warning(self, log: str | Exception):
-        """
-        Writes a warning message into the log file.
-
-        Parameters
-        ----------
-        log: :class:`str`
-            Warning message
-        """
+    async def warning(self, log_message: str | Exception, exc: Exception = None):
         date_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         uid = await self.generate_uid()
-        async with aiopen(file=self.file, mode="a", encoding="utf-8") as file:
-            await file.write(f"[UID: {uid} ] {date_time} - WARNING {log}\n")
-        print(log + "\n")
+
+        if exc:
+            traceback_str = "".join(
+                traceback.format_exception(type(exc), exc, exc.__traceback__)
+            )
+
+            async with aiopen(file=self.file, mode="a", encoding="utf-8") as file:
+                await file.write(f"[UID: {uid} ] {date_time} - WARNING {log_message}\n{traceback_str}\n")
+        else:
+            async with aiopen(file=self.file, mode="a", encoding="utf-8") as file:
+                await file.write(f"[UID: {uid} ] {date_time} - WARNING {log_message}\n")
+
+        print(f"{log_message}\n")
+
         return uid
 
-    async def error(self, log: str | Exception):
-        """
-        Writes an error message into the log file.
-
-        Parameters
-        ----------
-        log: :class:`str`
-            Error message
-        """
+    async def error(self, log_message: str | Exception, exc: Exception = None):
         date_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         uid = await self.generate_uid()
-        async with aiopen(file=self.file, mode="a", encoding="utf-8") as file:
-            await file.write(f"[UID: {uid} ] {date_time} - ERROR {log}\n")
-        print(log + "\n")
+
+        if exc:
+            traceback_str = "".join(
+                traceback.format_exception(type(exc), exc, exc.__traceback__)
+            )
+
+            async with aiopen(file=self.file, mode="a", encoding="utf-8") as file:
+                await file.write(f"[UID: {uid} ] {date_time} - ERROR {log_message}\n{traceback_str}\n")
+        else:
+            async with aiopen(file=self.file, mode="a", encoding="utf-8") as file:
+                await file.write(f"[UID: {uid} ] {date_time} - ERROR {log_message}\n")
+
+        print(f"{log_message}\n")
+
         return uid
 
-    async def critical(self, log: str | Exception):
-        """
-        Writes a critical error message into the log file.
-
-        Parameters
-        ----------
-        log: :class:`str`
-            Critical error message
-        """
+    async def critical(self, log_message: str | Exception, exc: Exception = None):
         date_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         uid = await self.generate_uid()
-        async with aiopen(file=self.file, mode="a", encoding="utf-8") as file:
-            await file.write(f"[UID: {uid} ] {date_time} - CRITICAL ERROR {log}\n")
-        print(log + "\n")
+
+        if exc:
+            traceback_str = "".join(
+                traceback.format_exception(type(exc), exc, exc.__traceback__)
+            )
+
+            async with aiopen(file=self.file, mode="a", encoding="utf-8") as file:
+                await file.write(f"[UID: {uid} ] {date_time} - CRITICAL ERROR {log_message}\n{traceback_str}\n")
+        else:
+            async with aiopen(file=self.file, mode="a", encoding="utf-8") as file:
+                await file.write(f"[UID: {uid} ] {date_time} - CRITICAL ERROR {log_message}\n")
+
+        print(f"{log_message}\n")
+
         return uid
