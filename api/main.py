@@ -7,6 +7,8 @@ import disnake
 from disnake.ext import commands
 from config import MAKERS_CHAT_ID
 
+from api.routers.database import db_router
+
 
 class APIService(FastAPI):
     def __init__(self, bot: commands.Bot, *args, **kwargs) -> None:
@@ -67,6 +69,7 @@ async def lifespan(app: APIService):
 def make_app(bot):
     app = APIService(bot, lifespan=lifespan)
     app.include_router(router)
+    app.include_router(db_router)
     return app
 
 
