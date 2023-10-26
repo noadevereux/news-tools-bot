@@ -140,6 +140,7 @@ async def add_maker_action(
             "setlevel",
             "setpost",
             "setstatus",
+            "setdate",
             "warn",
             "unwarn",
         ],
