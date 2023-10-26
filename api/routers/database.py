@@ -307,3 +307,99 @@ async def get_all_pub_actions():
             select(models.PublicationAction).order_by(models.PublicationAction.timestamp.desc()))
 
     return {"status": "ok", "actions": actions.scalars().all()}
+
+
+@db_router.post("/add_guild", dependencies=[Depends(JWTBearer())], tags=["Database", "Guilds"])
+async def add_guild(discord_id: int, guild_name: str):
+    guild = models.Guild(discord_id=discord_id, guild_name=guild_name)
+    async with SessionLocal() as session:
+        session.add(guild)
+        await session.commit()
+
+    return {"status": "ok", "message": None}
+
+
+@db_router.get("/is_guild_exists", dependencies=[Depends(JWTBearer())], tags=["Database", "Guilds"])
+async def is_guild_exists(discord_id: int):
+    async with SessionLocal() as session:
+        guild = await session.execute(select(models.Guild).filter_by(discord_id=discord_id))
+        result = guild.scalar()
+
+    return {"status": "ok", "message": (result is not None)}
+
+
+@db_router.get("/get_guild", dependencies=[Depends(JWTBearer())], tags=["Database", "Guilds"])
+async def get_guild(discord_id: int):
+    async with SessionLocal() as session:
+        guild = await session.execute(select(models.Guild).filter_by(discord_id=discord_id))
+        result = guild.scalar()
+
+    return {"status": "ok", "guild": result}
+
+
+@db_router.get("/get_guild_by_id", dependencies=[Depends(JWTBearer())], tags=["Database", "Guilds"])
+async def get_guild_by_id(id: int):
+    async with SessionLocal() as session:
+        guild = await session.execute(select(models.Guild).filter_by(id=id))
+        result = guild.scalar()
+
+    return {"status": "ok", "guild": result}
+
+
+@db_router.get("/get_all_guilds", dependencies=[Depends(JWTBearer())], tags=["Database", "Guilds"])
+async def get_all_guilds():
+    async with SessionLocal() as session:
+        guild = await session.execute(select(models.Guild))
+        result = guild.scalars().all()
+
+    return {"status": "ok", "guilds": result}
+
+
+@db_router.post("/update_guild", dependencies=[Depends(JWTBearer())], tags=["Database", "Guilds"])
+async def update_guild(
+        discord_id: int,
+        column_name: Literal[
+            "id",
+            "discord_id",
+            "guild_name",
+            "roles_list",
+            "is_notifies_enabled",
+            "channel_id",
+            "is_admin_guild",
+            "is_active"
+        ],
+        value
+):
+    async with SessionLocal() as session:
+        guild = await session.execute(select(models.Guild).filter_by(discord_id=discord_id))
+        if guild:
+            guild = guild.scalar()
+            setattr(guild, column_name, value)
+            await session.commit()
+
+    return {"status": "ok", "message": None}
+
+
+@db_router.post("/update_guild_by_id", dependencies=[Depends(JWTBearer())], tags=["Database", "Guilds"])
+async def update_guild_by_id(
+        id: int,
+        column_name: Literal[
+            "id",
+            "discord_id",
+            "guild_name",
+            "roles_list",
+            "is_notifies_enabled",
+            "channel_id",
+            "is_admin_guild",
+            "is_active"
+        ],
+        value
+):
+    async with SessionLocal() as session:
+        guild = await session.execute(select(models.Guild).filter_by(id=id))
+        if guild:
+            guild = guild.scalar()
+            setattr(guild, column_name, value)
+            await session.commit()
+
+    return {"status": "ok", "message": None}
