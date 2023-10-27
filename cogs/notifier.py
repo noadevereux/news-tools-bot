@@ -23,8 +23,8 @@ class Notifier(commands.Cog):
             return
 
         roles: list[disnake.Role] = [entry.guild.get_role(role_id) for role_id in guild.roles_list]
-        channel = entry.guild.get_channel(guild.channel_id)
-
+        channel = entry.guild.get_channel_or_thread(guild.channel_id)
+        
         if len(roles) == 0:
             return
         if not channel:
