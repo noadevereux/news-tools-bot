@@ -36,13 +36,31 @@ class Notifier(commands.Cog):
                     content=f"**`[WARNING]` -> Модератор <@{entry.user.id}> снял роль <@&{role.id}> участнику <@{entry.target.id}>.**",
                     view=ConfirmRoleAction()
                 )
-                await message.pin(reason="Действие требует подтверждения")
+                try:
+                    await message.pin(reason="Действие требует подтверждения")
+                except (disnake.errors.Forbidden, disnake.errors.NotFound, disnake.errors.HTTPException):
+                    pass
+                async for msg in channel.history(limit=5):
+                    if msg.type == disnake.MessageType.pins_add:
+                        try:
+                            await msg.delete()
+                        except (disnake.errors.Forbidden, disnake.errors.NotFound, disnake.errors.HTTPException):
+                            pass
             elif (role not in entry.before.roles) and (role in entry.after.roles):
                 message = await channel.send(
                     content=f"**`[WARNING]` -> Модератор <@{entry.user.id}> выдал роль <@&{role.id}> участнику <@{entry.target.id}>.**",
                     view=ConfirmRoleAction()
                 )
-                await message.pin(reason="Действие требует подтверждения")
+                try:
+                    await message.pin(reason="Действие требует подтверждения")
+                except (disnake.errors.Forbidden, disnake.errors.NotFound, disnake.errors.HTTPException):
+                    pass
+                async for msg in channel.history(limit=5):
+                    if msg.type == disnake.MessageType.pins_add:
+                        try:
+                            await msg.delete()
+                        except (disnake.errors.Forbidden, disnake.errors.NotFound, disnake.errors.HTTPException):
+                            pass
 
 
 def setup(bot: commands.Bot):
