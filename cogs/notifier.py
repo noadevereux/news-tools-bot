@@ -24,7 +24,7 @@ class Notifier(commands.Cog):
 
         roles: list[disnake.Role] = [entry.guild.get_role(role_id) for role_id in guild.roles_list]
         channel = entry.guild.get_channel_or_thread(guild.channel_id)
-        
+
         if len(roles) == 0:
             return
         if not channel:
@@ -35,7 +35,7 @@ class Notifier(commands.Cog):
                 message = await channel.send(
                     content=f"**`[WARNING]` -> Модератор <@{entry.user.id}> снял роль <@&{role.id}> участнику <@{entry.target.id}>.**",
                     view=ConfirmRoleAction(),
-                    allowed_mentions=disnake.AllowedMentions(users=[entry.user])
+                    allowed_mentions=disnake.AllowedMentions(users=[entry.user], roles=False)
                 )
                 try:
                     await message.pin(reason="Действие требует подтверждения")
@@ -51,7 +51,7 @@ class Notifier(commands.Cog):
                 message = await channel.send(
                     content=f"**`[WARNING]` -> Модератор <@{entry.user.id}> выдал роль <@&{role.id}> участнику <@{entry.target.id}>.**",
                     view=ConfirmRoleAction(),
-                    allowed_mentions=disnake.AllowedMentions(users=[entry.user])
+                    allowed_mentions=disnake.AllowedMentions(users=[entry.user], roles=False)
                 )
                 try:
                     await message.pin(reason="Действие требует подтверждения")

@@ -51,6 +51,8 @@ class ConfirmRoleAction(View):
                     disabled=True,
                 )
             ],
+            allowed_mentions=disnake.AllowedMentions.none()
+
         )
         await interaction.message.unpin(
             reason=f"{interaction.author.display_name} подтвердил действие"
