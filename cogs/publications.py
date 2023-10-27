@@ -413,11 +413,6 @@ class Publications(commands.Cog):
                 discord_id=member.id
             )
 
-            if publication.maker_id == maker.id:
-                return await interaction.edit_original_response(
-                    content=f"**Изменений не произошло, редактор выпуска установлен такой-же, какого вы указали.**"
-                )
-
             if not maker:
                 return await interaction.edit_original_response(
                     content=f"**Пользователь, которого вы указали не зарегистрирован в системе.**"
@@ -425,6 +420,11 @@ class Publications(commands.Cog):
             elif not maker.account_status:
                 return await interaction.edit_original_response(
                     content=f"**Аккаунт редактора, которого вы указали, деактивирован.**"
+                )
+
+            if publication.maker_id == maker.id:
+                return await interaction.edit_original_response(
+                    content=f"**Изменений не произошло, редактор выпуска установлен такой-же, какого вы указали.**"
                 )
 
             await publication_methods.update_publication(
