@@ -34,7 +34,8 @@ class Notifier(commands.Cog):
             if (role in entry.before.roles) and (role not in entry.after.roles):
                 message = await channel.send(
                     content=f"**`[WARNING]` -> Модератор <@{entry.user.id}> снял роль <@&{role.id}> участнику <@{entry.target.id}>.**",
-                    view=ConfirmRoleAction()
+                    view=ConfirmRoleAction(),
+                    allowed_mentions=disnake.AllowedMentions(users=[entry.user])
                 )
                 try:
                     await message.pin(reason="Действие требует подтверждения")
@@ -49,7 +50,8 @@ class Notifier(commands.Cog):
             elif (role not in entry.before.roles) and (role in entry.after.roles):
                 message = await channel.send(
                     content=f"**`[WARNING]` -> Модератор <@{entry.user.id}> выдал роль <@&{role.id}> участнику <@{entry.target.id}>.**",
-                    view=ConfirmRoleAction()
+                    view=ConfirmRoleAction(),
+                    allowed_mentions=disnake.AllowedMentions(users=[entry.user])
                 )
                 try:
                     await message.pin(reason="Действие требует подтверждения")
