@@ -11,6 +11,8 @@ def is_guild_exists():
         guild = await guild_methods.get_guild(discord_id=interaction.guild.id)
         if not guild:
             raise GuildNotExists(message=f"Guild {interaction.guild.id} doesn't exist in the database")
+        elif not guild.is_active:
+            raise GuildNotExists(message=f"Guild {interaction.guild.id} is inactive")
         return True
 
     return commands.check(predicate)
@@ -23,7 +25,9 @@ def is_guild_admin():
         guild = await guild_methods.get_guild(discord_id=interaction.guild.id)
         if not guild:
             raise GuildNotExists(message=f"Guild {interaction.guild.id} doesn't exist in the database")
-        if not guild.is_admin_guild:
+        elif not guild.is_active:
+            raise GuildNotExists(message=f"Guild {interaction.guild.id} is inactive")
+        elif not guild.is_admin_guild:
             raise GuildNotAdmin(message=f"Guild {interaction.guild.id} doesn't have an admin privileges")
         return True
 
