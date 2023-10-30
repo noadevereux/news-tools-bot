@@ -60,7 +60,7 @@ class ErrorHandler(commands.Cog):
             )
         elif isinstance(error, GuildNotExists):
             return await interaction.edit_original_response(
-                content="**Этот сервер не зарегистрирован. Использовать команды на нем невомзожно.**"
+                content="**Этот сервер не зарегистрирован или не активен. Использовать команды на нем невозможно.**"
             )
         elif isinstance(error, CommandCalledInDM):
             return await interaction.edit_original_response(
