@@ -1,7 +1,7 @@
 import re
 import disnake
 from disnake.colour import Colour
-from disnake import Embed, User
+from disnake import Embed, User, Guild
 
 from .database.methods import makers as maker_methods, publications as publication_methods, guilds as guild_methods
 
@@ -125,17 +125,18 @@ async def get_publication_profile(guild_id: int, publication_id: int) -> Embed:
     return embed
 
 
-async def get_guild_profile(discord_id: int):
+async def get_guild_profile(_guild: Guild, discord_id: int):
     guild = await guild_methods.get_guild(discord_id=discord_id)
 
     roles = ""
     roles_amount = len(guild.roles_list)
     iteration = 1
     for role in guild.roles_list:
+        role_name = _guild.get_role(role)
         if iteration < roles_amount:
-            roles += f"`{role}`, "
+            roles += f"`{role} [{role_name}]`, "
         else:
-            roles += f"`{role}`."
+            roles += f"`{role} [{role_name}]`."
         iteration += 1
     if roles == "":
         roles = "`нет`"

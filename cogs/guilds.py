@@ -140,7 +140,9 @@ class Guilds(commands.Cog):
                 content="**Сервер с указаным Discord ID не зарегистрирован.**"
             )
 
-        embed = await get_guild_profile(discord_id=guild_id)
+        _guild = self.bot.get_guild(guild_id)
+
+        embed = await get_guild_profile(_guild=_guild, discord_id=guild_id)
 
         return await interaction.edit_original_response(
             embed=embed
