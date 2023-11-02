@@ -110,6 +110,14 @@ async def get_maker(guild_id: int, discord_id: int):
     return {"status": "ok", "maker": maker.scalar()}
 
 
+@db_router.get("/get_maker_accounts", dependencies=[Depends(JWTBearer())], tags=["Database", "Maker"])
+async def get_maker_accounts(discord_id: int):
+    async with SessionLocal() as session:
+        accounts = await session.execute(select(models.Maker).filter_by(discord_id=discord_id))
+
+    return {"status": "ok", "makers": accounts.scalars().all()}
+
+
 @db_router.get("/get_maker_by_id", dependencies=[Depends(JWTBearer())], tags=["Database", "Maker"])
 async def get_maker_by_id(id: int):
     async with SessionLocal() as session:
