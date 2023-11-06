@@ -12,7 +12,7 @@ from ext.models.checks import is_guild_exists
 
 
 class Publications(commands.Cog):
-    def __init__(self, bot: commands.Bot) -> None:
+    def __init__(self, bot: commands.InteractionBot) -> None:
         super().__init__()
         self.bot = bot
         self.log = Logger("cogs.publications.py.log")
@@ -833,5 +833,5 @@ class Publications(commands.Cog):
             )
 
 
-def setup(bot: commands.Bot):
+def setup(bot: commands.InteractionBot):
     bot.add_cog(cog=Publications(bot=bot))

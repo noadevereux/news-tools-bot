@@ -6,7 +6,7 @@ from ext.models.keyboards import ConfirmRoleAction
 
 
 class Notifier(commands.Cog):
-    def __init__(self, bot: commands.Bot) -> None:
+    def __init__(self, bot: commands.InteractionBot) -> None:
         super().__init__()
         self.bot = bot
 
@@ -65,5 +65,5 @@ class Notifier(commands.Cog):
                             pass
 
 
-def setup(bot: commands.Bot):
+def setup(bot: commands.InteractionBot):
     bot.add_cog(Notifier(bot=bot))

@@ -17,7 +17,7 @@ from config import DEFAULT_POST_TITLES
 
 
 class Main(commands.Cog):
-    def __init__(self, bot: commands.Bot) -> None:
+    def __init__(self, bot: commands.InteractionBot) -> None:
         super().__init__()
         self.bot = bot
         self.log = Logger("cogs.makers.py.log")
@@ -903,5 +903,5 @@ class Main(commands.Cog):
         )
 
 
-def setup(bot: commands.Bot):
+def setup(bot: commands.InteractionBot):
     bot.add_cog(Main(bot=bot))
