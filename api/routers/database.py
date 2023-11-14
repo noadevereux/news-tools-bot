@@ -102,6 +102,15 @@ async def get_all_makers(guild_id: int):
     return {"status": "ok", "makers": makers_list.scalars().all()}
 
 
+@db_router.get("/get_all_makers_sorted", dependencies=[Depends(JWTBearer())], tags=["Database", "Maker"])
+async def get_all_makers_sorted(guild_id: int):
+    async with SessionLocal() as session:
+        makers_list = await session.execute(
+            select(models.Maker).filter_by(guild_id=guild_id).order_by(models.Maker.level.desc()))
+
+    return {"status": "ok", "makers": makers_list.scalars().all()}
+
+
 @db_router.get("/get_maker", dependencies=[Depends(JWTBearer())], tags=["Database", "Maker"])
 async def get_maker(guild_id: int, discord_id: int):
     async with SessionLocal() as session:
