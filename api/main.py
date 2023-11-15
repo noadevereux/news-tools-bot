@@ -5,7 +5,6 @@ from fastapi import APIRouter, FastAPI, Request, Depends
 from api.auth.auth_bearer import JWTBearer
 import disnake
 from disnake.ext import commands
-from config import MAKERS_CHAT_ID
 
 from api.routers.database import db_router
 
@@ -20,9 +19,12 @@ router = APIRouter()
 
 
 @router.post("/send_notify", dependencies=[Depends(JWTBearer())], tags=["Notifies"])
-async def send_notify(request: Request, message: str):
+async def send_notify(request: Request, channel_id: int, message: str):
     bot: commands.Bot = request.app.bot
-    channel = bot.get_channel(MAKERS_CHAT_ID)
+    channel = bot.get_channel(channel_id)
+
+    if not channel:
+        return {"status": "error", "code": "not_found", "message": "Channel wasn't found"}
 
     try:
         await channel.send(
