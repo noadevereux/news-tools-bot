@@ -10,7 +10,7 @@ from api.routers.database import db_router
 
 
 class APIService(FastAPI):
-    def __init__(self, bot: commands.Bot, *args, **kwargs) -> None:
+    def __init__(self, bot: commands.InteractionBot, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         self.bot = bot
 
@@ -20,7 +20,7 @@ router = APIRouter()
 
 @router.post("/send_notify", dependencies=[Depends(JWTBearer())], tags=["Notifies"])
 async def send_notify(request: Request, channel_id: int, message: str):
-    bot: commands.Bot = request.app.bot
+    bot: commands.InteractionBot = request.app.bot
     channel = bot.get_channel(channel_id)
 
     if not channel:
@@ -38,7 +38,7 @@ async def send_notify(request: Request, channel_id: int, message: str):
 
 @router.post("/send_dm_notify", dependencies=[Depends(JWTBearer())], tags=["Notifies"])
 async def send_dm_notify(request: Request, user_id: int, message: str):
-    bot: commands.Bot = request.app.bot
+    bot: commands.InteractionBot = request.app.bot
     user: disnake.User = bot.get_user(user_id)
 
     if not user:
@@ -75,7 +75,7 @@ def make_app(bot):
     return app
 
 
-async def start_server(bot: commands.Bot) -> None:
+async def start_server(bot: commands.InteractionBot) -> None:
     app = make_app(bot)
 
     config = uvicorn.Config(

@@ -9,7 +9,7 @@ from ext.models.checks import is_guild_admin
 
 
 class API(commands.Cog):
-    def __init__(self, bot: commands.Bot) -> None:
+    def __init__(self, bot: commands.InteractionBot) -> None:
         super().__init__()
         self.bot = bot
 
@@ -39,5 +39,5 @@ class API(commands.Cog):
         await start_server(self.bot)
 
 
-def setup(bot: commands.Bot):
+def setup(bot: commands.InteractionBot):
     bot.add_cog(API(bot))
