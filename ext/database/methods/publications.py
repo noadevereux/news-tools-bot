@@ -17,6 +17,7 @@ async def add_publication(guild_id: int, publication_id: int) -> Publication:
 
 
 async def update_publication(
+        guild_id: int,
         publication_id: int,
         column_name: Literal[
             "id",
@@ -32,7 +33,8 @@ async def update_publication(
         value: int | str | None,
 ) -> None:
     async with SessionLocal() as session:
-        publication = await session.execute(select(Publication).filter_by(publication_number=publication_id))
+        publication = await session.execute(
+            select(Publication).filter_by(guild_id=guild_id, publication_number=publication_id))
         if publication:
             publication = publication.scalar()
             setattr(publication, column_name, value)
