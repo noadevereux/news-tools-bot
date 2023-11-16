@@ -143,6 +143,7 @@ class MakerAction(Base):
             "setnickname",
             "setdiscord",
             "setlevel",
+            "setpost",
             "setstatus",
             "setdate",
             "warn",
