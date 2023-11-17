@@ -103,7 +103,7 @@ async def cog_unload(
 
 @bot.listen(name="on_ready")
 async def on_ready():
-    await create_db_tables.start()
+    # await create_db_tables.start()
     print(f"[INFO] {bot.user} запущен.")
     await log.info("Запущена новая сессия.")
     await bot.change_presence(
@@ -115,9 +115,9 @@ async def on_ready():
     )
 
 
-@tasks.loop(count=1)
-async def create_db_tables():
-    await create_tables()
+# @tasks.loop(count=1)
+# async def create_db_tables():
+#     await create_tables()
 
 
 async def main():
