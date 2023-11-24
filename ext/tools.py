@@ -25,11 +25,6 @@ async def get_status_title(status_kw: str) -> str:
     return status
 
 
-async def get_color_object(color_hex: str) -> Colour:
-    color = Colour(int(color_hex, base=16))
-    return color
-
-
 async def get_maker_profile(guild_id: int, user: User) -> Embed:
     maker = await maker_methods.get_maker(guild_id=guild_id, discord_id=user.id)
 
