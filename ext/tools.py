@@ -2,6 +2,7 @@ import re
 import disnake
 from disnake.colour import Colour
 from disnake import Embed, User, Guild
+from datetime import datetime
 
 from .database.methods import makers as maker_methods, publications as publication_methods, guilds as guild_methods
 
@@ -41,6 +42,8 @@ async def get_maker_profile(guild_id: int, user: User) -> Embed:
     else:
         publications_amount = len(publications_amount)
 
+    days = (datetime.now() - maker.appointment_datetime).days
+
     embed_description = f"""
     **ID аккаунта: `{maker.id}`**
     **Discord: <@{maker.discord_id}>**
@@ -51,6 +54,7 @@ async def get_maker_profile(guild_id: int, user: User) -> Embed:
 
     **Сделано выпусков: {publications_amount}**
     **Предупреждения: {maker.warns}**
+    **Дней на посту редактора: {days}**
     """
 
     if maker.is_admin:
