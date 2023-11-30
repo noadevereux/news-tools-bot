@@ -767,8 +767,15 @@ class Main(commands.Cog):
             content=f"**Вы установили редактору {member.mention} `{maker.nickname}` статус `{status_title}`.**"
         )
 
-    @maker.sub_command(name="warn", description="Выдать редактору выговор")
+    @maker.sub_command_group(name="warn", description="Управление наказаниями редактора")
     async def maker_warn(
+            self,
+            interaction: disnake.ApplicationCommandInteraction
+    ):
+        pass
+
+    @maker_warn.sub_command(name="give", description="Выдать редактору выговор")
+    async def maker_warn_give(
             self,
             interaction: disnake.ApplicationCommandInteraction,
             member: disnake.User | disnake.Member = commands.Param(name="maker",
@@ -832,8 +839,8 @@ class Main(commands.Cog):
             content=f"**Вы выдали выговор редактору {member.mention} `{maker.nickname}`. Причина: {reason}**"
         )
 
-    @maker.sub_command(name="unwarn", description="Снять редактору выговор")
-    async def maker_warn(
+    @maker_warn.sub_command(name="take", description="Снять редактору выговор")
+    async def maker_warn_take(
             self,
             interaction: disnake.ApplicationCommandInteraction,
             member: disnake.User | disnake.Member = commands.Param(name="maker",
