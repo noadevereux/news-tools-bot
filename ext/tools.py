@@ -8,21 +8,19 @@ from .database.methods import makers as maker_methods, publications as publicati
 
 
 async def get_status_title(status_kw: str) -> str:
-    if status_kw == "new":
-        status = "На испытательном сроке"
-    elif status_kw == "active":
-        status = "Активен"
-    elif status_kw == "inactive":
-        status = "Неактивен"
-    elif status_kw == "in_process":
-        status = "В процессе"
-    elif status_kw == "completed":
-        status = "Сделан"
-    elif status_kw == "failed":
-        status = "Провален"
-    else:
-        status = "`Ошибка`"
-    return status
+    match status_kw:
+        case "active":
+            return "Активен"
+        case "inactive":
+            return "Неактивен"
+        case "in_process":
+            return "В процессе"
+        case "completed":
+            return "Сделан"
+        case "failed":
+            return "Провален"
+        case _:
+            return "Неизвестно"
 
 
 async def get_maker_profile(guild_id: int, user: User | Member) -> Embed:
