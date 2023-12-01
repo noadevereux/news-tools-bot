@@ -1,7 +1,7 @@
 import re
 import disnake
 from disnake.colour import Colour
-from disnake import Embed, User, Guild
+from disnake import Embed, User, Guild, Member
 from datetime import datetime
 
 from .database.methods import makers as maker_methods, publications as publication_methods, guilds as guild_methods
@@ -25,7 +25,7 @@ async def get_status_title(status_kw: str) -> str:
     return status
 
 
-async def get_maker_profile(guild_id: int, user: User) -> Embed:
+async def get_maker_profile(guild_id: int, user: User | Member) -> Embed:
     maker = await maker_methods.get_maker(guild_id=guild_id, discord_id=user.id)
 
     level = int(maker.level)
