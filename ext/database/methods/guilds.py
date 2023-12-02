@@ -50,6 +50,8 @@ async def update_guild(
             "roles_list",
             "is_notifies_enabled",
             "channel_id",
+            "log_roles_list",
+            "log_roles_channel",
             "is_admin_guild",
             "is_active"
         ],
@@ -72,6 +74,8 @@ async def update_guild_by_id(
             "roles_list",
             "is_notifies_enabled",
             "channel_id",
+            "log_roles_list",
+            "log_roles_channel",
             "is_admin_guild",
             "is_active"
         ],
