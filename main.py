@@ -107,7 +107,7 @@ async def on_ready():
     await log.info("Запущена новая сессия.")
     await bot.change_presence(
         activity=disnake.Activity(
-            name="news-tools.ru",
+            name="news-tools.ru | v1.0.0",
             type=disnake.ActivityType.playing
         ),
         status=disnake.Status.online
