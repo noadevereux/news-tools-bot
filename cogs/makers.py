@@ -89,7 +89,7 @@ class Main(commands.Cog):
             meta=nickname,
         )
 
-        embed = await get_maker_profile(guild_id=guild.id, user=member)
+        embed = await get_maker_profile(maker_id=maker.id, user=member)
 
         return await interaction.edit_original_response(
             content=f"**Вы зарегистрировали редактора {member.mention} `{nickname}` в системе.**",
@@ -233,7 +233,7 @@ class Main(commands.Cog):
                 content=f"**Вы активировали аккаунт редактора <@{maker.discord_id}> `{nickname}`.**"
             )
 
-        embed = await get_maker_profile(guild_id=guild.id, user=member)
+        embed = await get_maker_profile(maker_id=maker.id, user=member)
 
         return await interaction.edit_original_response(
             content=f"**Вы активировали аккаунт редактора <@{maker.discord_id}> `{nickname}`.**",
@@ -368,12 +368,7 @@ class Main(commands.Cog):
 
         member = interaction.guild.get_member(maker.discord_id)
 
-        if not member:
-            return await interaction.edit_original_response(
-                content="**Невозможно отобразить профиль редактора, возможно его нет на сервере.**"
-            )
-
-        embed = await get_maker_profile(guild_id=guild.id, user=member)
+        embed = await get_maker_profile(maker_id=maker.id, user=member)
 
         return await interaction.edit_original_response(
             embed=embed

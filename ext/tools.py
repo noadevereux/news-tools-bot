@@ -25,8 +25,8 @@ async def get_status_title(status_kw: str | None) -> str:
             return "Неизвестно"
 
 
-async def get_maker_profile(guild_id: int, user: User | Member) -> Embed:
-    maker = await maker_methods.get_maker(guild_id=guild_id, discord_id=user.id)
+async def get_maker_profile(maker_id: int, user: User | Member = None) -> Embed:
+    maker = await maker_methods.get_maker_by_id(id=maker_id)
 
     level = int(maker.level)
     post = maker.post_name
@@ -39,33 +39,47 @@ async def get_maker_profile(guild_id: int, user: User | Member) -> Embed:
 
     days = (datetime.now() - maker.appointment_datetime).days
 
-    embed_description = f"""
-    **ID аккаунта: `{maker.id}`**
-    **Discord: <@{maker.discord_id}>**
-    **Никнейм: {maker.nickname}**
-    **Уровень доступа: {level}**
-    **Должность: {post}**
-    **Статус: {status}**
+    embed_description = f"""\
+**ID аккаунта: `{maker.id}`**
+**Discord: <@{maker.discord_id}>**
+**Никнейм: {maker.nickname}**
+**Уровень доступа: {level}**
+**Должность: {post}**
+**Статус: {status}**
 
-    **Сделано выпусков: {publications_amount}**
-    **Предупреждения: {maker.warns}**
-    **Дней на посту редактора: {days}**
+**Сделано выпусков: {publications_amount}**
+**Предупреждения: {maker.warns}**
+**Дней на посту редактора: {days}**
     """
 
     if maker.is_admin:
         embed_description += "\n**🛡️ Пользователь обладает административным доступом.**"
 
-    embed = Embed(
-        title=f"Профиль редактора {user.display_name}",
-        color=0x2B2D31,
-        description=embed_description,
-        timestamp=maker.appointment_datetime,
-    )
+    if isinstance(user, (User, Member)):
+        embed = Embed(
+            title=f"Профиль редактора {maker.nickname}",
+            color=0x2B2D31,
+            description=embed_description,
+            timestamp=maker.appointment_datetime,
+        )
 
-    if not maker.account_status:
-        embed.set_author(name="🔴 АККАУНТ ДЕАКТИВИРОВАН 🔴")
+        if not maker.account_status:
+            embed.set_author(name="🔴 АККАУНТ ДЕАКТИВИРОВАН 🔴")
 
-    embed.set_thumbnail(user.display_avatar.url)
+        embed.set_thumbnail(user.display_avatar.url)
+    else:
+        embed_description += "\n```🛠️ Внимание, это упрощенная версия информации, т.к. бот не смог найти участника.```"
+
+        embed = Embed(
+            title=f"Профиль редактора {maker.nickname}",
+            color=0x2B2D31,
+            description=embed_description,
+            timestamp=maker.appointment_datetime,
+        )
+
+        if not maker.account_status:
+            embed.set_author(name="🔴 АККАУНТ ДЕАКТИВИРОВАН 🔴")
+
     embed.set_footer(text="Дата постановления:")
 
     return embed
