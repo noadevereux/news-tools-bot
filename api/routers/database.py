@@ -57,10 +57,13 @@ async def update_maker(
         ],
         value
 ):
-    if value == "false":
-        value = False
-    elif value == "true":
-        value = True
+    match value:
+        case "false":
+            value = False
+        case "true":
+            value = True
+        case "null":
+            value = None
 
     async with SessionLocal() as session:
         maker = await session.execute(select(models.Maker).filter_by(guild_id=guild_id, discord_id=discord_id))
@@ -89,10 +92,13 @@ async def update_maker(
         ],
         value
 ):
-    if value == "false":
-        value = False
-    elif value == "true":
-        value = True
+    match value:
+        case "false":
+            value = False
+        case "true":
+            value = True
+        case "null":
+            value = None
 
     async with SessionLocal() as session:
         maker = await session.execute(select(models.Maker).filter_by(id=id))
