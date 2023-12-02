@@ -328,7 +328,7 @@ class Main(commands.Cog):
             self,
             interaction: disnake.ApplicationCommandInteraction,
             maker_id: int = commands.Param(default=None, name="maker", description="Редактор",
-                                           autocomplete=maker_autocomplete)
+                                           autocomplete=active_maker_autocomplete)
     ):
         await interaction.response.defer()
 
@@ -378,7 +378,8 @@ class Main(commands.Cog):
     async def maker_setdiscord(
             self,
             interaction: disnake.ApplicationCommandInteraction,
-            maker_id: int = commands.Param(name="maker", description="Редактор", autocomplete=maker_autocomplete),
+            maker_id: int = commands.Param(name="maker", description="Редактор",
+                                           autocomplete=active_maker_autocomplete),
             new_member: disnake.User | disnake.Member = commands.Param(name="user",
                                                                        description="Пользователь или его ID")
     ):
@@ -455,7 +456,8 @@ class Main(commands.Cog):
     async def maker_setnickname(
             self,
             interaction: disnake.ApplicationCommandInteraction,
-            maker_id: int = commands.Param(name="maker", description="Редактор", autocomplete=maker_autocomplete),
+            maker_id: int = commands.Param(name="maker", description="Редактор",
+                                           autocomplete=active_maker_autocomplete),
             nickname: str = commands.Param(name="nickname", description="Никнейм")
     ):
         await interaction.response.defer()
@@ -526,7 +528,8 @@ class Main(commands.Cog):
     async def maker_setlevel(
             self,
             interaction: disnake.ApplicationCommandInteraction,
-            maker_id: int = commands.Param(name="maker", description="Редактор", autocomplete=maker_autocomplete),
+            maker_id: int = commands.Param(name="maker", description="Редактор",
+                                           autocomplete=active_maker_autocomplete),
             level: str = commands.Param(
                 name="level",
                 description="Уровень доступа",
@@ -620,7 +623,7 @@ class Main(commands.Cog):
             self,
             interaction: disnake.ApplicationCommandInteraction,
             maker_id: int = commands.Param(name="maker", description="Редактор или его Discord ID",
-                                           autocomplete=maker_autocomplete),
+                                           autocomplete=active_maker_autocomplete),
             post: str = commands.Param(default=None, name="post", description="Должность редактора")
     ):
         await interaction.response.defer()
@@ -719,7 +722,7 @@ class Main(commands.Cog):
             self,
             interaction: disnake.ApplicationCommandInteraction,
             maker_id: int = commands.Param(name="maker", description="Редактор",
-                                           autocomplete=maker_autocomplete),
+                                           autocomplete=active_maker_autocomplete),
             status: str = commands.Param(
                 name="status",
                 description="Статус",
@@ -806,7 +809,8 @@ class Main(commands.Cog):
     async def maker_warn_give(
             self,
             interaction: disnake.ApplicationCommandInteraction,
-            maker_id: int = commands.Param(name="maker", description="Редактор", autocomplete=maker_autocomplete),
+            maker_id: int = commands.Param(name="maker", description="Редактор",
+                                           autocomplete=active_maker_autocomplete),
             reason: str = commands.Param(name="reason", description="Причина")
     ):
         await interaction.response.defer()
@@ -872,7 +876,8 @@ class Main(commands.Cog):
     async def maker_warn_take(
             self,
             interaction: disnake.ApplicationCommandInteraction,
-            maker_id: int = commands.Param(name="maker", description="Редактор", autocomplete=maker_autocomplete),
+            maker_id: int = commands.Param(name="maker", description="Редактор",
+                                           autocomplete=active_maker_autocomplete),
             reason: str = commands.Param(name="reason", description="Причина")
     ):
         await interaction.response.defer()
