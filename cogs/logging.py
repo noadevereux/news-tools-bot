@@ -87,7 +87,7 @@ class Notifier(commands.Cog):
         for role in roles:
             if (role in entry.before.roles) and (role not in entry.after.roles):
                 embed = disnake.Embed(
-                    title="Информация о снятии роли",
+                    title="🔴 Информация о снятии роли",
                     colour=role.colour,
                     timestamp=datetime.now()
                 )
@@ -106,7 +106,7 @@ class Notifier(commands.Cog):
                 await channel.send(embed=embed)
             elif (role not in entry.before.roles) and (role in entry.after.roles):
                 embed = disnake.Embed(
-                    title="Информация о выдаче роли",
+                    title="🟢 Информация о выдаче роли",
                     colour=role.colour,
                     timestamp=datetime.now()
                 )
