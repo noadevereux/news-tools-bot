@@ -7,7 +7,7 @@ from disnake import Embed, User, Guild, Member
 from .database.methods import makers as maker_methods, publications as publication_methods, guilds as guild_methods
 
 
-async def get_status_title(status_kw: str) -> str:
+async def get_status_title(status_kw: str | None) -> str:
     match status_kw:
         case "active":
             return "Активен"
@@ -19,6 +19,8 @@ async def get_status_title(status_kw: str) -> str:
             return "Сделан"
         case "failed":
             return "Провален"
+        case None:
+            return "Не установлено"
         case _:
             return "Неизвестно"
 
