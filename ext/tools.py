@@ -124,43 +124,81 @@ async def get_publication_profile(guild_id: int, publication_id: int) -> Embed:
     return embed
 
 
-async def get_guild_profile(_guild: Guild, discord_id: int):
-    guild = await guild_methods.get_guild(discord_id=discord_id)
+async def get_guild_profile(guild_id: int, _guild: Guild = None):
+    guild = await guild_methods.get_guild_by_id(id=guild_id)
+
+    match guild.is_notifies_enabled:
+        case True:
+            is_notifies_enabled = "включены"
+        case False:
+            is_notifies_enabled = "отключены"
+        case _:
+            is_notifies_enabled = "неизвестно"
+
+    match guild.is_admin_guild:
+        case True:
+            admin_guild = "да"
+        case False:
+            admin_guild = "нет"
+        case _:
+            admin_guild = "неизвестно"
+
+    match guild.is_active:
+        case True:
+            active = "активен"
+        case False:
+            active = "деактивирован"
+        case _:
+            active = "неизвестно"
 
     roles = ""
     roles_amount = len(guild.roles_list)
-    iteration = 1
-    for role in guild.roles_list:
-        role_name = _guild.get_role(role)
-        if iteration < roles_amount:
-            roles += f"`{role} [{role_name}]`, "
+
+    log_roles = ""
+    log_roles_amount = len(guild.log_roles_list)
+
+    if isinstance(_guild, Guild):
+        iteration = 1
+
+        for role in guild.roles_list:
+            role_name = _guild.get_role(role)
+
+            if iteration < roles_amount:
+                roles += f"`{role} [{role_name}]`, "
+            else:
+                roles += f"`{role} [{role_name}]`."
+
+            iteration += 1
+
+        if guild.channel_id:
+            channel_id = f"<#{guild.channel_id}> (`{guild.channel_id} | {_guild.get_channel_or_thread(int(guild.channel_id))}`)"
         else:
-            roles += f"`{role} [{role_name}]`."
-        iteration += 1
-    if roles == "":
-        roles = "`нет`"
+            channel_id = "`нет`"
 
-    if guild.channel_id:
-        channel_id = f"<#{guild.channel_id}> (`{guild.channel_id}`)"
-    else:
-        channel_id = "`нет`"
+        iteration = 1
 
-    if guild.is_notifies_enabled:
-        is_notifies_enabled = "включены"
-    else:
-        is_notifies_enabled = "отключены"
+        for role in guild.log_roles_list:
+            role_name = _guild.get_role(role)
 
-    if guild.is_admin_guild:
-        admin_guild = "да"
-    else:
-        admin_guild = "нет"
+            if iteration < log_roles_amount:
+                log_roles += f"`{role} [{role_name}]`, "
+            else:
+                log_roles += f"`{role} [{role_name}]`."
 
-    if guild.is_active:
-        active = "активен"
-    else:
-        active = "деактивирован"
+            iteration += 1
 
-    embed_description = f"""\
+        if guild.log_roles_channel:
+            log_channel = f"<#{guild.log_roles_channel}> (`{guild.log_roles_channel} | {_guild.get_channel_or_thread(int(guild.log_roles_channel))}`)"
+        else:
+            log_channel = "`нет`"
+
+        if roles == "":
+            roles = "`нет`"
+
+        if log_roles == "":
+            log_roles = "`нет`"
+
+        embed_description = f"""\
 **ID сервера: `{guild.id}`**
 **Discord ID сервера: `{guild.discord_id}`**
 **Имя сервера: `{guild.guild_name}`**
@@ -168,16 +206,76 @@ async def get_guild_profile(_guild: Guild, discord_id: int):
 **ID подключённых ролей: {roles}**
 **Подключённый канал: {channel_id}**
 
+**ID подключённых к логированию ролей: {log_roles}**
+**Канал для логирования ролей: {log_channel}**
+
 **Статус уведомлений: `{is_notifies_enabled}`**
 **Административный доступ: `{admin_guild}`**
 **Статус сервера: `{active}`**
-    """
+        """
+    else:
+        iteration = 1
+
+        for role in guild.roles_list:
+            if iteration < roles_amount:
+                roles += f"`{role}`, "
+            else:
+                roles += f"`{role}`."
+
+            iteration += 1
+
+        if guild.channel_id:
+            channel_id = f"<#{guild.channel_id}> (`{guild.channel_id}`)"
+        else:
+            channel_id = "`нет`"
+
+        iteration = 1
+
+        for role in guild.log_roles_list:
+            if iteration < log_roles_amount:
+                log_roles += f"`{role}`, "
+            else:
+                log_roles += f"`{role}`."
+
+            iteration += 1
+
+        if guild.log_roles_channel:
+            log_channel = f"<#{guild.log_roles_channel}> (`{guild.log_roles_channel}`)"
+        else:
+            log_channel = "`нет`"
+
+        if roles == "":
+            roles = "`нет`"
+
+        if log_roles == "":
+            log_roles = "`нет`"
+
+        embed_description = f"""\
+**ID сервера: `{guild.id}`**
+**Discord ID сервера: `{guild.discord_id}`**
+**Имя сервера: `{guild.guild_name}`**
+
+**ID подключённых ролей: {roles}**
+**Подключённый канал: {channel_id}**
+
+**ID подключённых к логированию ролей: {log_roles}**
+**Канал для логирования ролей: {log_channel}**
+
+**Статус уведомлений: `{is_notifies_enabled}`**
+**Административный доступ: `{admin_guild}`**
+**Статус сервера: `{active}`**
+```
+🛠️ Внимание, это упрощенная версия информации, т.к. бот не является участником сервера.
+В упрощенной версии нельзя посмотреть названия ролей и каналов.
+```
+        """
 
     embed = disnake.Embed(
         title=f"Информация о сервере `{guild.guild_name}`",
         description=embed_description,
         color=0x2B2D31,
     )
+
     return embed
 
 
