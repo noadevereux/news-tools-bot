@@ -138,7 +138,7 @@ class DeveloperCommands(commands.Cog):
 
         _guild = self.bot.get_guild(guild.discord_id)
 
-        embed = await get_guild_profile(_guild=_guild, discord_id=guild_id)
+        embed = await get_guild_profile(_guild=_guild, discord_id=guild.discord_id)
 
         return await interaction.edit_original_response(
             embed=embed
