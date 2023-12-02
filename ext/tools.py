@@ -1,8 +1,8 @@
 import re
-import disnake
-from disnake.colour import Colour
-from disnake import Embed, User, Guild, Member
 from datetime import datetime
+
+import disnake
+from disnake import Embed, User, Guild, Member
 
 from .database.methods import makers as maker_methods, publications as publication_methods, guilds as guild_methods
 
