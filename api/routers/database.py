@@ -52,6 +52,7 @@ async def update_maker(
             "post_name",
             "status",
             "warns",
+            "preds",
             "appointment_datetime",
             "account_status",
         ],
@@ -76,7 +77,7 @@ async def update_maker(
 
 
 @db_router.post("/update_maker_by_id", dependencies=[Depends(JWTBearer())], tags=["Database", "Maker"])
-async def update_maker(
+async def update_maker_by_id(
         id: int,
         column_name: Literal[
             "id",
@@ -87,6 +88,7 @@ async def update_maker(
             "post_name",
             "status",
             "warns",
+            "preds",
             "appointment_datetime",
             "account_status",
         ],
