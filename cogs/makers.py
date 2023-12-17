@@ -12,10 +12,10 @@ from ext.logger import Logger
 from ext.tools import *
 
 from ext.models.checks import is_guild_exists
+from ext.models.keyboards import get_profile_keyboard
+from ext.models.autocompleters import maker_autocomplete, deactivated_maker_autocomplete, active_maker_autocomplete
 
 from config import DEFAULT_POST_TITLES
-
-from ext.models.autocompleters import maker_autocomplete, deactivated_maker_autocomplete, active_maker_autocomplete
 
 
 class Main(commands.Cog):
@@ -371,7 +371,8 @@ class Main(commands.Cog):
         embed = await get_maker_profile(maker_id=maker.id, user=member)
 
         return await interaction.edit_original_response(
-            embed=embed
+            embed=embed,
+            view=get_profile_keyboard(maker_id=maker.id)
         )
 
     @maker.sub_command(name="setdiscord", description="Изменить редактору Discord")
