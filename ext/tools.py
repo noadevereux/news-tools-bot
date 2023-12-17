@@ -49,8 +49,11 @@ async def get_maker_profile(maker_id: int, user: User | Member = None) -> Embed:
 **Должность: {post}**
 **Статус: {status}**
 
+**Выговоры: {maker.warns}**
+**Предупреждения: {maker.preds}**
+
 **Сделано выпусков: {publications_amount}**
-**Предупреждения: {maker.warns}**
+
 **Дней на посту редактора: {days}**
     """
 
