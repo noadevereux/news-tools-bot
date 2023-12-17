@@ -104,3 +104,17 @@ class ConfirmReboot(View):
             content="**Вы отменили перезагрузку сервера.**",
             view=None
         )
+
+
+def get_profile_keyboard(maker_id: int):
+    keyboard = View()
+
+    items = [
+        disnake.ui.Button(style=disnake.ButtonStyle.gray, label="Страница в панели",
+                          url=f"https://news-tools.ru/profile/{maker_id}"),
+    ]
+
+    for item in items:
+        keyboard.add_item(item=item)
+
+    return keyboard
