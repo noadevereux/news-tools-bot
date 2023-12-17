@@ -799,7 +799,7 @@ class Main(commands.Cog):
             content=f"**Вы установили редактору <@{maker.discord_id}> `{maker.nickname}` статус `{status_title}`.**"
         )
 
-    @maker.sub_command_group(name="warn", description="Управление наказаниями редактора")
+    @maker.sub_command_group(name="warn", description="Управление выговорами редактора")
     async def maker_warn(
             self,
             interaction: disnake.ApplicationCommandInteraction
@@ -944,6 +944,216 @@ class Main(commands.Cog):
         return await interaction.edit_original_response(
             content=f"**Вы сняли выговор редактору <@{maker.discord_id}> `{maker.nickname}`. Причина: {reason}**"
         )
+
+    @maker.sub_command_group(name="pred", description="Управление предупреждениями редактора")
+    async def maker_pred(
+            self,
+            interaction: disnake.ApplicationCommandInteraction
+    ):
+        pass
+
+    @maker_pred.sub_command(name="give", description="Выдать редактору предупреждение")
+    async def maker_pred_give(
+            self,
+            interaction: disnake.ApplicationCommandInteraction,
+            maker_id: int = commands.Param(name="maker", description="Редактор",
+                                           autocomplete=active_maker_autocomplete),
+            reason: str = commands.Param(name="reason", description="Причина")
+    ):
+        await interaction.response.defer()
+
+        guild = await guild_methods.get_guild(discord_id=interaction.guild.id)
+
+        interaction_author = await maker_methods.get_maker(
+            guild_id=guild.id,
+            discord_id=interaction.author.id
+        )
+
+        if not interaction_author:
+            return await interaction.edit_original_response(
+                content="**У вас недостаточно прав для выполнения данной команды.**"
+            )
+
+        elif not interaction_author.account_status:
+            return await interaction.edit_original_response(
+                content="**У вас недостаточно прав для выполнения данной команды.**"
+            )
+
+        elif int(interaction_author.level) < 2:
+            return await interaction.edit_original_response(
+                content="**У вас недостаточно прав для выполнения данной команды.**"
+            )
+
+        maker = await maker_methods.get_maker_by_id(id=maker_id)
+
+        if not maker:
+            return await interaction.edit_original_response(
+                content="**Редактор не зарегистрирован в системе.**"
+            )
+
+        elif not maker.guild_id == interaction_author.guild_id:
+            return await interaction.edit_original_response(
+                content="**Редактор не зарегистрирован в системе.**"
+            )
+
+        elif int(interaction_author.level) <= int(maker.level) and not interaction_author.is_admin:
+            return await interaction.edit_original_response(
+                content="**У вас недостаточно прав чтобы сделать это.**"
+            )
+
+        if maker.preds < 2:
+            await maker_methods.update_maker(
+                guild_id=guild.id,
+                discord_id=maker.discord_id,
+                column_name="preds",
+                value=(maker.preds + 1)
+            )
+
+            await action_methods.add_maker_action(
+                maker_id=maker.id,
+                made_by=interaction_author.id,
+                action="pred",
+                reason=reason
+            )
+            return await interaction.edit_original_response(
+                content=f"**Вы выдали предупреждение редактору <@{maker.discord_id}> `{maker.nickname}`. Причина: {reason}**"
+            )
+        else:
+            await action_methods.add_maker_action(
+                maker_id=maker.id,
+                made_by=interaction_author.id,
+                action="pred",
+                reason=reason
+            )
+
+            await maker_methods.update_maker(
+                guild_id=guild.id,
+                discord_id=maker.discord_id,
+                column_name="preds",
+                value=0
+            )
+
+            await maker_methods.update_maker(
+                guild_id=guild.id,
+                discord_id=maker.discord_id,
+                column_name="warns",
+                value=(maker.warns + 1)
+            )
+
+            await action_methods.add_maker_action(
+                maker_id=maker.id,
+                made_by=-1,
+                action="warn",
+                reason="3/3 предупреждений"
+            )
+            return await interaction.edit_original_response(
+                content=f"**Вы выдали предупреждение редактору <@{maker.discord_id}> `{maker.nickname}`. Причина: {reason}**\n"
+                        f"**⚠️ Система выдала выговор редактору. Причина: 3/3 предупреждений.**"
+            )
+
+    @maker_pred.sub_command(name="take", description="Снять редактору предупреждение")
+    async def maker_pred_take(
+            self,
+            interaction: disnake.ApplicationCommandInteraction,
+            maker_id: int = commands.Param(name="maker", description="Редактор",
+                                           autocomplete=active_maker_autocomplete),
+            reason: str = commands.Param(name="reason", description="Причина")
+    ):
+        await interaction.response.defer()
+
+        guild = await guild_methods.get_guild(discord_id=interaction.guild.id)
+
+        interaction_author = await maker_methods.get_maker(
+            guild_id=guild.id,
+            discord_id=interaction.author.id
+        )
+
+        if not interaction_author:
+            return await interaction.edit_original_response(
+                content="**У вас недостаточно прав для выполнения данной команды.**"
+            )
+
+        elif not interaction_author.account_status:
+            return await interaction.edit_original_response(
+                content="**У вас недостаточно прав для выполнения данной команды.**"
+            )
+
+        elif int(interaction_author.level) < 2:
+            return await interaction.edit_original_response(
+                content="**У вас недостаточно прав для выполнения данной команды.**"
+            )
+
+        maker = await maker_methods.get_maker_by_id(id=maker_id)
+
+        if not maker:
+            return await interaction.edit_original_response(
+                content="**Редактор не зарегистрирован в системе.**"
+            )
+
+        elif not maker.guild_id == interaction_author.guild_id:
+            return await interaction.edit_original_response(
+                content="**Редактор не зарегистрирован в системе.**"
+            )
+
+        elif int(interaction_author.level) <= int(maker.level) and not interaction_author.is_admin:
+            return await interaction.edit_original_response(
+                content="**У вас недостаточно прав чтобы сделать это.**"
+            )
+
+        if maker.preds > 0:
+            await maker_methods.update_maker(
+                guild_id=guild.id,
+                discord_id=maker.discord_id,
+                column_name="preds",
+                value=(maker.preds - 1)
+            )
+
+            await action_methods.add_maker_action(
+                maker_id=maker.id,
+                made_by=interaction_author.id,
+                action="unpred",
+                reason=reason
+            )
+
+            return await interaction.edit_original_response(
+                content=f"**Вы сняли предупреждение редактору <@{maker.discord_id}> `{maker.nickname}`. Причина: {reason}**"
+            )
+        elif (maker.preds == 0) and (maker.warns > 0):
+            await maker_methods.update_maker(
+                guild_id=guild.id,
+                discord_id=maker.discord_id,
+                column_name="preds",
+                value=2
+            )
+
+            await maker_methods.update_maker(
+                guild_id=guild.id,
+                discord_id=maker.discord_id,
+                column_name="warns",
+                value=(maker.warns - 1)
+            )
+
+            await action_methods.add_maker_action(
+                maker_id=maker.id,
+                made_by=-1,
+                action="unwarn",
+                reason="распадение выговора на 3 предупреждения"
+            )
+
+            await action_methods.add_maker_action(
+                maker_id=maker.id,
+                made_by=interaction_author.id,
+                action="unpred",
+                reason=reason
+            )
+            return await interaction.edit_original_response(
+                content=f"**Вы сняли предупреждение редактору <@{maker.discord_id}> `{maker.nickname}`. Причина: {reason}**\n"
+                        f"**⚠️ Система сняла выговор редактору. Причина: распад выговора на 3 предупреждения.**"
+            )
+        else:
+            return await interaction.edit_original_response(
+                content="**Вы не можете установить отрицательное количество предупреждений редактору.**"
+            )
 
 
 def setup(bot: commands.InteractionBot):
