@@ -29,7 +29,10 @@ async def get_maker_profile(maker_id: int, user: User | Member = None) -> Embed:
     maker = await maker_methods.get_maker_by_id(id=maker_id)
 
     level = int(maker.level)
-    post = maker.post_name
+    if maker.post_name:
+        post = maker.post_name
+    else:
+        post = "не установлено"
     status = await get_status_title(maker.status)
     publications_amount = await maker_methods.get_publications_by_maker(id=maker.id)
     if not publications_amount:
@@ -47,7 +50,7 @@ async def get_maker_profile(maker_id: int, user: User | Member = None) -> Embed:
 **Никнейм: {maker.nickname}**
 **Уровень доступа: {level}**
 **Должность: {post}**
-**Статус: {status}**
+**Статус: {status.lower()}**
 
 **Выговоры: {maker.warns}**
 **Предупреждения: {maker.preds}**
