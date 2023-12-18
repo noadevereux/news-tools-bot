@@ -43,7 +43,7 @@ async def update_maker(
             "appointment_datetime",
             "account_status",
         ],
-        value: str | int,
+        value,
 ) -> None:
     async with SessionLocal() as session:
         maker = await session.execute(select(Maker).filter_by(guild_id=guild_id, discord_id=discord_id))
@@ -68,7 +68,7 @@ async def update_maker_by_id(
             "appointment_datetime",
             "account_status",
         ],
-        value: str | int,
+        value,
 ) -> None:
     async with SessionLocal() as session:
         maker = await session.execute(select(Maker).filter_by(id=id))

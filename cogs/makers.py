@@ -215,6 +215,16 @@ class Main(commands.Cog):
                 )
             )
 
+        if not maker.preds == 0:
+            tasks.append(
+                maker_methods.update_maker(
+                    guild_id=guild.id,
+                    discord_id=maker.discord_id,
+                    column_name="preds",
+                    value=0
+                )
+            )
+
         tasks.append(
             action_methods.add_maker_action(
                 maker_id=maker.id,
@@ -306,7 +316,19 @@ class Main(commands.Cog):
                 discord_id=maker.discord_id,
                 column_name="level",
                 value="0"
-            )
+            ),
+            maker_methods.update_maker(
+                guild_id=guild.id,
+                discord_id=maker.discord_id,
+                column_name="post_name",
+                value=None
+            ),
+            maker_methods.update_maker(
+                guild_id=guild.id,
+                discord_id=maker.discord_id,
+                column_name="status",
+                value="inactive"
+            ),
         ]
 
         await asyncio.gather(*tasks)
