@@ -611,6 +611,11 @@ class Main(commands.Cog):
                 content="**У вас недостаточно прав чтобы сделать это.**"
             )
 
+        elif not maker.account_status:
+            return await interaction.edit_original_response(
+                content="**Невозможно изменить уровень деактивированному редактору.**"
+            )
+
         elif maker.level == level:
             return await interaction.edit_original_response(
                 content="**Изменений не произошло, уровень, который вы указали, итак установлен редактору.**"
@@ -688,6 +693,11 @@ class Main(commands.Cog):
         elif int(interaction_author.level) <= int(maker.level) and not interaction_author.is_admin:
             return await interaction.edit_original_response(
                 content="**У вас недостаточно прав чтобы сделать это.**"
+            )
+
+        elif not maker.account_status:
+            return await interaction.edit_original_response(
+                content="**Невозможно изменить должность деактивированному редактору.**"
             )
 
         if post:
@@ -794,6 +804,11 @@ class Main(commands.Cog):
         elif int(interaction_author.level) <= int(maker.level) and not interaction_author.is_admin:
             return await interaction.edit_original_response(
                 content="**У вас недостаточно прав чтобы сделать это.**"
+            )
+
+        elif not maker.account_status:
+            return await interaction.edit_original_response(
+                content="**Невозможно изменить статус деактивированному редактору.**"
             )
 
         elif maker.status == status:
