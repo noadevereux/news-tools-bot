@@ -178,6 +178,8 @@ async def add_maker_action(
             "setdate",
             "warn",
             "unwarn",
+            "pred",
+            "unpred",
         ],
         meta: str = None,
         reason: str = None
