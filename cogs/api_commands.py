@@ -17,14 +17,20 @@ class API(commands.Cog):
     async def on_ready(self):
         self.start_server.start()
 
-    @commands.slash_command(name="apitoken", description="[DEV] Получить токен для API", guild_ids=DEV_GUILDS,
-                            dm_permission=False)
+    @commands.slash_command(
+        name="apitoken",
+        description="[DEV] Получить токен для API",
+        guild_ids=DEV_GUILDS,
+        dm_permission=False,
+    )
     @commands.is_owner()
     @is_guild_admin()
     async def api_token(
-            self,
-            interaction: disnake.ApplicationCommandInteraction,
-            username: str = commands.Param(name="username", description="Имя пользователя токена")
+        self,
+        interaction: disnake.ApplicationCommandInteraction,
+        username: str = commands.Param(
+            name="username", description="Имя пользователя токена"
+        ),
     ):
         await interaction.response.defer(ephemeral=True)
 

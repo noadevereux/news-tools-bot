@@ -12,21 +12,22 @@ class Server(commands.Cog):
         super().__init__()
         self.bot = bot
 
-    @commands.slash_command(name="server", description="[DEV] Управление сервером", guild_ids=DEV_GUILDS,
-                            dm_permission=False)
+    @commands.slash_command(
+        name="server",
+        description="[DEV] Управление сервером",
+        guild_ids=DEV_GUILDS,
+        dm_permission=False,
+    )
     @commands.is_owner()
     @is_guild_admin()
     async def server(self, interaction: disnake.ApplicationCommandInteraction):
         pass
 
     @server.sub_command(name="reboot", description="[DEV] Перезагрузить сервер")
-    async def server_reboot(
-            self,
-            interaction: disnake.ApplicationCommandInteraction
-    ):
+    async def server_reboot(self, interaction: disnake.ApplicationCommandInteraction):
         return await interaction.send(
             content=f"**Вы уверены что хотите перезагрузить сервер?**",
-            view=ConfirmReboot(bot=self.bot, member=interaction.author)
+            view=ConfirmReboot(bot=self.bot, member=interaction.author),
         )
 
 

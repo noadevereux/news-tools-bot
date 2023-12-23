@@ -14,9 +14,9 @@ class ErrorHandler(commands.Cog):
 
     @commands.Cog.listener(name=disnake.Event.slash_command_error)
     async def on_slash_command_error(
-            self,
-            interaction: disnake.ApplicationCommandInteraction,
-            error: commands.CommandError
+        self,
+        interaction: disnake.ApplicationCommandInteraction,
+        error: commands.CommandError,
     ):
         error_uid = await self.log.error(log_message=error, exc=error)
 
@@ -38,7 +38,7 @@ class ErrorHandler(commands.Cog):
 **Приносим свои извинения за доставленные неудобства.**
 """,
             timestamp=datetime.now(),
-            colour=disnake.Colour.red()
+            colour=disnake.Colour.red(),
         )
 
         if interaction.guild and interaction.guild.icon:
@@ -71,9 +71,7 @@ class ErrorHandler(commands.Cog):
                 content="**Этот сервер не обладает административным доступом для доступа к этой команде.**"
             )
         else:
-            return await interaction.edit_original_response(
-                embed=embed
-            )
+            return await interaction.edit_original_response(embed=embed)
 
 
 def setup(bot: commands.InteractionBot):

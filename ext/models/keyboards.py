@@ -13,7 +13,7 @@ class ConfirmRoleAction(View):
 
     @button(label="Подтвердить действие", style=disnake.ButtonStyle.blurple, emoji="✅")
     async def confirm_action(
-            self, button: Button, interaction: disnake.MessageInteraction
+        self, button: Button, interaction: disnake.MessageInteraction
     ):
         guild = await guild_methods.get_guild(discord_id=interaction.guild.id)
 
@@ -23,7 +23,9 @@ class ConfirmRoleAction(View):
                 ephemeral=True,
             )
 
-        interaction_author = await maker_methods.get_maker(guild_id=guild.id, discord_id=interaction.author.id)
+        interaction_author = await maker_methods.get_maker(
+            guild_id=guild.id, discord_id=interaction.author.id
+        )
 
         if not interaction_author:
             return await interaction.send(
@@ -51,8 +53,7 @@ class ConfirmRoleAction(View):
                     disabled=True,
                 )
             ],
-            allowed_mentions=disnake.AllowedMentions.none()
-
+            allowed_mentions=disnake.AllowedMentions.none(),
         )
         await interaction.message.unpin(
             reason=f"{interaction.author.display_name} подтвердил действие"
@@ -74,19 +75,18 @@ class ConfirmReboot(View):
         if not interaction.author.id == self.member.id:
             return await interaction.send(
                 content="**У вас нет прав для взаимодействия с этой кнопкой.**",
-                ephemeral=True
+                ephemeral=True,
             )
 
         await interaction.message.edit(
             content="**Сервер будет перезагружен через 5 секунд. Перезагрузка займет примерно 3 минуты.**",
-            view=None
+            view=None,
         )
         await self.bot.change_presence(
             activity=disnake.Activity(
-                name="ПЕРЕЗАГРУЗКА СИСТЕМ",
-                type=disnake.ActivityType.watching
+                name="ПЕРЕЗАГРУЗКА СИСТЕМ", type=disnake.ActivityType.watching
             ),
-            status=disnake.Status.idle
+            status=disnake.Status.idle,
         )
         await sleep(5)
         await interaction.channel.send("**Начинаю перезагрузку сервера.**")
@@ -97,12 +97,11 @@ class ConfirmReboot(View):
         if not interaction.author.id == self.member.id:
             return await interaction.send(
                 content="**У вас нет прав для взаимодействия с этой кнопкой.**",
-                ephemeral=True
+                ephemeral=True,
             )
 
         return await interaction.message.edit(
-            content="**Вы отменили перезагрузку сервера.**",
-            view=None
+            content="**Вы отменили перезагрузку сервера.**", view=None
         )
 
 
@@ -110,8 +109,11 @@ def get_profile_keyboard(maker_id: int):
     keyboard = View()
 
     items = [
-        disnake.ui.Button(style=disnake.ButtonStyle.gray, label="Страница в панели",
-                          url=f"https://news-tools.ru/profile/{maker_id}"),
+        disnake.ui.Button(
+            style=disnake.ButtonStyle.gray,
+            label="Страница в панели",
+            url=f"https://news-tools.ru/profile/{maker_id}",
+        ),
     ]
 
     for item in items:
