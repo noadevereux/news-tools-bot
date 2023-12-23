@@ -42,20 +42,20 @@ async def get_all_guilds() -> list[Guild]:
 
 
 async def update_guild(
-        discord_id: int,
-        column_name: Literal[
-            "id",
-            "discord_id",
-            "guild_name",
-            "roles_list",
-            "is_notifies_enabled",
-            "channel_id",
-            "log_roles_list",
-            "log_roles_channel",
-            "is_admin_guild",
-            "is_active"
-        ],
-        value
+    discord_id: int,
+    column_name: Literal[
+        "id",
+        "discord_id",
+        "guild_name",
+        "roles_list",
+        "is_notifies_enabled",
+        "channel_id",
+        "log_roles_list",
+        "log_roles_channel",
+        "is_admin_guild",
+        "is_active",
+    ],
+    value,
 ) -> None:
     async with SessionLocal() as session:
         guild = await session.execute(select(Guild).filter_by(discord_id=discord_id))
@@ -66,20 +66,20 @@ async def update_guild(
 
 
 async def update_guild_by_id(
-        id: int,
-        column_name: Literal[
-            "id",
-            "discord_id",
-            "guild_name",
-            "roles_list",
-            "is_notifies_enabled",
-            "channel_id",
-            "log_roles_list",
-            "log_roles_channel",
-            "is_admin_guild",
-            "is_active"
-        ],
-        value
+    id: int,
+    column_name: Literal[
+        "id",
+        "discord_id",
+        "guild_name",
+        "roles_list",
+        "is_notifies_enabled",
+        "channel_id",
+        "log_roles_list",
+        "log_roles_channel",
+        "is_admin_guild",
+        "is_active",
+    ],
+    value,
 ) -> None:
     async with SessionLocal() as session:
         guild = await session.execute(select(Guild).filter_by(id=id))

@@ -22,7 +22,7 @@ DEFAULT_POST_TITLES = {
     2: "Заместитель главного редактора",
     3: "Главный редактор",
     4: "Куратор",
-    5: "Руководитель"
+    5: "Руководитель",
 }
 
 # https://discord.com/api/oauth2/authorize?client_id=1089657230330183765&permissions=274878237888&scope=applications.commands%20bot
