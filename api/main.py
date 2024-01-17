@@ -40,6 +40,28 @@ async def send_notify(request: Request, channel_id: int, message: str):
     return {"status": "ok", "message": message}
 
 
+@router.post("/send_service_notify", dependencies=[Depends(JWTBearer())], tags=["Notifies"])
+async def send_service_notify(request: Request, message: str):
+    bot: commands.InteractionBot = request.app.bot
+    channel = bot.get_channel(1197196512728449105)
+
+    if not channel:
+        return {
+            "status": "error",
+            "code": "not_found",
+            "message": "Channel wasn't found",
+        }
+
+    try:
+        await channel.send(
+            content=message, allowed_mentions=disnake.AllowedMentions(users=False)
+        )
+    except Exception as error:
+        return {"status": "error", "code": "exception", "message": str(error)}
+
+    return {"status": "ok", "message": message}
+
+
 @router.post("/send_dm_notify", dependencies=[Depends(JWTBearer())], tags=["Notifies"])
 async def send_dm_notify(request: Request, user_id: int, message: str):
     bot: commands.InteractionBot = request.app.bot
