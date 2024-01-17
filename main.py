@@ -22,8 +22,8 @@ async def cog(interaction: disnake.ApplicationCommandInteraction):
 
 @cog.sub_command(name="load", description="[DEV] Загрузить модуль бота")
 async def cog_load(
-    interaction: disnake.ApplicationCommandInteraction,
-    extension: str = commands.Param(name="module", description="Название модуля"),
+        interaction: disnake.ApplicationCommandInteraction,
+        extension: str = commands.Param(name="module", description="Название модуля"),
 ):
     await interaction.response.defer(ephemeral=True)
 
@@ -50,8 +50,8 @@ async def cog_load(
 
 @cog.sub_command(name="reload", description="[DEV] Перезагрузить модуль бота")
 async def cog_reload(
-    interaction: disnake.ApplicationCommandInteraction,
-    extension: str = commands.Param(name="module", description="Название модуля"),
+        interaction: disnake.ApplicationCommandInteraction,
+        extension: str = commands.Param(name="module", description="Название модуля"),
 ):
     await interaction.response.defer(ephemeral=True)
 
@@ -78,8 +78,8 @@ async def cog_reload(
 
 @cog.sub_command(name="unload", description="[DEV] Выгрузить модуль бота")
 async def cog_unload(
-    interaction: disnake.ApplicationCommandInteraction,
-    extension: str = commands.Param(name="module", description="Название модуля"),
+        interaction: disnake.ApplicationCommandInteraction,
+        extension: str = commands.Param(name="module", description="Название модуля"),
 ):
     await interaction.response.defer(ephemeral=True)
 
@@ -105,7 +105,7 @@ async def on_ready():
     await log.info("Запущена новая сессия.")
     await bot.change_presence(
         activity=disnake.Activity(
-            name="news-tools.ru | v1.0.1", type=disnake.ActivityType.playing
+            name="news-tools.ru | v1.1", type=disnake.ActivityType.playing
         ),
         status=disnake.Status.online,
     )
