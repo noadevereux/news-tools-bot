@@ -375,6 +375,24 @@ async def delete_publication(guild_id: int, publication_number: int):
     return {"status": "ok", "message": None}
 
 
+@db_router.delete(
+    "/delete_publication_by_id",
+    dependencies=[Depends(JWTBearer())],
+    tags=["Database", "Publication"],
+)
+async def delete_publication_by_id(publication_id: int):
+    async with SessionLocal() as session:
+        publication = await session.execute(
+            select(models.Publication).filter_by(id=publication_id)
+        )
+        if publication:
+            publication = publication.scalar()
+            await session.delete(publication)
+            await session.commit()
+
+    return {"status": "ok", "message": None}
+
+
 @db_router.get(
     "/is_publication_exists",
     dependencies=[Depends(JWTBearer())],
