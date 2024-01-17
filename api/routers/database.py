@@ -345,6 +345,10 @@ async def update_publication_by_id(
         )
         if publication:
             publication = publication.scalar()
+
+            if value == "null":
+                value = None
+
             setattr(publication, column_name, value)
             await session.commit()
 
