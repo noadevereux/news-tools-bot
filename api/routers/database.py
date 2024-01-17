@@ -319,6 +319,38 @@ async def update_publication(
     return {"status": "ok", "message": None}
 
 
+@db_router.post(
+    "/update_publication_by_id",
+    dependencies=[Depends(JWTBearer())],
+    tags=["Database", "Publication"],
+)
+async def update_publication_by_id(
+    publication_id: int,
+    column_name: Literal[
+        "id",
+        "guild_id",
+        "publication_number",
+        "maker_id",
+        "date",
+        "information_creator_id",
+        "status",
+        "amount_dp",
+        "salary_payer_id",
+    ],
+    value,
+):
+    async with SessionLocal() as session:
+        publication = await session.execute(
+            select(models.Publication).filter_by(publication_id=publication_id)
+        )
+        if publication:
+            publication = publication.scalar()
+            setattr(publication, column_name, value)
+            await session.commit()
+
+    return {"status": "ok", "message": None}
+
+
 @db_router.delete(
     "/delete_publication",
     dependencies=[Depends(JWTBearer())],
