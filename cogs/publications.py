@@ -3,8 +3,12 @@ import datetime
 import disnake
 from disnake.ext import commands
 
-from ext.database.methods import guilds as guild_methods, makers as maker_methods, publications as publication_methods, \
-    publication_actions as action_methods
+from ext.database.methods import (
+    guilds as guild_methods,
+    makers as maker_methods,
+    publications as publication_methods,
+    publication_actions as action_methods,
+)
 from ext.logger import Logger
 from ext.tools import validate_date, get_publication_profile, get_status_title
 
@@ -17,24 +21,25 @@ class Publications(commands.Cog):
         self.bot = bot
         self.log = Logger("cogs.publications.py.log")
 
-    @commands.slash_command(name="pubsetting", description="Настройка выпусков", dm_permission=False)
+    @commands.slash_command(
+        name="pubsetting", description="Настройка выпусков", dm_permission=False
+    )
     @is_guild_exists()
     async def pubsetting(self, interaction: disnake.ApplicationCommandInteraction):
         pass
 
     @pubsetting.sub_command(name="create", description="Создать выпуск")
     async def pubsetting_create(
-            self,
-            interaction: disnake.ApplicationCommandInteraction,
-            pub_number: int = commands.Param(name="number", description="Номер выпуска")
+        self,
+        interaction: disnake.ApplicationCommandInteraction,
+        pub_number: int = commands.Param(name="number", description="Номер выпуска"),
     ):
         await interaction.response.defer()
 
         guild = await guild_methods.get_guild(discord_id=interaction.guild.id)
 
         interaction_author = await maker_methods.get_maker(
-            guild_id=guild.id,
-            discord_id=interaction.author.id
+            guild_id=guild.id, discord_id=interaction.author.id
         )
 
         if not interaction_author:
@@ -53,8 +58,7 @@ class Publications(commands.Cog):
             )
 
         publication = await publication_methods.get_publication(
-            guild_id=guild.id,
-            publication_id=pub_number
+            guild_id=guild.id, publication_id=pub_number
         )
 
         if publication:
@@ -63,39 +67,34 @@ class Publications(commands.Cog):
             )
 
         new_publication = await publication_methods.add_publication(
-            guild_id=guild.id,
-            publication_id=pub_number
+            guild_id=guild.id, publication_id=pub_number
         )
 
         await action_methods.add_pub_action(
-            pub_id=new_publication.id,
-            made_by=interaction_author.id,
-            action="createpub"
+            pub_id=new_publication.id, made_by=interaction_author.id, action="createpub"
         )
 
         embed = await get_publication_profile(
-            guild_id=guild.id,
-            publication_id=new_publication.publication_number
+            guild_id=guild.id, publication_id=new_publication.publication_number
         )
 
         return await interaction.edit_original_response(
             content=f"**Вы создали выпуск `#{new_publication.publication_number}`.**",
-            embed=embed
+            embed=embed,
         )
 
     @pubsetting.sub_command(name="delete", description="[DANGER] Удалить выпуск")
     async def pubsetting_delete(
-            self,
-            interaction: disnake.ApplicationCommandInteraction,
-            pub_number: int = commands.Param(name="number", description="Номер выпуска")
+        self,
+        interaction: disnake.ApplicationCommandInteraction,
+        pub_number: int = commands.Param(name="number", description="Номер выпуска"),
     ):
         await interaction.response.defer()
 
         guild = await guild_methods.get_guild(discord_id=interaction.guild.id)
 
         interaction_author = await maker_methods.get_maker(
-            guild_id=guild.id,
-            discord_id=interaction.author.id
+            guild_id=guild.id, discord_id=interaction.author.id
         )
 
         if not interaction_author:
@@ -114,8 +113,7 @@ class Publications(commands.Cog):
             )
 
         publication = await publication_methods.get_publication(
-            guild_id=guild.id,
-            publication_id=pub_number
+            guild_id=guild.id, publication_id=pub_number
         )
 
         if not publication:
@@ -124,42 +122,39 @@ class Publications(commands.Cog):
             )
 
         await publication_methods.delete_publication(
-            guild_id=guild.id,
-            publication_id=pub_number
+            guild_id=guild.id, publication_id=pub_number
         )
 
         await action_methods.add_pub_action(
             pub_id=publication.id,
             made_by=interaction_author.id,
             action="deletepub",
-            meta=publication.id
+            meta=publication.id,
         )
 
         return await interaction.edit_original_response(
             content=f"**Вы удалили выпуск с номером `#{publication.publication_number}` `[UID: {publication.id}]`.**"
         )
 
-    @commands.slash_command(name="publication", description="Действия с выпусками", dm_permission=False)
+    @commands.slash_command(
+        name="publication", description="Действия с выпусками", dm_permission=False
+    )
     @is_guild_exists()
-    async def publication(
-            self,
-            interaction: disnake.ApplicationCommandInteraction
-    ):
+    async def publication(self, interaction: disnake.ApplicationCommandInteraction):
         pass
 
     @publication.sub_command(name="info", description="Посмотреть информацию о выпуске")
     async def publication_info(
-            self,
-            interaction: disnake.ApplicationCommandInteraction,
-            pub_number: int = commands.Param(name="number", description="Номер выпуска")
+        self,
+        interaction: disnake.ApplicationCommandInteraction,
+        pub_number: int = commands.Param(name="number", description="Номер выпуска"),
     ):
         await interaction.response.defer()
 
         guild = await guild_methods.get_guild(discord_id=interaction.guild.id)
 
         interaction_author = await maker_methods.get_maker(
-            guild_id=guild.id,
-            discord_id=interaction.author.id
+            guild_id=guild.id, discord_id=interaction.author.id
         )
 
         if not interaction_author:
@@ -173,8 +168,7 @@ class Publications(commands.Cog):
             )
 
         publication = await publication_methods.get_publication(
-            guild_id=guild.id,
-            publication_id=pub_number
+            guild_id=guild.id, publication_id=pub_number
         )
 
         if not publication:
@@ -183,28 +177,28 @@ class Publications(commands.Cog):
             )
 
         embed = await get_publication_profile(
-            guild_id=guild.id,
-            publication_id=pub_number
+            guild_id=guild.id, publication_id=pub_number
         )
 
-        return await interaction.edit_original_response(
-            embed=embed
-        )
+        return await interaction.edit_original_response(embed=embed)
 
     @pubsetting.sub_command(name="number", description="Изменить номер выпуска")
     async def pubsetting_setnumber(
-            self,
-            interaction: disnake.ApplicationCommandInteraction,
-            old_number: int = commands.Param(name="number", description="Текущий номер выпуска"),
-            new_number: int = commands.Param(name="new_number", description="Новый номер выпуска")
+        self,
+        interaction: disnake.ApplicationCommandInteraction,
+        old_number: int = commands.Param(
+            name="number", description="Текущий номер выпуска"
+        ),
+        new_number: int = commands.Param(
+            name="new_number", description="Новый номер выпуска"
+        ),
     ):
         await interaction.response.defer()
 
         guild = await guild_methods.get_guild(discord_id=interaction.guild.id)
 
         interaction_author = await maker_methods.get_maker(
-            guild_id=guild.id,
-            discord_id=interaction.author.id
+            guild_id=guild.id, discord_id=interaction.author.id
         )
 
         if not interaction_author:
@@ -228,12 +222,10 @@ class Publications(commands.Cog):
             )
 
         publication = await publication_methods.get_publication(
-            guild_id=guild.id,
-            publication_id=old_number
+            guild_id=guild.id, publication_id=old_number
         )
         new_publication = await publication_methods.get_publication(
-            guild_id=guild.id,
-            publication_id=new_number
+            guild_id=guild.id, publication_id=new_number
         )
 
         if not publication:
@@ -243,26 +235,25 @@ class Publications(commands.Cog):
 
         elif new_publication:
             embed = await get_publication_profile(
-                guild_id=guild.id,
-                publication_id=new_number
+                guild_id=guild.id, publication_id=new_number
             )
             return await interaction.edit_original_response(
                 content=f"**Номер выпуска `#{new_number}` уже занят. Информация о выпуске:**",
-                embed=embed
+                embed=embed,
             )
 
         await publication_methods.update_publication(
             guild_id=guild.id,
             publication_id=publication.publication_number,
             column_name="publication_number",
-            value=new_number
+            value=new_number,
         )
 
         await action_methods.add_pub_action(
             pub_id=publication.id,
             made_by=interaction_author.id,
             action="setpub_id",
-            meta=f"[{old_number}, {new_number}]"
+            meta=f"[{old_number}, {new_number}]",
         )
 
         return await interaction.edit_original_response(
@@ -271,18 +262,19 @@ class Publications(commands.Cog):
 
     @pubsetting.sub_command(name="date", description="Изменить дату публикации выпуска")
     async def pubsetting_date(
-            self,
-            interaction: disnake.ApplicationCommandInteraction,
-            pub_number: int = commands.Param(name="number", description="Номер выпуска"),
-            date: str = commands.Param(default=None, name="date", description="Дата в формате ГГГГ-ММ-ДД")
+        self,
+        interaction: disnake.ApplicationCommandInteraction,
+        pub_number: int = commands.Param(name="number", description="Номер выпуска"),
+        date: str = commands.Param(
+            default=None, name="date", description="Дата в формате ГГГГ-ММ-ДД"
+        ),
     ):
         await interaction.response.defer()
 
         guild = await guild_methods.get_guild(discord_id=interaction.guild.id)
 
         interaction_author = await maker_methods.get_maker(
-            guild_id=guild.id,
-            discord_id=interaction.author.id
+            guild_id=guild.id, discord_id=interaction.author.id
         )
 
         if not interaction_author:
@@ -309,8 +301,7 @@ class Publications(commands.Cog):
                 )
 
         publication = await publication_methods.get_publication(
-            guild_id=guild.id,
-            publication_id=pub_number
+            guild_id=guild.id, publication_id=pub_number
         )
 
         if not publication:
@@ -328,14 +319,14 @@ class Publications(commands.Cog):
                 guild_id=guild.id,
                 publication_id=pub_number,
                 column_name="date",
-                value=date
+                value=date,
             )
 
             await action_methods.add_pub_action(
                 pub_id=publication.id,
                 made_by=interaction_author.id,
                 action="setpub_date",
-                meta=date
+                meta=date,
             )
 
             return await interaction.edit_original_response(
@@ -351,14 +342,14 @@ class Publications(commands.Cog):
                 guild_id=guild.id,
                 publication_id=pub_number,
                 column_name="date",
-                value=None
+                value=None,
             )
 
             await action_methods.add_pub_action(
                 pub_id=publication.id,
                 made_by=interaction_author.id,
                 action="setpub_date",
-                meta="не указана"
+                meta="не указана",
             )
 
             return await interaction.edit_original_response(
@@ -367,19 +358,20 @@ class Publications(commands.Cog):
 
     @pubsetting.sub_command(name="maker", description="Изменить редактора выпуска")
     async def pubsetting_maker(
-            self,
-            interaction: disnake.ApplicationCommandInteraction,
-            pub_number: int = commands.Param(name="number", description="Номер выпуска"),
-            member: disnake.User | disnake.Member = commands.Param(default=None, name="maker",
-                                                                   description="Редактор или его Discord ID")
+        self,
+        interaction: disnake.ApplicationCommandInteraction,
+        pub_number: int = commands.Param(name="number", description="Номер выпуска"),
+        member: disnake.User
+        | disnake.Member = commands.Param(
+            default=None, name="maker", description="Редактор или его Discord ID"
+        ),
     ):
         await interaction.response.defer()
 
         guild = await guild_methods.get_guild(discord_id=interaction.guild.id)
 
         interaction_author = await maker_methods.get_maker(
-            guild_id=guild.id,
-            discord_id=interaction.author.id
+            guild_id=guild.id, discord_id=interaction.author.id
         )
 
         if not interaction_author:
@@ -398,8 +390,7 @@ class Publications(commands.Cog):
             )
 
         publication = await publication_methods.get_publication(
-            guild_id=guild.id,
-            publication_id=pub_number
+            guild_id=guild.id, publication_id=pub_number
         )
 
         if not publication:
@@ -409,8 +400,7 @@ class Publications(commands.Cog):
 
         if member:
             maker = await maker_methods.get_maker(
-                guild_id=guild.id,
-                discord_id=member.id
+                guild_id=guild.id, discord_id=member.id
             )
 
             if not maker:
@@ -431,14 +421,14 @@ class Publications(commands.Cog):
                 guild_id=guild.id,
                 publication_id=pub_number,
                 column_name="maker_id",
-                value=maker.id
+                value=maker.id,
             )
 
             await action_methods.add_pub_action(
                 pub_id=publication.id,
                 made_by=interaction_author.id,
                 action="setpub_maker",
-                meta=maker.id
+                meta=maker.id,
             )
 
             return await interaction.edit_original_response(
@@ -454,14 +444,14 @@ class Publications(commands.Cog):
                 guild_id=guild.id,
                 publication_id=pub_number,
                 column_name="maker_id",
-                value=None
+                value=None,
             )
 
             await action_methods.add_pub_action(
                 pub_id=publication.id,
                 made_by=interaction_author.id,
                 action="setpub_maker",
-                meta="не указан"
+                meta="не указан",
             )
 
             return await interaction.edit_original_response(
@@ -470,22 +460,25 @@ class Publications(commands.Cog):
 
     @pubsetting.sub_command(name="status", description="Изменить статус выпуска")
     async def pubsetting_status(
-            self,
-            interaction: disnake.ApplicationCommandInteraction,
-            pub_number: int = commands.Param(name="number", description="Номер выпуска"),
-            status: str = commands.Param(name="status", description="Статус выпуска", choices=[
+        self,
+        interaction: disnake.ApplicationCommandInteraction,
+        pub_number: int = commands.Param(name="number", description="Номер выпуска"),
+        status: str = commands.Param(
+            name="status",
+            description="Статус выпуска",
+            choices=[
                 disnake.OptionChoice(name="Сделан", value="completed"),
                 disnake.OptionChoice(name="Провален", value="failed"),
-                disnake.OptionChoice(name="В процессе", value="in_process")
-            ])
+                disnake.OptionChoice(name="В процессе", value="in_process"),
+            ],
+        ),
     ):
         await interaction.response.defer()
 
         guild = await guild_methods.get_guild(discord_id=interaction.guild.id)
 
         interaction_author = await maker_methods.get_maker(
-            guild_id=guild.id,
-            discord_id=interaction.author.id
+            guild_id=guild.id, discord_id=interaction.author.id
         )
 
         if not interaction_author:
@@ -504,8 +497,7 @@ class Publications(commands.Cog):
             )
 
         publication = await publication_methods.get_publication(
-            guild_id=guild.id,
-            publication_id=pub_number
+            guild_id=guild.id, publication_id=pub_number
         )
 
         if not publication:
@@ -522,14 +514,14 @@ class Publications(commands.Cog):
             guild_id=guild.id,
             publication_id=pub_number,
             column_name="status",
-            value=status
+            value=status,
         )
 
         await action_methods.add_pub_action(
             pub_id=publication.id,
             made_by=interaction_author.id,
             action="setpub_status",
-            meta=status
+            meta=status,
         )
 
         status_title = await get_status_title(status)
@@ -540,18 +532,19 @@ class Publications(commands.Cog):
 
     @pubsetting.sub_command(name="salary", description="Изменить зарплату за выпуск")
     async def pubsetting_salary(
-            self,
-            interaction: disnake.ApplicationCommandInteraction,
-            pub_number: int = commands.Param(name="number", description="Номер выпуска"),
-            amount: int = commands.Param(default=None, name="salary", description="Сумма зарплаты за выпуск")
+        self,
+        interaction: disnake.ApplicationCommandInteraction,
+        pub_number: int = commands.Param(name="number", description="Номер выпуска"),
+        amount: int = commands.Param(
+            default=None, name="salary", description="Сумма зарплаты за выпуск"
+        ),
     ):
         await interaction.response.defer()
 
         guild = await guild_methods.get_guild(discord_id=interaction.guild.id)
 
         interaction_author = await maker_methods.get_maker(
-            guild_id=guild.id,
-            discord_id=interaction.author.id
+            guild_id=guild.id, discord_id=interaction.author.id
         )
 
         if not interaction_author:
@@ -570,8 +563,7 @@ class Publications(commands.Cog):
             )
 
         publication = await publication_methods.get_publication(
-            guild_id=guild.id,
-            publication_id=pub_number
+            guild_id=guild.id, publication_id=pub_number
         )
 
         if not publication:
@@ -589,14 +581,14 @@ class Publications(commands.Cog):
                 guild_id=guild.id,
                 publication_id=pub_number,
                 column_name="amount_dp",
-                value=amount
+                value=amount,
             )
 
             await action_methods.add_pub_action(
                 pub_id=publication.id,
                 made_by=interaction_author.id,
                 action="setpub_amount",
-                meta=amount
+                meta=amount,
             )
 
             return await interaction.edit_original_response(
@@ -612,35 +604,38 @@ class Publications(commands.Cog):
                 guild_id=guild.id,
                 publication_id=pub_number,
                 column_name="amount_dp",
-                value=None
+                value=None,
             )
 
             await action_methods.add_pub_action(
                 pub_id=publication.id,
                 made_by=interaction_author.id,
                 action="setpub_amount",
-                meta="не установлено"
+                meta="не установлено",
             )
 
             return await interaction.edit_original_response(
                 content=f"**Вы очистили зарплату за выпуск `#{pub_number}`.**"
             )
 
-    @pubsetting.sub_command(name="information_creator", description="Изменить автора информации к выпуску")
+    @pubsetting.sub_command(
+        name="information_creator", description="Изменить автора информации к выпуску"
+    )
     async def pubsetting_information_creator(
-            self,
-            interaction: disnake.ApplicationCommandInteraction,
-            pub_number: int = commands.Param(name="number", description="Номер выпуска"),
-            member: disnake.User | disnake.Member = commands.Param(default=None, name="creator",
-                                                                   description="Автор информации")
+        self,
+        interaction: disnake.ApplicationCommandInteraction,
+        pub_number: int = commands.Param(name="number", description="Номер выпуска"),
+        member: disnake.User
+        | disnake.Member = commands.Param(
+            default=None, name="creator", description="Автор информации"
+        ),
     ):
         await interaction.response.defer()
 
         guild = await guild_methods.get_guild(discord_id=interaction.guild.id)
 
         interaction_author = await maker_methods.get_maker(
-            guild_id=guild.id,
-            discord_id=interaction.author.id
+            guild_id=guild.id, discord_id=interaction.author.id
         )
 
         if not interaction_author:
@@ -659,8 +654,7 @@ class Publications(commands.Cog):
             )
 
         publication = await publication_methods.get_publication(
-            guild_id=guild.id,
-            publication_id=pub_number
+            guild_id=guild.id, publication_id=pub_number
         )
 
         if not publication:
@@ -670,8 +664,7 @@ class Publications(commands.Cog):
 
         if member:
             creator = await maker_methods.get_maker(
-                guild_id=guild.id,
-                discord_id=member.id
+                guild_id=guild.id, discord_id=member.id
             )
 
             if not creator:
@@ -692,14 +685,14 @@ class Publications(commands.Cog):
                 guild_id=guild.id,
                 publication_id=pub_number,
                 column_name="information_creator_id",
-                value=creator.id
+                value=creator.id,
             )
 
             await action_methods.add_pub_action(
                 pub_id=publication.id,
                 made_by=interaction_author.id,
                 action="setpub_infocreator",
-                meta=creator.id
+                meta=creator.id,
             )
 
             return await interaction.edit_original_response(
@@ -715,35 +708,40 @@ class Publications(commands.Cog):
                 guild_id=guild.id,
                 publication_id=pub_number,
                 column_name="information_creator_id",
-                value=None
+                value=None,
             )
 
             await action_methods.add_pub_action(
                 pub_id=publication.id,
                 made_by=interaction_author.id,
                 action="setpub_infocreator",
-                meta="не указан"
+                meta="не указан",
             )
 
             return await interaction.edit_original_response(
                 content=f"**Вы очистили автора информации к выпуску `#{pub_number}`.**"
             )
 
-    @pubsetting.sub_command(name="salary_payer", description="Изменить человека, который выплатил зарплату")
+    @pubsetting.sub_command(
+        name="salary_payer", description="Изменить человека, который выплатил зарплату"
+    )
     async def pubsetting_salary_payer(
-            self,
-            interaction: disnake.ApplicationCommandInteraction,
-            pub_number: int = commands.Param(name="number", description="Номер выпуска"),
-            member: disnake.User | disnake.Member = commands.Param(default=None, name="salary_payer",
-                                                                   description="Человек, который выплатил зарплату за выпуск")
+        self,
+        interaction: disnake.ApplicationCommandInteraction,
+        pub_number: int = commands.Param(name="number", description="Номер выпуска"),
+        member: disnake.User
+        | disnake.Member = commands.Param(
+            default=None,
+            name="salary_payer",
+            description="Человек, который выплатил зарплату за выпуск",
+        ),
     ):
         await interaction.response.defer()
 
         guild = await guild_methods.get_guild(discord_id=interaction.guild.id)
 
         interaction_author = await maker_methods.get_maker(
-            guild_id=guild.id,
-            discord_id=interaction.author.id
+            guild_id=guild.id, discord_id=interaction.author.id
         )
 
         if not interaction_author:
@@ -762,8 +760,7 @@ class Publications(commands.Cog):
             )
 
         publication = await publication_methods.get_publication(
-            guild_id=guild.id,
-            publication_id=pub_number
+            guild_id=guild.id, publication_id=pub_number
         )
 
         if not publication:
@@ -773,8 +770,7 @@ class Publications(commands.Cog):
 
         if member:
             salary_payer = await maker_methods.get_maker(
-                guild_id=guild.id,
-                discord_id=member.id
+                guild_id=guild.id, discord_id=member.id
             )
 
             if publication.salary_payer_id == salary_payer.id:
@@ -795,14 +791,14 @@ class Publications(commands.Cog):
                 guild_id=guild.id,
                 publication_id=pub_number,
                 column_name="salary_payer_id",
-                value=salary_payer.id
+                value=salary_payer.id,
             )
 
             await action_methods.add_pub_action(
                 pub_id=publication.id,
                 made_by=interaction_author.id,
                 action="setpub_salarypayer",
-                meta=salary_payer.id
+                meta=salary_payer.id,
             )
 
             return await interaction.edit_original_response(
@@ -818,14 +814,14 @@ class Publications(commands.Cog):
                 guild_id=guild.id,
                 publication_id=pub_number,
                 column_name="salary_payer_id",
-                value=None
+                value=None,
             )
 
             await action_methods.add_pub_action(
                 pub_id=publication.id,
                 made_by=interaction_author.id,
                 action="setpub_salarypayer",
-                meta="не указан"
+                meta="не указан",
             )
 
             return await interaction.edit_original_response(
