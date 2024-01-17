@@ -319,7 +319,7 @@ async def update_publication(
     return {"status": "ok", "message": None}
 
 
-@db_router.post(
+@db_router.delete(
     "/delete_publication",
     dependencies=[Depends(JWTBearer())],
     tags=["Database", "Publication"],
