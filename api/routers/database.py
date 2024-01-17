@@ -341,7 +341,7 @@ async def update_publication_by_id(
 ):
     async with SessionLocal() as session:
         publication = await session.execute(
-            select(models.Publication).filter_by(publication_id=publication_id)
+            select(models.Publication).filter_by(id=publication_id)
         )
         if publication:
             publication = publication.scalar()
