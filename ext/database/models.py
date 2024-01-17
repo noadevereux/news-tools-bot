@@ -53,7 +53,7 @@ class Publication(Base):
         "Guild",
         back_populates="publications",
         foreign_keys=[guild_id],
-        primaryjoin="Publication.guild_id == Guild.id"
+        primaryjoin="Publication.guild_id == Guild.id",
     )
 
 
@@ -64,13 +64,20 @@ class Maker(Base):
     guild_id: Mapped[int] = mapped_column(ForeignKey("guilds.id"))
     discord_id: Mapped[int] = mapped_column(BigInteger)
     nickname: Mapped[str] = mapped_column(String(255))
-    level: Mapped[Literal["0", "1", "2", "3", "4", "5"]] = mapped_column(server_default="1")
-    post_name: Mapped[str] = mapped_column(String(255), nullable=True, server_default="Редактор")
+    level: Mapped[Literal["0", "1", "2", "3", "4", "5"]] = mapped_column(
+        server_default="1"
+    )
+    post_name: Mapped[str] = mapped_column(
+        String(255), nullable=True, server_default="Редактор"
+    )
     status: Mapped[Literal["new", "active", "inactive"]] = mapped_column(
         server_default="active"
     )
     warns: Mapped[int] = mapped_column(server_default="0")
-    appointment_datetime: Mapped[datetime] = mapped_column(TIMESTAMP(timezone=True), server_default=func.now())
+    preds: Mapped[int] = mapped_column(server_default="0")
+    appointment_datetime: Mapped[datetime] = mapped_column(
+        TIMESTAMP(timezone=True), server_default=func.now()
+    )
     is_admin: Mapped[bool] = mapped_column(server_default="0")
     account_status: Mapped[bool] = mapped_column(server_default="1")
 
@@ -78,7 +85,7 @@ class Maker(Base):
         "Guild",
         back_populates="makers",
         foreign_keys=[guild_id],
-        primaryjoin="Maker.guild_id == Guild.id"
+        primaryjoin="Maker.guild_id == Guild.id",
     )
 
     publications_made = relationship(
@@ -111,9 +118,13 @@ class Guild(Base):
     guild_name: Mapped[str] = mapped_column(String(255), unique=True)
     roles_list: Mapped[list[int]] = mapped_column(JSON, default=[])
     is_notifies_enabled: Mapped[bool] = mapped_column(server_default="1")
-    channel_id: Mapped[int] = mapped_column(BigInteger, nullable=True, server_default=None)
+    channel_id: Mapped[int] = mapped_column(
+        BigInteger, nullable=True, server_default=None
+    )
     log_roles_list: Mapped[list[int]] = mapped_column(JSON, default=[])
-    log_roles_channel: Mapped[int] = mapped_column(BigInteger, nullable=True, server_default=None)
+    log_roles_channel: Mapped[int] = mapped_column(
+        BigInteger, nullable=True, server_default=None
+    )
     is_admin_guild: Mapped[bool] = mapped_column(server_default="0")
     is_active: Mapped[bool] = mapped_column(server_default="1")
 
@@ -121,14 +132,14 @@ class Guild(Base):
         "Publication",
         back_populates="guild_id_rel",
         foreign_keys=[Publication.guild_id],
-        primaryjoin="Guild.id == Publication.guild_id"
+        primaryjoin="Guild.id == Publication.guild_id",
     )
 
     makers = relationship(
         "Maker",
         back_populates="guild_id_rel",
         foreign_keys=[Maker.guild_id],
-        primaryjoin="Guild.id == Maker.guild_id"
+        primaryjoin="Guild.id == Maker.guild_id",
     )
 
 
@@ -150,10 +161,14 @@ class MakerAction(Base):
             "setdate",
             "warn",
             "unwarn",
+            "pred",
+            "unpred",
         ]
     ] = mapped_column()
     meta: Mapped[str] = mapped_column(String(255), nullable=True)
-    timestamp: Mapped[datetime] = mapped_column(TIMESTAMP(timezone=True), server_default=func.now())
+    timestamp: Mapped[datetime] = mapped_column(
+        TIMESTAMP(timezone=True), server_default=func.now()
+    )
     reason: Mapped[str] = mapped_column(String(255), nullable=True)
 
 
@@ -177,7 +192,9 @@ class PublicationAction(Base):
         ]
     ] = mapped_column()
     meta: Mapped[str] = mapped_column(String(255), nullable=True)
-    timestamp: Mapped[datetime] = mapped_column(TIMESTAMP(timezone=True), server_default=func.now())
+    timestamp: Mapped[datetime] = mapped_column(
+        TIMESTAMP(timezone=True), server_default=func.now()
+    )
     reason: Mapped[str] = mapped_column(String(255), nullable=True)
 
 

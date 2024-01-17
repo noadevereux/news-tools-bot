@@ -24,7 +24,11 @@ async def send_notify(request: Request, channel_id: int, message: str):
     channel = bot.get_channel(channel_id)
 
     if not channel:
-        return {"status": "error", "code": "not_found", "message": "Channel wasn't found"}
+        return {
+            "status": "error",
+            "code": "not_found",
+            "message": "Channel wasn't found",
+        }
 
     try:
         await channel.send(

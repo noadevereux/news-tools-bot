@@ -4,7 +4,11 @@ from datetime import datetime
 import disnake
 from disnake import Embed, User, Guild, Member
 
-from .database.methods import makers as maker_methods, publications as publication_methods, guilds as guild_methods
+from .database.methods import (
+    makers as maker_methods,
+    publications as publication_methods,
+    guilds as guild_methods,
+)
 
 
 async def get_status_title(status_kw: str | None) -> str:
@@ -29,7 +33,10 @@ async def get_maker_profile(maker_id: int, user: User | Member = None) -> Embed:
     maker = await maker_methods.get_maker_by_id(id=maker_id)
 
     level = int(maker.level)
-    post = maker.post_name
+    if maker.post_name:
+        post = maker.post_name
+    else:
+        post = "не установлено"
     status = await get_status_title(maker.status)
     publications_amount = await maker_methods.get_publications_by_maker(id=maker.id)
     if not publications_amount:
@@ -47,10 +54,13 @@ async def get_maker_profile(maker_id: int, user: User | Member = None) -> Embed:
 **Никнейм: {maker.nickname}**
 **Уровень доступа: {level}**
 **Должность: {post}**
-**Статус: {status}**
+**Статус: {status.lower()}**
+
+**Выговоры: {maker.warns}**
+**Предупреждения: {maker.preds}**
 
 **Сделано выпусков: {publications_amount}**
-**Предупреждения: {maker.warns}**
+
 **Дней на посту редактора: {days}**
     """
 
@@ -73,7 +83,9 @@ async def get_maker_profile(maker_id: int, user: User | Member = None) -> Embed:
 
         embed.set_thumbnail(user.display_avatar.url)
     else:
-        notes.append("🛠️ Внимание, это упрощенная версия информации, т.к. бот не смог найти участника")
+        notes.append(
+            "🛠️ Внимание, это упрощенная версия информации, т.к. бот не смог найти участника"
+        )
 
         for note in notes:
             embed_description += f"\n**{note}.**"
@@ -94,14 +106,18 @@ async def get_maker_profile(maker_id: int, user: User | Member = None) -> Embed:
 
 
 async def get_publication_profile(guild_id: int, publication_id: int) -> Embed:
-    publication = await publication_methods.get_publication(guild_id=guild_id, publication_id=publication_id)
+    publication = await publication_methods.get_publication(
+        guild_id=guild_id, publication_id=publication_id
+    )
     maker = await maker_methods.get_maker_by_id(id=publication.maker_id)
     if not maker:
         maker = "`не указан`"
     else:
         maker = f"<@{maker.discord_id}> `{maker.nickname}`"
 
-    information_creator = await maker_methods.get_maker_by_id(id=publication.information_creator_id)
+    information_creator = await maker_methods.get_maker_by_id(
+        id=publication.information_creator_id
+    )
     if not information_creator:
         information_creator = "`не указан`"
     else:
