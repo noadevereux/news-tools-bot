@@ -10,9 +10,8 @@ from ext.database.methods import makers as maker_methods
 from ext.database.methods import maker_actions as action_methods
 from ext.logger import Logger
 from ext.tools import *
-
 from ext.models.checks import is_guild_exists
-from ext.models.keyboards import get_profile_keyboard
+from ext.models.maker_components import GearButton
 from ext.models.autocompleters import (
     maker_autocomplete,
     deactivated_maker_autocomplete,
@@ -414,9 +413,20 @@ class Main(commands.Cog):
 
         embed = await get_maker_profile(maker_id=maker.id, user=member)
 
-        return await interaction.edit_original_response(
-            embed=embed, view=get_profile_keyboard(maker_id=maker.id)
-        )
+        if (
+            not (
+                (int(interaction_author.level) <= int(maker.level))
+                or (interaction_author.id == maker.id)
+            )
+        ) or interaction_author.is_admin:
+            view = GearButton(
+                author=interaction.author,
+                maker_id=maker.id,
+            )
+
+            return await interaction.edit_original_response(embed=embed, view=view)
+        else:
+            return await interaction.edit_original_response(embed=embed)
 
     @maker.sub_command(name="setdiscord", description="Изменить редактору Discord")
     async def maker_setdiscord(
