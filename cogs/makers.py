@@ -3,7 +3,7 @@ from disnake.ext import commands
 from ext.database.methods import maker_actions as action_methods
 from ext.logger import Logger
 from ext.models.autocompleters import (
-    active_maker_autocomplete,
+    maker_autocomplete,
 )
 from ext.models.checks import is_guild_exists
 from ext.models.maker_components import GearButton
@@ -101,7 +101,7 @@ class Main(commands.Cog):
             default=None,
             name="maker",
             description="Редактор",
-            autocomplete=active_maker_autocomplete,
+            autocomplete=maker_autocomplete,
         ),
     ):
         await interaction.response.defer()
