@@ -45,7 +45,7 @@ class MakersListPaginator(ui.View):
                     title=f"🧾 Состав новостного раздела {guild.guild_name}",
                     colour=0x2B2D31,
                     description=f"### **Статус | ID | Никнейм | Discord | Должность**\n\n"
-                    f"- **{emoji_status} | [ID: {makers[i].id}] | {makers[i].nickname} | <@{makers[i].discord_id}> | {makers[i].post_name}**\n",
+                                f"- **{emoji_status} | [ID: {makers[i].id}] | {makers[i].nickname} | <@{makers[i].discord_id}> | {makers[i].post_name}**\n",
                 )
                 embeds.append(new_embed)
                 continue
@@ -55,15 +55,13 @@ class MakersListPaginator(ui.View):
                     title=f"🧾 Состав новостного раздела {guild.guild_name}",
                     colour=0x2B2D31,
                     description=f"### **Статус | ID | Никнейм | Discord | Должность**\n\n"
-                    f"- **{emoji_status} | [ID: {makers[i].id}] | {makers[i].nickname} | <@{makers[i].discord_id}> | {makers[i].post_name}**\n",
+                                f"- **{emoji_status} | [ID: {makers[i].id}] | {makers[i].nickname} | <@{makers[i].discord_id}> | {makers[i].post_name}**\n",
                 )
                 embeds.append(new_embed)
                 next_embed_iteration += 10
                 continue
 
-            embeds[
-                -1
-            ].description += f"- **{emoji_status} | [ID: {makers[i].id}] | {makers[i].nickname} | <@{makers[i].discord_id}> | {makers[i].post_name}**\n"  # @formatter:off
+            embeds[-1].description += f"- **{emoji_status} | [ID: {makers[i].id}] | {makers[i].nickname} | <@{makers[i].discord_id}> | {makers[i].post_name}**\n"  # @formatter:off
 
         return cls(embeds=embeds), embeds[0]
 
