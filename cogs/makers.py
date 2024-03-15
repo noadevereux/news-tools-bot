@@ -6,7 +6,7 @@ from ext.models.autocompleters import (
     maker_autocomplete,
 )
 from ext.models.checks import is_guild_exists
-from ext.models.maker_components import GearButton
+from ext.models.maker_components import GearButton, MakersListPaginator
 from ext.tools import *
 
 
@@ -27,15 +27,15 @@ class Main(commands.Cog):
         name="register", description="Зарегистрировать редактора в системе"
     )
     async def maker_register(
-        self,
-        interaction: disnake.ApplicationCommandInteraction,
-        member: disnake.User
-        | disnake.Member = commands.Param(
-            name="maker", description="Редактор или его Discord ID"
-        ),
-        nickname: str = commands.Param(
-            name="nickname", description="Никнейм редактора"
-        ),
+            self,
+            interaction: disnake.ApplicationCommandInteraction,
+            member: disnake.User
+                    | disnake.Member = commands.Param(
+                name="maker", description="Редактор или его Discord ID"
+            ),
+            nickname: str = commands.Param(
+                name="nickname", description="Никнейм редактора"
+            ),
     ):
         await interaction.response.defer()
 
@@ -95,14 +95,14 @@ class Main(commands.Cog):
     )
     @is_guild_exists()
     async def maker_profile(
-        self,
-        interaction: disnake.ApplicationCommandInteraction,
-        maker_id: int = commands.Param(
-            default=None,
-            name="maker",
-            description="Редактор",
-            autocomplete=maker_autocomplete,
-        ),
+            self,
+            interaction: disnake.ApplicationCommandInteraction,
+            maker_id: int = commands.Param(
+                default=None,
+                name="maker",
+                description="Редактор",
+                autocomplete=maker_autocomplete,
+            ),
     ):
         await interaction.response.defer()
 
@@ -143,10 +143,10 @@ class Main(commands.Cog):
         embed = await get_maker_profile(maker_id=maker.id, user=member)
 
         if (
-            not (
-                (int(interaction_author.level) <= int(maker.level))
-                or (interaction_author.id == maker.id)
-            )
+                not (
+                        (int(interaction_author.level) <= int(maker.level))
+                        or (interaction_author.id == maker.id)
+                )
         ) or interaction_author.is_admin:
             view = GearButton(
                 author=interaction.author,
@@ -156,6 +156,43 @@ class Main(commands.Cog):
             return await interaction.edit_original_response(embed=embed, view=view)
         else:
             return await interaction.edit_original_response(embed=embed)
+
+    @commands.slash_command(
+        name="makerslist", description="Список редакторов, зарегистрированных в системе", dm_permission=False
+    )
+    @is_guild_exists()
+    async def makers_list(
+            self,
+            interaction: disnake.ApplicationCommandInteraction
+    ):
+        await interaction.response.defer(ephemeral=True)
+
+        guild = await guild_methods.get_guild(discord_id=interaction.guild.id)
+
+        interaction_author = await maker_methods.get_maker(
+            guild_id=guild.id, discord_id=interaction.author.id
+        )
+
+        if not interaction_author:
+            return await interaction.edit_original_response(
+                content="**У вас недостаточно прав для выполнения данной команды.**"
+            )
+
+        elif not interaction_author.account_status:
+            return await interaction.edit_original_response(
+                content="**У вас недостаточно прав для выполнения данной команды.**"
+            )
+
+        elif int(interaction_author.level) < 2:
+            return await interaction.edit_original_response(
+                content="**У вас недостаточно прав для выполнения данной команды.**"
+            )
+
+        view, embed = await MakersListPaginator.create(guild_id=guild.id)
+
+        return await interaction.edit_original_response(
+            embed=embed, view=view
+        )
 
     # @maker.sub_command(name="activate", description="Активировать аккаунт редактора")
     # async def maker_activate(

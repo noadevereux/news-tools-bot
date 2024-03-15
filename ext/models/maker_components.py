@@ -14,6 +14,85 @@ from ext.database.methods import (
 from ext.tools import get_maker_profile, validate_date, get_status_title
 
 
+class MakersListPaginator(ui.View):
+    def __init__(self, embeds: list[disnake.Embed]):
+        super().__init__(timeout=180)
+        self.embeds = embeds
+        self.current_page = 0
+
+        embed: disnake.Embed
+        for i, embed in enumerate(self.embeds):
+            embed.set_footer(text=f"Страница {i + 1} из {len(embeds)}")
+
+        self._update_state()
+
+    @classmethod
+    async def create(cls, guild_id: int):
+        makers = await maker_methods.get_all_makers_sorted_by_lvl(guild_id=guild_id)
+        guild = await guild_methods.get_guild_by_id(id=guild_id)
+
+        next_embed_iteration = 10
+        embeds = []
+        for i in range(len(makers)):
+            match makers[i].account_status:
+                case True:
+                    emoji_status = "🚹"
+                case _:
+                    emoji_status = "📛"
+
+            if i == 0:
+                new_embed = disnake.Embed(
+                    title=f"🧾 Состав новостного раздела {guild.guild_name}",
+                    colour=0x2B2D31,
+                    description=f"### **Статус | ID | Никнейм | Discord | Должность**\n\n"
+                                f"- **{emoji_status} | [ID: {makers[i].id}] | {makers[i].nickname} | <@{makers[i].discord_id}> | {makers[i].post_name}**\n",
+                )
+                embeds.append(new_embed)
+                continue
+
+            if i == next_embed_iteration:
+                new_embed = disnake.Embed(
+                    title=f"🧾 Состав новостного раздела {guild.guild_name}",
+                    colour=0x2B2D31,
+                    description=f"### **Статус | ID | Никнейм | Discord | Должность**\n\n"
+                                f"- **{emoji_status} | [ID: {makers[i].id}] | {makers[i].nickname} | <@{makers[i].discord_id}> | {makers[i].post_name}**\n",
+                )
+                embeds.append(new_embed)
+                next_embed_iteration += 10
+                continue
+
+            embeds[-1].description += f"- **{emoji_status} | [ID: {makers[i].id}] | {makers[i].nickname} | <@{makers[i].discord_id}> | {makers[i].post_name}**\n"  # @formatter:off
+
+        return cls(embeds=embeds), embeds[0]
+
+    def _update_state(self) -> None:
+        self.prev_page.disabled = self.current_page == 0
+        self.next_page.disabled = (
+                self.current_page == len(self.embeds) - 1
+        )
+
+    @disnake.ui.button(emoji="◀", style=disnake.ButtonStyle.secondary)
+    async def prev_page(
+            self, button: disnake.ui.Button, inter: disnake.MessageInteraction
+    ):
+        self.current_page -= 1
+        self._update_state()
+
+        await inter.response.edit_message(
+            embed=self.embeds[self.current_page], view=self
+        )
+
+    @disnake.ui.button(emoji="▶", style=disnake.ButtonStyle.secondary)
+    async def next_page(
+            self, button: disnake.ui.Button, inter: disnake.MessageInteraction
+    ):
+        self.current_page += 1
+        self._update_state()
+
+        await inter.response.edit_message(
+            embed=self.embeds[self.current_page], view=self
+        )
+
 class GearButton(ui.View):
     def __init__(self, author: disnake.Member, maker_id: int):
         super().__init__(timeout=120)
@@ -23,7 +102,7 @@ class GearButton(ui.View):
 
     @ui.button(emoji="<:service_gear:1207389592815407137>")
     async def open_editor(
-        self, button: ui.Button, interaction: disnake.MessageInteraction
+            self, button: ui.Button, interaction: disnake.MessageInteraction
     ):
         if not interaction.author == self.author:
             return await interaction.send(
@@ -52,7 +131,7 @@ class MainMenu(ui.View):
 
     @ui.button(label="Отмена", style=disnake.ButtonStyle.red, row=2)
     async def cancel_callback(
-        self, button: ui.Button, interaction: disnake.MessageInteraction
+            self, button: ui.Button, interaction: disnake.MessageInteraction
     ):
         if not interaction.author == self.author:
             return await interaction.send(
@@ -257,8 +336,8 @@ class OptionSelect(ui.StringSelect):
                     )
 
                 elif (
-                    int(interaction_author.level) <= int(maker.level)
-                    and not interaction_author.is_admin
+                        int(interaction_author.level) <= int(maker.level)
+                        and not interaction_author.is_admin
                 ):
                     return await interaction.edit_original_response(
                         content="**У вас недостаточно прав для выполнения данного взаимодействия.**"
@@ -392,7 +471,7 @@ class WarnsControl(ui.View):
         row=2,
     )
     async def give_warn(
-        self, button: ui.Button, interaction: disnake.MessageInteraction
+            self, button: ui.Button, interaction: disnake.MessageInteraction
     ):
         if not interaction.author == self.author:
             return await interaction.send(
@@ -408,7 +487,7 @@ class WarnsControl(ui.View):
 
     @ui.button(label="Снять", emoji="<:minus:1207397544100110376>", row=2)
     async def take_warn(
-        self, button: ui.Button, interaction: disnake.MessageInteraction
+            self, button: ui.Button, interaction: disnake.MessageInteraction
     ):
         if not interaction.author == self.author:
             return await interaction.send(
@@ -452,7 +531,7 @@ class PredsControl(ui.View):
         row=2,
     )
     async def give_warn(
-        self, button: ui.Button, interaction: disnake.MessageInteraction
+            self, button: ui.Button, interaction: disnake.MessageInteraction
     ):
         if not interaction.author == self.author:
             return await interaction.send(
@@ -468,7 +547,7 @@ class PredsControl(ui.View):
 
     @ui.button(label="Снять", emoji="<:minus:1207397544100110376>", row=2)
     async def take_warn(
-        self, button: ui.Button, interaction: disnake.MessageInteraction
+            self, button: ui.Button, interaction: disnake.MessageInteraction
     ):
         if not interaction.author == self.author:
             return await interaction.send(
@@ -518,7 +597,7 @@ class SetLevel(ui.View):
         ],
     )
     async def choose_level(
-        self, string_select: ui.StringSelect, interaction: disnake.MessageInteraction
+            self, string_select: ui.StringSelect, interaction: disnake.MessageInteraction
     ):
         if not interaction.author == self.author:
             return await interaction.send(
@@ -552,8 +631,8 @@ class SetLevel(ui.View):
             )
 
         elif (
-            int(interaction_author.level) <= int(level)
-            and not interaction_author.is_admin
+                int(interaction_author.level) <= int(level)
+                and not interaction_author.is_admin
         ):
             return await interaction.edit_original_response(
                 content="**Вы не можете установить редактору уровень доступа, который равнен или выше вашего.**"
@@ -572,8 +651,8 @@ class SetLevel(ui.View):
             )
 
         elif (
-            int(interaction_author.level) <= int(maker.level)
-            and not interaction_author.is_admin
+                int(interaction_author.level) <= int(maker.level)
+                and not interaction_author.is_admin
         ):
             return await interaction.edit_original_response(
                 content="**У вас недостаточно прав для выполнения данного взаимодействия.**"
@@ -663,7 +742,7 @@ class SetStatus(ui.View):
         ],
     )
     async def choose_status(
-        self, string_select: ui.StringSelect, interaction: disnake.MessageInteraction
+            self, string_select: ui.StringSelect, interaction: disnake.MessageInteraction
     ):
         if not interaction.author == self.author:
             return await interaction.send(
@@ -709,8 +788,8 @@ class SetStatus(ui.View):
             )
 
         elif (
-            int(interaction_author.level) <= int(maker.level)
-            and not interaction_author.is_admin
+                int(interaction_author.level) <= int(maker.level)
+                and not interaction_author.is_admin
         ):
             return await interaction.edit_original_response(
                 content="**У вас недостаточно прав для выполнения данного взаимодействия.**"
@@ -758,16 +837,16 @@ class SetStatus(ui.View):
 
 class SubmitReason(ui.Modal):
     def __init__(
-        self,
-        action: Literal[
-            "give_warn",
-            "take_warn",
-            "give_pred",
-            "take_pred",
-            "deactivate",
-        ],
-        author: disnake.Member,
-        maker_id: int,
+            self,
+            action: Literal[
+                "give_warn",
+                "take_warn",
+                "give_pred",
+                "take_pred",
+                "deactivate",
+            ],
+            author: disnake.Member,
+            maker_id: int,
     ):
         super().__init__(
             title="Укажите причину",
@@ -832,8 +911,8 @@ class SubmitReason(ui.Modal):
                     )
 
                 elif (
-                    int(interaction_author.level) <= int(maker.level)
-                    and not interaction_author.is_admin
+                        int(interaction_author.level) <= int(maker.level)
+                        and not interaction_author.is_admin
                 ):
                     return await interaction.edit_original_response(
                         content="**У вас недостаточно прав для выполнения данного взаимодействия.**"
@@ -900,8 +979,8 @@ class SubmitReason(ui.Modal):
                     )
 
                 elif (
-                    int(interaction_author.level) <= int(maker.level)
-                    and not interaction_author.is_admin
+                        int(interaction_author.level) <= int(maker.level)
+                        and not interaction_author.is_admin
                 ):
                     return await interaction.edit_original_response(
                         content="**У вас недостаточно прав для выполнения данного взаимодействия.**"
@@ -973,8 +1052,8 @@ class SubmitReason(ui.Modal):
                     )
 
                 elif (
-                    int(interaction_author.level) <= int(maker.level)
-                    and not interaction_author.is_admin
+                        int(interaction_author.level) <= int(maker.level)
+                        and not interaction_author.is_admin
                 ):
                     return await interaction.edit_original_response(
                         content="**У вас недостаточно прав для выполнения данного взаимодействия.**"
@@ -1043,7 +1122,7 @@ class SubmitReason(ui.Modal):
 
                     return await interaction.edit_original_response(
                         content=f"**Вы выдали предупреждение редактору <@{maker.discord_id}> `{maker.nickname}`. Причина: {reason}**\n"
-                        f"**⚠️ Система выдала выговор редактору. Причина: 3/3 предупреждений.**"
+                                f"**⚠️ Система выдала выговор редактору. Причина: 3/3 предупреждений.**"
                     )
             case "take_pred":
                 await interaction.response.defer()
@@ -1082,8 +1161,8 @@ class SubmitReason(ui.Modal):
                     )
 
                 elif (
-                    int(interaction_author.level) <= int(maker.level)
-                    and not interaction_author.is_admin
+                        int(interaction_author.level) <= int(maker.level)
+                        and not interaction_author.is_admin
                 ):
                     return await interaction.edit_original_response(
                         content="**У вас недостаточно прав для выполнения данного взаимодействия.**"
@@ -1153,7 +1232,7 @@ class SubmitReason(ui.Modal):
 
                     return await interaction.edit_original_response(
                         content=f"**Вы сняли предупреждение редактору <@{maker.discord_id}> `{maker.nickname}`. Причина: {reason}**\n"
-                        f"**⚠️ Система сняла выговор редактору. Причина: распад выговора на 3 предупреждения.**"
+                                f"**⚠️ Система сняла выговор редактору. Причина: распад выговора на 3 предупреждения.**"
                     )
 
                 else:
@@ -1198,8 +1277,8 @@ class SubmitReason(ui.Modal):
                     )
 
                 elif (
-                    int(interaction_author.level) <= int(maker.level)
-                    and not interaction_author.is_admin
+                        int(interaction_author.level) <= int(maker.level)
+                        and not interaction_author.is_admin
                 ):
                     return await interaction.edit_original_response(
                         content="**У вас недостаточно прав для выполнения данного взаимодействия.**"
@@ -1264,12 +1343,12 @@ class SubmitReason(ui.Modal):
 
 class SubmitText(ui.Modal):
     def __init__(
-        self,
-        modal_title: str,
-        modal_type: Literal["discord", "nickname", "post_name", "date"],
-        components: ui.TextInput,
-        author: disnake.Member,
-        maker_id: int,
+            self,
+            modal_title: str,
+            modal_type: Literal["discord", "nickname", "post_name", "date"],
+            components: ui.TextInput,
+            author: disnake.Member,
+            maker_id: int,
     ):
         super().__init__(title=modal_title, components=components, timeout=300)
         self.author = author
@@ -1278,10 +1357,10 @@ class SubmitText(ui.Modal):
 
     @classmethod
     async def create(
-        cls,
-        modal_type: Literal["discord", "nickname", "post_name", "date"],
-        author: disnake.Member,
-        maker_id: int,
+            cls,
+            modal_type: Literal["discord", "nickname", "post_name", "date"],
+            author: disnake.Member,
+            maker_id: int,
     ):
         match modal_type:
             case "discord":
@@ -1426,8 +1505,8 @@ class SubmitText(ui.Modal):
                     )
 
                 elif (
-                    int(interaction_author.level) <= int(maker.level)
-                    and not interaction_author.is_admin
+                        int(interaction_author.level) <= int(maker.level)
+                        and not interaction_author.is_admin
                 ):
                     main_menu = await MainMenu.create(
                         author=self.author, maker_id=self.maker_id
@@ -1451,7 +1530,7 @@ class SubmitText(ui.Modal):
                     )
 
                 if await maker_methods.is_maker_exists(
-                    guild_id=guild.id, discord_id=new_member.id
+                        guild_id=guild.id, discord_id=new_member.id
                 ):
                     main_menu = await MainMenu.create(
                         author=self.author, maker_id=self.maker_id
@@ -1561,8 +1640,8 @@ class SubmitText(ui.Modal):
                     )
 
                 elif (
-                    int(interaction_author.level) <= int(maker.level)
-                    and not interaction_author.is_admin
+                        int(interaction_author.level) <= int(maker.level)
+                        and not interaction_author.is_admin
                 ):
                     main_menu = await MainMenu.create(
                         author=self.author, maker_id=self.maker_id
@@ -1683,8 +1762,8 @@ class SubmitText(ui.Modal):
                     )
 
                 elif (
-                    int(interaction_author.level) <= int(maker.level)
-                    and not interaction_author.is_admin
+                        int(interaction_author.level) <= int(maker.level)
+                        and not interaction_author.is_admin
                 ):
                     main_menu = await MainMenu.create(
                         author=self.author, maker_id=self.maker_id
@@ -1884,8 +1963,8 @@ class SubmitText(ui.Modal):
                     )
 
                 elif (
-                    int(interaction_author.level) <= int(maker.level)
-                    and not interaction_author.is_admin
+                        int(interaction_author.level) <= int(maker.level)
+                        and not interaction_author.is_admin
                 ):
                     main_menu = await MainMenu.create(
                         author=self.author, maker_id=self.maker_id
