@@ -32,22 +32,22 @@ async def add_maker(guild_id: int, discord_id: int, nickname: str) -> Maker | No
 
 
 async def update_maker(
-        guild_id: int,
-        discord_id: int,
-        column_name: Literal[
-            "id",
-            "guild_id",
-            "discord_id",
-            "nickname",
-            "level",
-            "post_name",
-            "status",
-            "warns",
-            "preds",
-            "appointment_datetime",
-            "account_status",
-        ],
-        value,
+    guild_id: int,
+    discord_id: int,
+    column_name: Literal[
+        "id",
+        "guild_id",
+        "discord_id",
+        "nickname",
+        "level",
+        "post_name",
+        "status",
+        "warns",
+        "preds",
+        "appointment_datetime",
+        "account_status",
+    ],
+    value,
 ) -> None:
     async with SessionLocal() as session:
         maker = await session.execute(
@@ -60,21 +60,21 @@ async def update_maker(
 
 
 async def update_maker_by_id(
-        id: int,
-        column_name: Literal[
-            "id",
-            "guild_id",
-            "discord_id",
-            "nickname",
-            "level",
-            "post_name",
-            "status",
-            "warns",
-            "preds",
-            "appointment_datetime",
-            "account_status",
-        ],
-        value,
+    id: int,
+    column_name: Literal[
+        "id",
+        "guild_id",
+        "discord_id",
+        "nickname",
+        "level",
+        "post_name",
+        "status",
+        "warns",
+        "preds",
+        "appointment_datetime",
+        "account_status",
+    ],
+    value,
 ) -> None:
     async with SessionLocal() as session:
         maker = await session.execute(select(Maker).filter_by(id=id))
@@ -92,7 +92,9 @@ async def get_all_makers(guild_id: int) -> list[Maker] | None:
 
 async def get_all_makers_sorted_by_lvl(guild_id: int) -> list[Maker] | None:
     async with SessionLocal() as session:
-        makers = await session.execute(select(Maker).filter_by(guild_id=guild_id).order_by(Maker.level.desc()))
+        makers = await session.execute(
+            select(Maker).filter_by(guild_id=guild_id).order_by(Maker.level.desc())
+        )
         return makers.scalars().all()
 
 
