@@ -31,7 +31,7 @@ class Main(commands.Cog):
         interaction: disnake.ApplicationCommandInteraction,
         member: disnake.User
         | disnake.Member = commands.Param(
-            name="maker", description="Редактор или его Discord ID"
+            name="user", description="Пользователь или его Discord ID"
         ),
         nickname: str = commands.Param(
             name="nickname", description="Никнейм редактора"
