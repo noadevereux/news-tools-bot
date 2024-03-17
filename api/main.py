@@ -40,7 +40,9 @@ async def send_notify(request: Request, channel_id: int, message: str):
     return {"status": "ok", "message": message}
 
 
-@router.post("/send_service_notify", dependencies=[Depends(JWTBearer())], tags=["Notifies"])
+@router.post(
+    "/send_service_notify", dependencies=[Depends(JWTBearer())], tags=["Notifies"]
+)
 async def send_service_notify(request: Request, message: str):
     bot: commands.InteractionBot = request.app.bot
     channel = bot.get_channel(1197196512728449105)
