@@ -6,17 +6,19 @@ async def guild_autocomplete(
     interaction: disnake.ApplicationCommandInteraction, user_input: str
 ):
     guilds = await guild_methods.get_all_guilds()
+
     if len(user_input) == 0:
         return [
             disnake.OptionChoice(name=guild.guild_name, value=str(guild.id))
-            for guild in guilds
+            for guild in guilds[:25]
         ]
     else:
-        return [
+        sorted_guilds = [
             disnake.OptionChoice(name=guild.guild_name, value=str(guild.id))
             for guild in guilds
             if user_input.lower() in guild.guild_name.lower()
         ]
+        return sorted_guilds[:25]
 
 
 async def maker_autocomplete(
@@ -29,60 +31,16 @@ async def maker_autocomplete(
             disnake.OptionChoice(
                 name=f"[ID:{maker.id}] {maker.nickname}", value=str(maker.id)
             )
-            for maker in makers
+            for maker in makers[:25]
         ]
     else:
-        return [
-            disnake.OptionChoice(
-                name=f"[ID:{maker.id}] {maker.nickname}", value=str(maker.id)
-            )
-            for maker in makers
-            if user_input.lower() in maker.nickname.lower()
-        ]
-
-
-async def deactivated_maker_autocomplete(
-    interaction: disnake.ApplicationCommandInteraction, user_input: str
-):
-    guild = await guild_methods.get_guild(interaction.guild.id)
-    makers = await maker_methods.get_all_makers(guild_id=guild.id)
-    if len(user_input) == 0:
-        return [
-            disnake.OptionChoice(
-                name=f"[ID:{maker.id}] {maker.nickname}", value=str(maker.id)
-            )
-            for maker in makers
-            if not maker.account_status
-        ]
-    else:
-        return [
+        sorted_makers = [
             disnake.OptionChoice(
                 name=f"[ID:{maker.id}] {maker.nickname}", value=str(maker.id)
             )
             for maker in makers
             if (user_input.lower() in maker.nickname.lower())
-            and (not maker.account_status)
+            or (user_input.lower() in str(maker.id))
         ]
 
-
-async def active_maker_autocomplete(
-    interaction: disnake.ApplicationCommandInteraction, user_input: str
-):
-    guild = await guild_methods.get_guild(interaction.guild.id)
-    makers = await maker_methods.get_all_makers(guild_id=guild.id)
-    if len(user_input) == 0:
-        return [
-            disnake.OptionChoice(
-                name=f"[ID:{maker.id}] {maker.nickname}", value=str(maker.id)
-            )
-            for maker in makers
-            if maker.account_status
-        ]
-    else:
-        return [
-            disnake.OptionChoice(
-                name=f"[ID:{maker.id}] {maker.nickname}", value=str(maker.id)
-            )
-            for maker in makers
-            if (user_input.lower() in maker.nickname.lower()) and maker.account_status
-        ]
+        return sorted_makers[:25]
