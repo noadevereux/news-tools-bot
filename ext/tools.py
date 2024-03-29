@@ -105,10 +105,8 @@ async def get_maker_profile(maker_id: int, user: User | Member = None) -> Embed:
     return embed
 
 
-async def get_publication_profile(guild_id: int, publication_id: int) -> Embed:
-    publication = await publication_methods.get_publication(
-        guild_id=guild_id, publication_id=publication_id
-    )
+async def get_publication_profile(publication_id: int) -> Embed:
+    publication = await publication_methods.get_publication_by_id(publication_id)
     maker = await maker_methods.get_maker_by_id(id=publication.maker_id)
     if not maker:
         maker = "`не указан`"
@@ -144,6 +142,7 @@ async def get_publication_profile(guild_id: int, publication_id: int) -> Embed:
     status = await get_status_title(status_kw=publication.status)
 
     embed_description = f"""
+    **ID выпуска: `{publication.id}`**
     **Номер выпуска: `{publication.publication_number}`**
     **Дата публикации выпуска: {date}**
     **Редактор: {maker}**
