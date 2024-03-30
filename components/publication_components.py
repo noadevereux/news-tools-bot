@@ -10,6 +10,91 @@ from ext.tools import validate_date, get_status_title
 from ext.profile_getters import get_publication_profile
 
 
+class PublicationListPaginator(ui.View):
+    def __init__(self, embeds: list[disnake.Embed]):
+        super().__init__(timeout=180)
+        self.embeds = embeds
+        self.current_page = 0
+
+        embed: disnake.Embed
+        for i, embed in enumerate(self.embeds):
+            embed.set_footer(text=f"Страница {i + 1} из {len(embeds)}")
+
+        self._update_state()
+
+    @classmethod
+    async def create(cls, guild_id: int):
+        publications = await publication_methods.get_all_publications(guild_id=guild_id)
+        guild = await guild_methods.get_guild_by_id(id=guild_id)
+
+        next_embed_iteration = 10
+        embeds = []
+        for i in range(len(publications)):
+            if publications[i].maker_id:
+                maker = await maker_methods.get_maker_by_id(id=publications[i].maker_id)
+                maker = maker.nickname
+            else:
+                maker = "Не установлен"
+
+            status = get_status_title(status_kw=str(publications[i].status))
+
+            if publications[i].date:
+                date = publications[i].date.strftime("%d.%m.%Y")
+            else:
+                date = "Не указана"
+
+            if i == 0:
+                new_embed = disnake.Embed(
+                    title=f"🧾 Выпуски новостного раздела {guild.guild_name}",
+                    colour=0x2B2D31,
+                    description=f"**ID | Номер выпуска | Никнейм редактора | Статус | Дата публикации**\n\n"
+                                f"- **[ID: {publications[i].id}] | #{publications[i].publication_number} | {maker} | {status} | {date}**\n",
+                )
+                embeds.append(new_embed)
+                continue
+
+            if i == next_embed_iteration:
+                new_embed = disnake.Embed(
+                    title=f"🧾 Выпуски новостного раздела {guild.guild_name}",
+                    colour=0x2B2D31,
+                    description=f"**ID | Номер выпуска | Никнейм редактора | Статус | Дата публикации**\n\n"
+                                f"- **[ID: {publications[i].id}] | #{publications[i].publication_number} | {maker} | {status} | {date}**\n",
+                )
+                embeds.append(new_embed)
+                next_embed_iteration += 10
+                continue
+
+            embeds[-1].description += f"- **[ID: {publications[i].id}] | #{publications[i].publication_number} | {maker} | {status} | {date}**\n"  # @formatter:off
+
+        return cls(embeds=embeds), embeds[0]
+
+    def _update_state(self) -> None:
+        self.prev_page.disabled = self.current_page == 0
+        self.next_page.disabled = self.current_page == len(self.embeds) - 1
+
+    @disnake.ui.button(emoji="◀", style=disnake.ButtonStyle.secondary)
+    async def prev_page(
+        self, button: disnake.ui.Button, inter: disnake.MessageInteraction
+    ):
+        self.current_page -= 1
+        self._update_state()
+
+        await inter.response.edit_message(
+            embed=self.embeds[self.current_page], view=self
+        )
+
+    @disnake.ui.button(emoji="▶", style=disnake.ButtonStyle.secondary)
+    async def next_page(
+        self, button: disnake.ui.Button, inter: disnake.MessageInteraction
+    ):
+        self.current_page += 1
+        self._update_state()
+
+        await inter.response.edit_message(
+            embed=self.embeds[self.current_page], view=self
+        )
+
+
 class GearButton(ui.View):
     def __init__(self, author: disnake.Member, publication_id: int):
         super().__init__(timeout=120)
