@@ -17,17 +17,17 @@ class Publications(commands.Cog):
         self.log = Logger("cogs.publications.py.log")
 
     @commands.slash_command(
-        name="pubsetting", description="Настройка выпусков", dm_permission=False
+        name="publication", description="Действия с выпусками", dm_permission=False
     )
     @is_guild_exists()
-    async def pubsetting(self, interaction: disnake.ApplicationCommandInteraction):
+    async def publication(self, interaction: disnake.ApplicationCommandInteraction):
         pass
 
-    @pubsetting.sub_command(name="create", description="Создать выпуск")
-    async def pubsetting_create(
+    @publication.sub_command(name="create", description="Создать выпуск")
+    async def publication_create(
             self,
             interaction: disnake.ApplicationCommandInteraction,
-            pub_number: int = commands.Param(name="number", description="Номер выпуска"),
+            publication_number: int = commands.Param(name="number", description="Номер выпуска"),
     ):
         await interaction.response.defer()
 
@@ -53,16 +53,16 @@ class Publications(commands.Cog):
             )
 
         publication = await publication_methods.get_publication(
-            guild_id=guild.id, publication_number=pub_number
+            guild_id=guild.id, publication_number=publication_number
         )
 
         if publication:
             return await interaction.edit_original_response(
-                content=f"**Выпуск с номером `#{pub_number}` уже существует.**"
+                content=f"**Выпуск с номером `#{publication_number}` уже существует.**"
             )
 
         new_publication = await publication_methods.add_publication(
-            guild_id=guild.id, publication_id=pub_number
+            guild_id=guild.id, publication_number=publication_number
         )
 
         await action_methods.add_pub_action(
@@ -70,18 +70,13 @@ class Publications(commands.Cog):
         )
 
         embed = await get_publication_profile(publication_id=new_publication.id)
+        view = GearButton(author=interaction.author, publication_id=new_publication.id)
 
         return await interaction.edit_original_response(
             content=f"**Вы создали выпуск `#{new_publication.publication_number}`.**",
             embed=embed,
+            view=view
         )
-
-    @commands.slash_command(
-        name="publication", description="Действия с выпусками", dm_permission=False
-    )
-    @is_guild_exists()
-    async def publication(self, interaction: disnake.ApplicationCommandInteraction):
-        pass
 
     @publication.sub_command(name="info", description="Посмотреть информацию о выпуске")
     async def publication_info(
