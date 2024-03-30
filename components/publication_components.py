@@ -709,7 +709,7 @@ class ChooseMaker(ui.View):
         self.previous_page.disabled = self.page_index == 0
         self.next_page.disabled = self.page_index == len(self.options_list) - 1
 
-    @ui.button(emoji="◀", style=disnake.ButtonStyle.blurple, row=3)
+    @ui.button(emoji="◀", style=disnake.ButtonStyle.secondary, row=3)
     async def previous_page(
             self, button: ui.Button, interaction: disnake.MessageInteraction
     ):
@@ -721,7 +721,7 @@ class ChooseMaker(ui.View):
 
         return await interaction.response.edit_message(view=self)
 
-    @ui.button(emoji="▶", style=disnake.ButtonStyle.blurple, row=3)
+    @ui.button(emoji="▶", style=disnake.ButtonStyle.secondary, row=3)
     async def next_page(
             self, button: ui.Button, interaction: disnake.MessageInteraction
     ):
