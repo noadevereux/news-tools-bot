@@ -1,9 +1,5 @@
 import disnake
-from ext.database.methods import (
-    guilds as guild_methods,
-    makers as maker_methods,
-    publications as publication_methods,
-)
+from database.methods import makers as maker_methods, guilds as guild_methods, publications as publication_methods
 
 
 async def guild_autocomplete(

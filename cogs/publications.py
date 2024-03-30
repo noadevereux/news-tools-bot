@@ -1,12 +1,8 @@
 import disnake
 from disnake.ext import commands
 
-from ext.database.methods import (
-    guilds as guild_methods,
-    makers as maker_methods,
-    publications as publication_methods,
-    publication_actions as action_methods,
-)
+from database.methods import publication_actions as action_methods, makers as maker_methods, guilds as guild_methods, \
+    publications as publication_methods
 from ext.logger import Logger
 from ext.models.autocompleters import publication_autocomplete
 from ext.models.checks import is_guild_exists

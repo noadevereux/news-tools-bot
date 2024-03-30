@@ -2,7 +2,7 @@ import disnake
 from disnake.ext import commands
 from sqlalchemy.exc import IntegrityError
 
-from ext.database.methods import makers as maker_methods, guilds as guild_methods
+from database.methods import guilds as guild_methods
 from ext.models.checks import is_guild_admin
 from config import DEV_GUILDS
 from ext.models.autocompleters import guild_autocomplete
@@ -30,14 +30,14 @@ class DeveloperCommands(commands.Cog):
 
     @dev_guild.sub_command(name="register", description="[DEV] Зарегистрировать сервер")
     async def dev_guild_register(
-        self,
-        interaction: disnake.ApplicationCommandInteraction,
-        guild_id: disnake.Guild = commands.Param(
-            name="guild", description="Discord ID сервера"
-        ),
-        guild_name: str = commands.Param(
-            name="guild_name", description="Название сервера"
-        ),
+            self,
+            interaction: disnake.ApplicationCommandInteraction,
+            guild_id: disnake.Guild = commands.Param(
+                name="guild", description="Discord ID сервера"
+            ),
+            guild_name: str = commands.Param(
+                name="guild_name", description="Название сервера"
+            ),
     ):
         await interaction.response.defer()
 
@@ -66,11 +66,11 @@ class DeveloperCommands(commands.Cog):
 
     @dev_guild.sub_command(name="activate", description="[DEV] Активировать сервер")
     async def dev_guild_activate(
-        self,
-        interaction: disnake.ApplicationCommandInteraction,
-        guild_id: int = commands.Param(
-            name="guild", description="Сервер", autocomplete=guild_autocomplete
-        ),
+            self,
+            interaction: disnake.ApplicationCommandInteraction,
+            guild_id: int = commands.Param(
+                name="guild", description="Сервер", autocomplete=guild_autocomplete
+            ),
     ):
         await interaction.response.defer()
 
@@ -96,11 +96,11 @@ class DeveloperCommands(commands.Cog):
 
     @dev_guild.sub_command(name="deactivate", description="[DEV] Деактивировать сервер")
     async def dev_guild_deactivate(
-        self,
-        interaction: disnake.ApplicationCommandInteraction,
-        guild_id: int = commands.Param(
-            name="guild", description="Сервер", autocomplete=guild_autocomplete
-        ),
+            self,
+            interaction: disnake.ApplicationCommandInteraction,
+            guild_id: int = commands.Param(
+                name="guild", description="Сервер", autocomplete=guild_autocomplete
+            ),
     ):
         await interaction.response.defer()
 
@@ -133,11 +133,11 @@ class DeveloperCommands(commands.Cog):
         name="info", description="[DEV] Посмотреть информацию о сервере"
     )
     async def dev_guild_info(
-        self,
-        interaction: disnake.ApplicationCommandInteraction,
-        guild_id: int = commands.Param(
-            name="guild", description="Сервер", autocomplete=guild_autocomplete
-        ),
+            self,
+            interaction: disnake.ApplicationCommandInteraction,
+            guild_id: int = commands.Param(
+                name="guild", description="Сервер", autocomplete=guild_autocomplete
+            ),
     ):
         await interaction.response.defer()
 
@@ -156,14 +156,14 @@ class DeveloperCommands(commands.Cog):
 
     @dev_guild.sub_command(name="name", description="[DEV] Изменить имя сервера")
     async def dev_guild_name(
-        self,
-        interaction: disnake.ApplicationCommandInteraction,
-        guild_id: int = commands.Param(
-            name="guild", description="Сервер", autocomplete=guild_autocomplete
-        ),
-        new_name: str = commands.Param(
-            name="new_name", description="Новое имя сервера"
-        ),
+            self,
+            interaction: disnake.ApplicationCommandInteraction,
+            guild_id: int = commands.Param(
+                name="guild", description="Сервер", autocomplete=guild_autocomplete
+            ),
+            new_name: str = commands.Param(
+                name="new_name", description="Новое имя сервера"
+            ),
     ):
         await interaction.response.defer()
 
@@ -191,14 +191,14 @@ class DeveloperCommands(commands.Cog):
         name="add_role", description="[DEV] Подключить роль к серверу"
     )
     async def dev_guild_add_role(
-        self,
-        interaction: disnake.ApplicationCommandInteraction,
-        guild_id: int = commands.Param(
-            name="guild", description="Сервер", autocomplete=guild_autocomplete
-        ),
-        role_id: commands.LargeInt = commands.Param(
-            name="role_id", description="Discord ID роли"
-        ),
+            self,
+            interaction: disnake.ApplicationCommandInteraction,
+            guild_id: int = commands.Param(
+                name="guild", description="Сервер", autocomplete=guild_autocomplete
+            ),
+            role_id: commands.LargeInt = commands.Param(
+                name="role_id", description="Discord ID роли"
+            ),
     ):
         await interaction.response.defer()
 
@@ -230,14 +230,14 @@ class DeveloperCommands(commands.Cog):
         name="remove_role", description="[DEV] Отключить роль от сервера"
     )
     async def dev_guild_remove_role(
-        self,
-        interaction: disnake.ApplicationCommandInteraction,
-        guild_id: int = commands.Param(
-            name="guild", description="Сервер", autocomplete=guild_autocomplete
-        ),
-        role_id: commands.LargeInt = commands.Param(
-            name="role_id", description="Discord ID роли"
-        ),
+            self,
+            interaction: disnake.ApplicationCommandInteraction,
+            guild_id: int = commands.Param(
+                name="guild", description="Сервер", autocomplete=guild_autocomplete
+            ),
+            role_id: commands.LargeInt = commands.Param(
+                name="role_id", description="Discord ID роли"
+            ),
     ):
         await interaction.response.defer()
 
@@ -270,9 +270,9 @@ class DeveloperCommands(commands.Cog):
         description="[DEV] Включить уведомления о выдаче и снятии ролей",
     )
     async def dev_guild_notifies_enable(
-        self,
-        interaction: disnake.ApplicationCommandInteraction,
-        guild_id: int = commands.Param(name="guild", description="Сервер"),
+            self,
+            interaction: disnake.ApplicationCommandInteraction,
+            guild_id: int = commands.Param(name="guild", description="Сервер"),
     ):
         await interaction.response.defer()
 
@@ -301,11 +301,11 @@ class DeveloperCommands(commands.Cog):
         description="[DEV] Отключить уведомления о выдаче и снятии ролей",
     )
     async def dev_guild_notifies_disable(
-        self,
-        interaction: disnake.ApplicationCommandInteraction,
-        guild_id: int = commands.Param(
-            name="guild", description="Сервер", autocomplete=guild_autocomplete
-        ),
+            self,
+            interaction: disnake.ApplicationCommandInteraction,
+            guild_id: int = commands.Param(
+                name="guild", description="Сервер", autocomplete=guild_autocomplete
+            ),
     ):
         await interaction.response.defer()
 
@@ -333,14 +333,14 @@ class DeveloperCommands(commands.Cog):
         name="channel", description="[DEV] Изменить рабочий канал для сервера"
     )
     async def dev_guild_channel(
-        self,
-        interaction: disnake.ApplicationCommandInteraction,
-        guild_id: int = commands.Param(
-            name="guild", description="Сервер", autocomplete=guild_autocomplete
-        ),
-        channel_id: commands.LargeInt = commands.Param(
-            default=None, name="channel_id", description="Discord ID канала"
-        ),
+            self,
+            interaction: disnake.ApplicationCommandInteraction,
+            guild_id: int = commands.Param(
+                name="guild", description="Сервер", autocomplete=guild_autocomplete
+            ),
+            channel_id: commands.LargeInt = commands.Param(
+                default=None, name="channel_id", description="Discord ID канала"
+            ),
     ):
         await interaction.response.defer()
 
@@ -383,14 +383,14 @@ class DeveloperCommands(commands.Cog):
         description="[DEV] Подключить роль для логирования на сервере",
     )
     async def dev_guild_add_log_role(
-        self,
-        interaction: disnake.ApplicationCommandInteraction,
-        guild_id: int = commands.Param(
-            name="guild", description="Сервер", autocomplete=guild_autocomplete
-        ),
-        role_id: commands.LargeInt = commands.Param(
-            name="role_id", description="Discord ID роли"
-        ),
+            self,
+            interaction: disnake.ApplicationCommandInteraction,
+            guild_id: int = commands.Param(
+                name="guild", description="Сервер", autocomplete=guild_autocomplete
+            ),
+            role_id: commands.LargeInt = commands.Param(
+                name="role_id", description="Discord ID роли"
+            ),
     ):
         await interaction.response.defer()
 
@@ -423,14 +423,14 @@ class DeveloperCommands(commands.Cog):
         description="[DEV] Отключить роль от логирования на сервере",
     )
     async def dev_guild_remove_log_role(
-        self,
-        interaction: disnake.ApplicationCommandInteraction,
-        guild_id: int = commands.Param(
-            name="guild", description="Сервер", autocomplete=guild_autocomplete
-        ),
-        role_id: commands.LargeInt = commands.Param(
-            name="role_id", description="Discord ID роли"
-        ),
+            self,
+            interaction: disnake.ApplicationCommandInteraction,
+            guild_id: int = commands.Param(
+                name="guild", description="Сервер", autocomplete=guild_autocomplete
+            ),
+            role_id: commands.LargeInt = commands.Param(
+                name="role_id", description="Discord ID роли"
+            ),
     ):
         await interaction.response.defer()
 
@@ -463,14 +463,14 @@ class DeveloperCommands(commands.Cog):
         description="[DEV] Изменить канал для логирования ролей на сервере",
     )
     async def dev_guild_log_roles_channel(
-        self,
-        interaction: disnake.ApplicationCommandInteraction,
-        guild_id: int = commands.Param(
-            name="guild", description="Сервер", autocomplete=guild_autocomplete
-        ),
-        channel_id: commands.LargeInt = commands.Param(
-            default=None, name="channel_id", description="Discord ID канала"
-        ),
+            self,
+            interaction: disnake.ApplicationCommandInteraction,
+            guild_id: int = commands.Param(
+                name="guild", description="Сервер", autocomplete=guild_autocomplete
+            ),
+            channel_id: commands.LargeInt = commands.Param(
+                default=None, name="channel_id", description="Discord ID канала"
+            ),
     ):
         await interaction.response.defer()
 
@@ -514,11 +514,11 @@ class DeveloperCommands(commands.Cog):
         name="admin_grant", description="[DEV] Выдать серверу административные права"
     )
     async def dev_guild_admin_grant(
-        self,
-        interaction: disnake.ApplicationCommandInteraction,
-        guild_id: int = commands.Param(
-            name="guild", description="Сервер", autocomplete=guild_autocomplete
-        ),
+            self,
+            interaction: disnake.ApplicationCommandInteraction,
+            guild_id: int = commands.Param(
+                name="guild", description="Сервер", autocomplete=guild_autocomplete
+            ),
     ):
         await interaction.response.defer()
 
@@ -547,11 +547,11 @@ class DeveloperCommands(commands.Cog):
         description="[DEV] Забрать у сервера административные права",
     )
     async def dev_guild_admin_revoke(
-        self,
-        interaction: disnake.ApplicationCommandInteraction,
-        guild_id: int = commands.Param(
-            name="guild", description="Сервер", autocomplete=guild_autocomplete
-        ),
+            self,
+            interaction: disnake.ApplicationCommandInteraction,
+            guild_id: int = commands.Param(
+                name="guild", description="Сервер", autocomplete=guild_autocomplete
+            ),
     ):
         await interaction.response.defer()
 
