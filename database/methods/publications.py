@@ -6,14 +6,14 @@ from ..database import SessionLocal
 from ..models import Publication
 
 
-async def add_publication(guild_id: int, publication_id: int) -> Publication:
-    new_publication = Publication(guild_id=guild_id, publication_number=publication_id)
+async def add_publication(guild_id: int, publication_number: int) -> Publication:
+    new_publication = Publication(guild_id=guild_id, publication_number=publication_number)
     async with SessionLocal() as session:
         session.add(new_publication)
         await session.commit()
         publication = await session.execute(
             select(Publication).filter_by(
-                guild_id=guild_id, publication_number=publication_id
+                guild_id=guild_id, publication_number=publication_number
             )
         )
         return publication.scalar()
