@@ -3,7 +3,7 @@ from datetime import datetime
 import disnake
 from disnake.ext import commands
 
-from ext.database.methods import guilds as guild_methods
+from database.methods import guilds as guild_methods
 from ext.models.keyboards import ConfirmRoleAction
 
 
@@ -46,9 +46,9 @@ class Notifier(commands.Cog):
                 try:
                     await message.pin(reason="Действие требует подтверждения")
                 except (
-                    disnake.errors.Forbidden,
-                    disnake.errors.NotFound,
-                    disnake.errors.HTTPException,
+                        disnake.errors.Forbidden,
+                        disnake.errors.NotFound,
+                        disnake.errors.HTTPException,
                 ):
                     pass
                 async for msg in channel.history(limit=5):
@@ -56,9 +56,9 @@ class Notifier(commands.Cog):
                         try:
                             await msg.delete()
                         except (
-                            disnake.errors.Forbidden,
-                            disnake.errors.NotFound,
-                            disnake.errors.HTTPException,
+                                disnake.errors.Forbidden,
+                                disnake.errors.NotFound,
+                                disnake.errors.HTTPException,
                         ):
                             pass
             elif (role not in entry.before.roles) and (role in entry.after.roles):
@@ -72,9 +72,9 @@ class Notifier(commands.Cog):
                 try:
                     await message.pin(reason="Действие требует подтверждения")
                 except (
-                    disnake.errors.Forbidden,
-                    disnake.errors.NotFound,
-                    disnake.errors.HTTPException,
+                        disnake.errors.Forbidden,
+                        disnake.errors.NotFound,
+                        disnake.errors.HTTPException,
                 ):
                     pass
                 async for msg in channel.history(limit=5):
@@ -82,9 +82,9 @@ class Notifier(commands.Cog):
                         try:
                             await msg.delete()
                         except (
-                            disnake.errors.Forbidden,
-                            disnake.errors.NotFound,
-                            disnake.errors.HTTPException,
+                                disnake.errors.Forbidden,
+                                disnake.errors.NotFound,
+                                disnake.errors.HTTPException,
                         ):
                             pass
 
