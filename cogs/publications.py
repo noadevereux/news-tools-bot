@@ -10,7 +10,7 @@ from ext.database.methods import (
 from ext.logger import Logger
 from ext.models.autocompleters import publication_autocomplete
 from ext.models.checks import is_guild_exists
-from ext.models.publication_components import GearButton
+from components.publication_components import GearButton
 from ext.tools import get_publication_profile
 
 

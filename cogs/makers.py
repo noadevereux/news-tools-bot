@@ -6,7 +6,7 @@ from ext.models.autocompleters import (
     maker_autocomplete,
 )
 from ext.models.checks import is_guild_exists
-from ext.models.maker_components import GearButton, MakersListPaginator
+from components.maker_components import GearButton, MakersListPaginator
 from ext.tools import *
 
 
@@ -27,15 +27,15 @@ class Makers(commands.Cog):
         name="register", description="Зарегистрировать редактора в системе"
     )
     async def maker_register(
-        self,
-        interaction: disnake.ApplicationCommandInteraction,
-        member: disnake.User
-        | disnake.Member = commands.Param(
-            name="user", description="Пользователь или его Discord ID"
-        ),
-        nickname: str = commands.Param(
-            name="nickname", description="Никнейм редактора"
-        ),
+            self,
+            interaction: disnake.ApplicationCommandInteraction,
+            member: disnake.User
+                    | disnake.Member = commands.Param(
+                name="user", description="Пользователь или его Discord ID"
+            ),
+            nickname: str = commands.Param(
+                name="nickname", description="Никнейм редактора"
+            ),
     ):
         await interaction.response.defer()
 
@@ -95,14 +95,14 @@ class Makers(commands.Cog):
     )
     @is_guild_exists()
     async def maker_profile(
-        self,
-        interaction: disnake.ApplicationCommandInteraction,
-        maker_id: int = commands.Param(
-            default=None,
-            name="maker",
-            description="Редактор",
-            autocomplete=maker_autocomplete,
-        ),
+            self,
+            interaction: disnake.ApplicationCommandInteraction,
+            maker_id: int = commands.Param(
+                default=None,
+                name="maker",
+                description="Редактор",
+                autocomplete=maker_autocomplete,
+            ),
     ):
         await interaction.response.defer()
 
@@ -143,10 +143,10 @@ class Makers(commands.Cog):
         embed = await get_maker_profile(maker_id=maker.id, user=member)
 
         if (
-            not (
-                (int(interaction_author.level) <= int(maker.level))
-                or (interaction_author.id == maker.id)
-            )
+                not (
+                        (int(interaction_author.level) <= int(maker.level))
+                        or (interaction_author.id == maker.id)
+                )
         ) or interaction_author.is_admin:
             view = GearButton(
                 author=interaction.author,
