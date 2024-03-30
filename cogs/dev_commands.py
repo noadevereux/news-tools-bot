@@ -6,7 +6,7 @@ from database.methods import guilds as guild_methods
 from ext.models.checks import is_guild_admin
 from config import DEV_GUILDS
 from ext.models.autocompleters import guild_autocomplete
-from ext.tools import get_guild_profile
+from ext.profile_getters import get_guild_profile
 
 
 class DeveloperCommands(commands.Cog):

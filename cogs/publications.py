@@ -7,7 +7,7 @@ from ext.logger import Logger
 from ext.models.autocompleters import publication_autocomplete
 from ext.models.checks import is_guild_exists
 from components.publication_components import GearButton
-from ext.tools import get_publication_profile
+from ext.profile_getters import get_publication_profile
 
 
 class Publications(commands.Cog):
