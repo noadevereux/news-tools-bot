@@ -6,7 +6,7 @@ from database.methods import publication_actions as action_methods, makers as ma
 from ext.logger import Logger
 from ext.models.autocompleters import publication_autocomplete
 from ext.models.checks import is_guild_exists
-from components.publication_components import GearButton
+from components.publication_components import GearButton, PublicationListPaginator
 from ext.profile_getters import get_publication_profile
 
 
@@ -120,6 +120,30 @@ class Publications(commands.Cog):
         else:
             view = GearButton(author=interaction.author, publication_id=publication.id)
             return await interaction.edit_original_response(embed=embed, view=view)
+
+    @publication.sub_command(name="list", description="Посмотреть список выпусков")
+    async def publication_list(self, interaction: disnake.ApplicationCommandInteraction):
+        await interaction.response.defer(ephemeral=True)
+
+        guild = await guild_methods.get_guild(discord_id=interaction.guild.id)
+
+        interaction_author = await maker_methods.get_maker(
+            guild_id=guild.id, discord_id=interaction.author.id
+        )
+
+        if not interaction_author:
+            return await interaction.edit_original_response(
+                content="**У вас недостаточно прав для выполнения данной команды.**"
+            )
+
+        elif not interaction_author.account_status:
+            return await interaction.edit_original_response(
+                content="**У вас недостаточно прав для выполнения данной команды.**"
+            )
+
+        view, embed = await PublicationListPaginator.create(guild_id=guild.id)
+
+        return await interaction.edit_original_response(embed=embed, view=view)
 
 
 def setup(bot: commands.InteractionBot):
