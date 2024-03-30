@@ -6,11 +6,7 @@ import disnake
 from disnake import ui, MessageInteraction, ModalInteraction
 
 from config import DEFAULT_POST_TITLES
-from ext.database.methods import (
-    makers as maker_methods,
-    guilds as guild_methods,
-    maker_actions as action_methods,
-)
+from database.methods import makers as maker_methods, guilds as guild_methods, maker_actions as action_methods
 from ext.tools import get_maker_profile, validate_date, get_status_title
 
 

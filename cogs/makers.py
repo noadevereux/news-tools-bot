@@ -1,6 +1,6 @@
 from disnake.ext import commands
 
-from ext.database.methods import maker_actions as action_methods
+from database.methods import maker_actions as action_methods
 from ext.logger import Logger
 from ext.models.autocompleters import (
     maker_autocomplete,

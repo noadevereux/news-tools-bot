@@ -4,8 +4,8 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.sql import select
 
 from api.auth.auth_bearer import JWTBearer
-from ext.database import models
-from ext.database.database import SessionLocal
+from database import models
+from database.database import SessionLocal
 
 db_router = APIRouter()
 
@@ -57,22 +57,22 @@ async def add_maker(guild_id: int, discord_id: int, nickname: str):
     "/update_maker", dependencies=[Depends(JWTBearer())], tags=["Database", "Maker"]
 )
 async def update_maker(
-    guild_id: int,
-    discord_id: int,
-    column_name: Literal[
-        "id",
-        "guild_id",
-        "discord_id",
-        "nickname",
-        "level",
-        "post_name",
-        "status",
-        "warns",
-        "preds",
-        "appointment_datetime",
-        "account_status",
-    ],
-    value,
+        guild_id: int,
+        discord_id: int,
+        column_name: Literal[
+            "id",
+            "guild_id",
+            "discord_id",
+            "nickname",
+            "level",
+            "post_name",
+            "status",
+            "warns",
+            "preds",
+            "appointment_datetime",
+            "account_status",
+        ],
+        value,
 ):
     match value:
         case "false":
@@ -100,21 +100,21 @@ async def update_maker(
     tags=["Database", "Maker"],
 )
 async def update_maker_by_id(
-    id: int,
-    column_name: Literal[
-        "id",
-        "guild_id",
-        "discord_id",
-        "nickname",
-        "level",
-        "post_name",
-        "status",
-        "warns",
-        "preds",
-        "appointment_datetime",
-        "account_status",
-    ],
-    value,
+        id: int,
+        column_name: Literal[
+            "id",
+            "guild_id",
+            "discord_id",
+            "nickname",
+            "level",
+            "post_name",
+            "status",
+            "warns",
+            "preds",
+            "appointment_datetime",
+            "account_status",
+        ],
+        value,
 ):
     match value:
         case "false":
@@ -218,24 +218,24 @@ async def get_publications_by_maker(id: int):
     tags=["Database", "Maker Actions"],
 )
 async def add_maker_action(
-    maker_id: int,
-    made_by: int,
-    action: Literal[
-        "addmaker",
-        "deactivate",
-        "setnickname",
-        "setdiscord",
-        "setlevel",
-        "setpost",
-        "setstatus",
-        "setdate",
-        "warn",
-        "unwarn",
-        "pred",
-        "unpred",
-    ],
-    meta: str = None,
-    reason: str = None,
+        maker_id: int,
+        made_by: int,
+        action: Literal[
+            "addmaker",
+            "deactivate",
+            "setnickname",
+            "setdiscord",
+            "setlevel",
+            "setpost",
+            "setstatus",
+            "setdate",
+            "warn",
+            "unwarn",
+            "pred",
+            "unpred",
+        ],
+        meta: str = None,
+        reason: str = None,
 ):
     new_action = models.MakerAction(
         maker_id=maker_id, made_by=made_by, action=action, meta=meta, reason=reason
@@ -290,20 +290,20 @@ async def add_publication(guild_id: int, publication_number: int):
     tags=["Database", "Publication"],
 )
 async def update_publication(
-    guild_id: int,
-    publication_number: int,
-    column_name: Literal[
-        "id",
-        "guild_id",
-        "publication_number",
-        "maker_id",
-        "date",
-        "information_creator_id",
-        "status",
-        "amount_dp",
-        "salary_payer_id",
-    ],
-    value,
+        guild_id: int,
+        publication_number: int,
+        column_name: Literal[
+            "id",
+            "guild_id",
+            "publication_number",
+            "maker_id",
+            "date",
+            "information_creator_id",
+            "status",
+            "amount_dp",
+            "salary_payer_id",
+        ],
+        value,
 ):
     async with SessionLocal() as session:
         publication = await session.execute(
@@ -325,19 +325,19 @@ async def update_publication(
     tags=["Database", "Publication"],
 )
 async def update_publication_by_id(
-    publication_id: int,
-    column_name: Literal[
-        "id",
-        "guild_id",
-        "publication_number",
-        "maker_id",
-        "date",
-        "information_creator_id",
-        "status",
-        "amount_dp",
-        "salary_payer_id",
-    ],
-    value,
+        publication_id: int,
+        column_name: Literal[
+            "id",
+            "guild_id",
+            "publication_number",
+            "maker_id",
+            "date",
+            "information_creator_id",
+            "status",
+            "amount_dp",
+            "salary_payer_id",
+        ],
+        value,
 ):
     async with SessionLocal() as session:
         publication = await session.execute(
@@ -458,21 +458,21 @@ async def get_publication(guild_id: int):
     tags=["Database", "Publication Actions"],
 )
 async def add_pub_action(
-    pub_id: int,
-    made_by: int,
-    action: Literal[
-        "createpub",
-        "deletepub",
-        "setpub_id",
-        "setpub_date",
-        "setpub_maker",
-        "setpub_status",
-        "setpub_amount",
-        "setpub_infocreator",
-        "setpub_salarypayer",
-    ],
-    meta: str | int = None,
-    reason: str = None,
+        pub_id: int,
+        made_by: int,
+        action: Literal[
+            "createpub",
+            "deletepub",
+            "setpub_id",
+            "setpub_date",
+            "setpub_maker",
+            "setpub_status",
+            "setpub_amount",
+            "setpub_infocreator",
+            "setpub_salarypayer",
+        ],
+        meta: str | int = None,
+        reason: str = None,
 ):
     new_action = models.PublicationAction(
         publication_id=pub_id, made_by=made_by, action=action, meta=meta, reason=reason
@@ -581,18 +581,18 @@ async def get_all_guilds():
     "/update_guild", dependencies=[Depends(JWTBearer())], tags=["Database", "Guilds"]
 )
 async def update_guild(
-    discord_id: int,
-    column_name: Literal[
-        "id",
-        "discord_id",
-        "guild_name",
-        "roles_list",
-        "is_notifies_enabled",
-        "channel_id",
-        "is_admin_guild",
-        "is_active",
-    ],
-    value,
+        discord_id: int,
+        column_name: Literal[
+            "id",
+            "discord_id",
+            "guild_name",
+            "roles_list",
+            "is_notifies_enabled",
+            "channel_id",
+            "is_admin_guild",
+            "is_active",
+        ],
+        value,
 ):
     async with SessionLocal() as session:
         guild = await session.execute(
@@ -612,18 +612,18 @@ async def update_guild(
     tags=["Database", "Guilds"],
 )
 async def update_guild_by_id(
-    id: int,
-    column_name: Literal[
-        "id",
-        "discord_id",
-        "guild_name",
-        "roles_list",
-        "is_notifies_enabled",
-        "channel_id",
-        "is_admin_guild",
-        "is_active",
-    ],
-    value,
+        id: int,
+        column_name: Literal[
+            "id",
+            "discord_id",
+            "guild_name",
+            "roles_list",
+            "is_notifies_enabled",
+            "channel_id",
+            "is_admin_guild",
+            "is_active",
+        ],
+        value,
 ):
     async with SessionLocal() as session:
         guild = await session.execute(select(models.Guild).filter_by(id=id))

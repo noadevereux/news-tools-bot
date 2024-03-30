@@ -4,11 +4,7 @@ from datetime import datetime
 import disnake
 from disnake import Embed, User, Guild, Member
 
-from .database.methods import (
-    makers as maker_methods,
-    publications as publication_methods,
-    guilds as guild_methods,
-)
+from database.methods import makers as maker_methods, guilds as guild_methods, publications as publication_methods
 
 
 async def get_status_title(status_kw: str | None) -> str:

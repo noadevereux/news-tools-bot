@@ -1,6 +1,6 @@
 import disnake
 from disnake.ext import commands
-from ..database.methods import guilds as guild_methods
+from database.methods import guilds as guild_methods
 from .exceptions import GuildNotExists, CommandCalledInDM, GuildNotAdmin
 
 

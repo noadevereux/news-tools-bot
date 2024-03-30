@@ -1,10 +1,9 @@
 import os
 import asyncio
 import disnake
-from disnake.ext import commands, tasks
+from disnake.ext import commands
 
 from config import TOKEN, DEV_GUILDS
-from ext.database.models import create_tables
 from ext.logger import Logger
 
 bot = commands.InteractionBot(intents=disnake.Intents.all())
@@ -22,8 +21,8 @@ async def cog(interaction: disnake.ApplicationCommandInteraction):
 
 @cog.sub_command(name="load", description="[DEV] Загрузить модуль бота")
 async def cog_load(
-    interaction: disnake.ApplicationCommandInteraction,
-    extension: str = commands.Param(name="module", description="Название модуля"),
+        interaction: disnake.ApplicationCommandInteraction,
+        extension: str = commands.Param(name="module", description="Название модуля"),
 ):
     await interaction.response.defer(ephemeral=True)
 
@@ -50,8 +49,8 @@ async def cog_load(
 
 @cog.sub_command(name="reload", description="[DEV] Перезагрузить модуль бота")
 async def cog_reload(
-    interaction: disnake.ApplicationCommandInteraction,
-    extension: str = commands.Param(name="module", description="Название модуля"),
+        interaction: disnake.ApplicationCommandInteraction,
+        extension: str = commands.Param(name="module", description="Название модуля"),
 ):
     await interaction.response.defer(ephemeral=True)
 
@@ -78,8 +77,8 @@ async def cog_reload(
 
 @cog.sub_command(name="unload", description="[DEV] Выгрузить модуль бота")
 async def cog_unload(
-    interaction: disnake.ApplicationCommandInteraction,
-    extension: str = commands.Param(name="module", description="Название модуля"),
+        interaction: disnake.ApplicationCommandInteraction,
+        extension: str = commands.Param(name="module", description="Название модуля"),
 ):
     await interaction.response.defer(ephemeral=True)
 

@@ -4,12 +4,8 @@ from typing import Literal
 import disnake
 from disnake import ui, ModalInteraction, MessageInteraction
 
-from ext.database.methods import (
-    makers as maker_methods,
-    guilds as guild_methods,
-    publications as publication_methods,
-    publication_actions as action_methods,
-)
+from database.methods import publication_actions as action_methods, makers as maker_methods, guilds as guild_methods, \
+    publications as publication_methods
 from ext.tools import get_publication_profile, validate_date, get_status_title
 
 
