@@ -117,7 +117,7 @@ async def on_ready():
 
 async def main():
     for file in os.listdir("cogs"):
-        if (file.endswith(".py")) and (not file.startswith(".")):
+        if (file.endswith(".py")) and (not file.startswith(".") and "__" not in file):
             try:
                 bot.load_extension(f"cogs.{file[:-3]}")
             except Exception as error:
