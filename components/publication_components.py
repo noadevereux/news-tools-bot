@@ -6,7 +6,8 @@ from disnake import ui, ModalInteraction, MessageInteraction
 
 from database.methods import publication_actions as action_methods, makers as maker_methods, guilds as guild_methods, \
     publications as publication_methods
-from ext.tools import get_publication_profile, validate_date, get_status_title
+from ext.tools import validate_date, get_status_title
+from ext.profile_getters import get_publication_profile
 
 
 class GearButton(ui.View):
@@ -445,7 +446,7 @@ class SubmitText(ui.Modal):
                     date = None
 
                 if date:
-                    is_date_valid = await validate_date(date)
+                    is_date_valid = validate_date(date)
 
                     if not is_date_valid:
                         await interaction.message.edit(view=view)
@@ -1247,7 +1248,7 @@ class SetStatus(ui.View):
             meta=status,
         )
 
-        status_title = await get_status_title(status)
+        status_title = get_status_title(status)
 
         embed = await get_publication_profile(publication_id=publication.id)
         view = SetStatus(author=self.author, publication_id=self.publication_id)

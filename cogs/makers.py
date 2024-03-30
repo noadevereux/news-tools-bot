@@ -1,13 +1,14 @@
+import disnake
 from disnake.ext import commands
 
-from database.methods import maker_actions as action_methods
+from database.methods import makers as maker_methods, maker_actions as action_methods, guilds as guild_methods
 from ext.logger import Logger
 from ext.models.autocompleters import (
     maker_autocomplete,
 )
 from ext.models.checks import is_guild_exists
 from components.maker_components import GearButton, MakersListPaginator
-from ext.tools import *
+from ext.profile_getters import get_maker_profile
 
 
 class Makers(commands.Cog):
