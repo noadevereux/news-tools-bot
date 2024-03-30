@@ -4,7 +4,7 @@ from disnake.ui import View, button, Button
 from asyncio import sleep
 from os import system
 
-from ext.database.methods import guilds as guild_methods, makers as maker_methods
+from database.methods import makers as maker_methods, guilds as guild_methods
 
 
 class ConfirmRoleAction(View):
@@ -13,7 +13,7 @@ class ConfirmRoleAction(View):
 
     @button(label="Подтвердить действие", style=disnake.ButtonStyle.blurple, emoji="✅")
     async def confirm_action(
-        self, button: Button, interaction: disnake.MessageInteraction
+            self, button: Button, interaction: disnake.MessageInteraction
     ):
         guild = await guild_methods.get_guild(discord_id=interaction.guild.id)
 

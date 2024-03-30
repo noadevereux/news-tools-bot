@@ -6,12 +6,9 @@ import disnake
 from disnake import ui, MessageInteraction, ModalInteraction
 
 from config import DEFAULT_POST_TITLES
-from ext.database.methods import (
-    makers as maker_methods,
-    guilds as guild_methods,
-    maker_actions as action_methods,
-)
-from ext.tools import get_maker_profile, validate_date, get_status_title
+from database.methods import makers as maker_methods, guilds as guild_methods, maker_actions as action_methods
+from ext.tools import validate_date, get_status_title
+from ext.profile_getters import get_maker_profile
 
 
 class MakersListPaginator(ui.View):
@@ -818,7 +815,7 @@ class SetStatus(ui.View):
             meta=status,
         )
 
-        status_title = await get_status_title(status)
+        status_title = get_status_title(status)
 
         embed = await get_maker_profile(
             maker_id=self.maker_id,
@@ -1872,7 +1869,7 @@ class SubmitText(ui.Modal):
 
                 date_str = interaction.text_values.get("date")
 
-                is_date_valid = await validate_date(date_str)
+                is_date_valid = validate_date(date_str)
 
                 if not is_date_valid:
                     main_menu = await MainMenu.create(
