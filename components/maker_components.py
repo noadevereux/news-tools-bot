@@ -28,6 +28,16 @@ class MakersListPaginator(ui.View):
         makers = await maker_methods.get_all_makers_sorted_by_lvl(guild_id=guild_id)
         guild = await guild_methods.get_guild_by_id(id=guild_id)
 
+        if len(makers) == 0:
+            embed = disnake.Embed(
+                title=f"🧾 Состав новостного раздела {guild.guild_name}",
+                colour=0x2B2D31,
+                description="**На сервере нет зарегистрированных редакторов. "
+                            "Интересно, как вы смогли использовать команду? Держите промокод на бесплатную пиццу: ||ilovenewstools||.**"
+            )
+
+            return None, embed
+
         next_embed_iteration = 10
         embeds = []
         for i in range(len(makers)):
