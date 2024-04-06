@@ -27,6 +27,15 @@ class PublicationListPaginator(ui.View):
         publications = await publication_methods.get_all_publications(guild_id=guild_id)
         guild = await guild_methods.get_guild_by_id(id=guild_id)
 
+        if len(publications) == 0:
+            embed = disnake.Embed(
+                title=f"🧾 Выпуски новостного раздела {guild.guild_name}",
+                colour=0x2B2D31,
+                description="**На сервере нет выпусков. Создайте один и вы сможете увидеть его здесь! ||А можете создать сразу много :)||.**"
+            )
+
+            return None, embed
+
         next_embed_iteration = 10
         embeds = []
         for i in range(len(publications)):
