@@ -113,6 +113,11 @@ class Publications(commands.Cog):
                 content=f"**Выпуска с указанным `ID: {publication_id}` не существует.**"
             )
 
+        elif not publication.guild_id == interaction_author.guild_id:
+            return await interaction.edit_original_response(
+                content=f"**Выпуска с указанным `ID: {publication_id}` не существует.**"
+            )
+
         embed = await get_publication_profile(publication_id=publication.id)
 
         if int(interaction_author.level) < 2:
