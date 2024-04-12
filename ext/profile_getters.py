@@ -27,30 +27,35 @@ async def get_maker_profile(maker_id: int, user: User | Member = None) -> Embed:
     notes = []
 
     embed_description = f"""\
-**ID аккаунта: `{maker.id}`**
-**Discord: <@{maker.discord_id}>**
-**Никнейм: {maker.nickname}**
-**Уровень доступа: {level}**
-**Должность: {post}**
-**Статус: {status.lower()}**
+**<:hashtag:1220792495047184515> ID аккаунта: `{maker.id}`**
+**<:discord_icon:1207328653734584371> Discord: <@{maker.discord_id}>**
+**<:id_card:1207329341227147274> Никнейм: {maker.nickname}**
+**<:access_key:1207330321075535882> Уровень доступа: {level}**
+**<:job_title:1207331119176089681>️ Должность: {post}**
+**<:status:1207331595497771018> Статус: {status.lower()}**
 
-**Выговоры: {maker.warns}**
-**Предупреждения: {maker.preds}**
+**<:warn_sign:1207315803893145610> Выговоры: {maker.warns}**
+**<:pred_sign:1207316150044590081> Предупреждения: {maker.preds}**
 
-**Сделано выпусков: {publications_amount}**
+**🗞 Сделано выпусков: {publications_amount}**
 
-**Дней на посту редактора: {days}**
+**<:yellow_calendar:1207339611911884902> Дней на посту редактора: {days}**
     """
 
     if maker.is_admin:
         notes.append("🛡️ Пользователь обладает административным доступом")
+
+    if maker.account_status:
+        title_emoji = "<:user:1220792994328875058>"
+    else:
+        title_emoji = "<:user_red:1223319477308100641>"
 
     if isinstance(user, (User, Member)):
         for note in notes:
             embed_description += f"\n**{note}.**"
 
         embed = Embed(
-            title=f"Профиль редактора {maker.nickname}",
+            title=f"{title_emoji} Профиль редактора {maker.nickname}",
             color=0x2B2D31,
             description=embed_description,
             timestamp=maker.appointment_datetime,
@@ -101,11 +106,11 @@ async def get_publication_profile(publication_id: int) -> Embed:
             f"<@{information_creator.discord_id}> `{information_creator.nickname}`"
         )
 
-    dp_paid_by = await maker_methods.get_maker_by_id(id=publication.salary_payer_id)
-    if not dp_paid_by:
-        dp_paid_by = "`не выплачено`"
+    salary_payer = await maker_methods.get_maker_by_id(id=publication.salary_payer_id)
+    if not salary_payer:
+        salary_payer = "`не выплачено`"
     else:
-        dp_paid_by = f"<@{dp_paid_by.discord_id}> `{dp_paid_by.nickname}`"
+        salary_payer = f"<@{salary_payer.discord_id}> `{salary_payer.nickname}`"
 
     if not publication.date:
         date = "`не указана`"
@@ -113,26 +118,26 @@ async def get_publication_profile(publication_id: int) -> Embed:
         date = publication.date.strftime("%d.%m.%Y")
 
     if not publication.amount_dp:
-        amount_dp = "`не установлено`"
+        salary = "`не установлено`"
     else:
-        amount_dp = f"{publication.amount_dp} DP"
+        salary = f"{publication.amount_dp}"
 
     status = get_status_title(status_kw=publication.status)
 
     embed_description = f"""
-    **ID выпуска: `{publication.id}`**
-    **Номер выпуска: `{publication.publication_number}`**
-    **Дата публикации выпуска: {date}**
-    **Редактор: {maker}**
-    **Статус: {status}**
-    **Зарплата за выпуск: {amount_dp}**
+    **<:hashtag:1220792495047184515> ID выпуска: `{publication.id}`**
+    **<:id_card:1207329341227147274> Номер выпуска: `{publication.publication_number}`**
+    **<:yellow_calendar:1207339611911884902> Дата публикации выпуска: {date}**
+    **<:user:1220792994328875058> Редактор: {maker}**
+    **<:workinprogress:1220793552234086451> Статус: {status.lower()}**
+    **<:money:1220793737391771829> Зарплата за выпуск: {salary}**
 
-    **Информацию для выпуска собрал: {information_creator}**
-    **Зарплату выплатил: {dp_paid_by}**
+    **<:user:1220792994328875058> Информацию для выпуска собрал: {information_creator}**
+    **<:user:1220792994328875058> Зарплату выплатил: {salary_payer}**
     """
 
     embed = disnake.Embed(
-        title=f"Информация о выпуске `[#{publication.publication_number}]`",
+        title=f"<:job_title:1207331119176089681> Информация о выпуске `[#{publication.publication_number}]`",
         description=embed_description,
         color=0x2B2D31,
     )
