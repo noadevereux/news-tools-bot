@@ -27,6 +27,15 @@ class PublicationListPaginator(ui.View):
         publications = await publication_methods.get_all_publications(guild_id=guild_id)
         guild = await guild_methods.get_guild_by_id(id=guild_id)
 
+        if len(publications) == 0:
+            embed = disnake.Embed(
+                title=f"🧾 Выпуски новостного раздела {guild.guild_name}",
+                colour=0x2B2D31,
+                description="**На сервере нет выпусков. Создайте один и вы сможете увидеть его здесь! ||А можете создать сразу много :)||.**"
+            )
+
+            return None, embed
+
         next_embed_iteration = 10
         embeds = []
         for i in range(len(publications)):
@@ -269,6 +278,14 @@ class MainMenu(ui.View):
                                 " не существует.**"
                     )
 
+                elif not publication.guild_id == interaction_author.guild_id:
+                    await interaction.message.edit(view=None)
+
+                    return await interaction.edit_original_response(
+                        content="**Произошло что-то странное. Выпуска, с которым вы взаимодействуете"
+                                " не существует.**"
+                    )
+
                 await publication_methods.delete_publication_by_id(
                     publication_id=publication.id
                 )
@@ -441,7 +458,15 @@ class SubmitText(ui.Modal):
                         content="**У вас недостаточно прав для выполнения данной команды.**"
                     )
 
-                elif not publication:
+                if not publication:
+                    await interaction.message.edit(view=None)
+
+                    return await interaction.edit_original_response(
+                        content="**Произошло что-то странное. Выпуска, с которым вы взаимодействуете"
+                                " не существует.**"
+                    )
+
+                elif not publication.guild_id == interaction_author.guild_id:
                     await interaction.message.edit(view=None)
 
                     return await interaction.edit_original_response(
@@ -552,6 +577,14 @@ class SubmitText(ui.Modal):
                                 " не существует.**"
                     )
 
+                elif not publication.guild_id == interaction_author.guild_id:
+                    await interaction.message.edit(view=None)
+
+                    return await interaction.edit_original_response(
+                        content="**Произошло что-то странное. Выпуска, с которым вы взаимодействуете"
+                                " не существует.**"
+                    )
+
                 if date:
                     if publication.date == datetime.date.fromisoformat(date):
                         await interaction.message.edit(view=view)
@@ -640,6 +673,14 @@ class SubmitText(ui.Modal):
                 )
 
                 if not publication:
+                    await interaction.message.edit(view=None)
+
+                    return await interaction.edit_original_response(
+                        content="**Произошло что-то странное. Выпуска, с которым вы взаимодействуете"
+                                " не существует.**"
+                    )
+
+                elif not publication.guild_id == interaction_author.guild_id:
                     await interaction.message.edit(view=None)
 
                     return await interaction.edit_original_response(
@@ -950,6 +991,14 @@ class SelectMaker(ui.StringSelect):
                                 " не существует.**"
                     )
 
+                elif not publication.guild_id == interaction_author.guild_id:
+                    await interaction.message.edit(view=None)
+
+                    return await interaction.edit_original_response(
+                        content="**Произошло что-то странное. Выпуска, с которым вы взаимодействуете"
+                                " не существует.**"
+                    )
+
                 if maker_id:
                     maker = await maker_methods.get_maker_by_id(id=maker_id)
 
@@ -1048,6 +1097,14 @@ class SelectMaker(ui.StringSelect):
                 )
 
                 if not publication:
+                    await interaction.message.edit(view=None)
+
+                    return await interaction.edit_original_response(
+                        content="**Произошло что-то странное. Выпуска, с которым вы взаимодействуете"
+                                " не существует.**"
+                    )
+
+                elif not publication.guild_id == interaction_author.guild_id:
                     await interaction.message.edit(view=None)
 
                     return await interaction.edit_original_response(
@@ -1154,6 +1211,14 @@ class SelectMaker(ui.StringSelect):
 
                 if not publication:
                     await interaction.message.edit(view=view)
+
+                    return await interaction.edit_original_response(
+                        content="**Произошло что-то странное. Выпуска, с которым вы взаимодействуете"
+                                " не существует.**"
+                    )
+
+                elif not publication.guild_id == interaction_author.guild_id:
+                    await interaction.message.edit(view=None)
 
                     return await interaction.edit_original_response(
                         content="**Произошло что-то странное. Выпуска, с которым вы взаимодействуете"
@@ -1306,6 +1371,14 @@ class SetStatus(ui.View):
         status = interaction.values[0]
 
         if not publication:
+            await interaction.message.edit(view=None)
+
+            return await interaction.edit_original_response(
+                content="**Произошло что-то странное. Выпуска, с которым вы взаимодействуете"
+                        " не существует.**"
+            )
+
+        elif not publication.guild_id == interaction_author.guild_id:
             await interaction.message.edit(view=None)
 
             return await interaction.edit_original_response(
