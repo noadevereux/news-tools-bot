@@ -58,7 +58,7 @@ async def if_badge_exists(
         emoji: str = None,
         badge_id: int = None,
         by_id: bool = False
-):
+) -> bool:
     async with SessionLocal() as session:
         if not by_id:
             badge = await session.execute(
