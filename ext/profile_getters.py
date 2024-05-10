@@ -3,7 +3,8 @@ from datetime import datetime
 import disnake
 from disnake import User, Member, Embed, Guild
 
-from database.methods import makers as maker_methods, publications as publication_methods, guilds as guild_methods
+from database.methods import makers as maker_methods, publications as publication_methods, guilds as guild_methods, \
+    badges as badge_methods
 from ext.tools import get_status_title
 
 
@@ -293,6 +294,53 @@ async def get_guild_profile(guild_id: int, _guild: Guild = None):
         title=f"Информация о сервере `{guild.guild_name}`",
         description=embed_description,
         color=0x2B2D31,
+    )
+
+    return embed
+
+
+async def get_badge_profile(badge_id: int) -> Embed:
+    badge = await badge_methods.get_badge(badge_id=badge_id)
+
+    if badge.description:
+        badge_description = badge.description
+    else:
+        badge_description = "`не задано`"
+
+    if badge.link:
+        badge_link = badge.link
+    else:
+        badge_link = "`не задана`"
+
+    if badge.is_global:
+        badge_is_global = "`да`"
+    else:
+        badge_is_global = "`нет`"
+
+    guild_names = []
+
+    for guild_id in badge.allowed_guilds:
+        guild = await guild_methods.get_guild_by_id(id=guild_id)
+        guild_names.append(guild.guild_name)
+
+    if len(guild_names) > 0:
+        guild_names = ", ".join(guild_names)
+    else:
+        guild_names = "`нет`"
+
+    embed_description = f"""\
+**ID: {badge.id}**
+**Эмодзи: {badge.emoji}**
+**Название: `{badge.name}`**
+**Описание: {badge_description}**
+**Ссылка: {badge_link}**
+**Разрешенные сервера: {guild_names}**
+**Только глобальный: {badge_is_global}**"""
+
+    embed = disnake.Embed(
+        title=f"Информация о значке {badge.emoji} {badge.name}",
+        description=embed_description,
+        colour=0x2B2D31
     )
 
     return embed
