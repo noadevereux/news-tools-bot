@@ -3,6 +3,14 @@ from dotenv import load_dotenv
 
 load_dotenv("./venv/.env")
 
+# Temp variables ###
+
+temp = {
+    "startup_time": None
+}
+
+####################
+
 TOKEN = getenv("TOKEN")
 
 DEV_GUILDS = (1063529260918264009,)

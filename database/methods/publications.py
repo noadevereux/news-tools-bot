@@ -122,9 +122,12 @@ async def get_publication_by_id(id: int) -> Publication | None:
         return publication.scalar()
 
 
-async def get_all_publications(guild_id: int) -> list[Publication] | None:
+async def get_all_publications(guild_id: int = None) -> list[Publication] | None:
     async with SessionLocal() as session:
-        publications = await session.execute(
-            select(Publication).filter_by(guild_id=guild_id)
-        )
+        if guild_id:
+            publications = await session.execute(
+                select(Publication).filter_by(guild_id=guild_id)
+            )
+        else:
+            publications = await session.execute(select(Publication))
         return publications.scalars().all()

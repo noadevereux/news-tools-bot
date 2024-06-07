@@ -1,10 +1,13 @@
+import datetime
+
 import disnake
 from disnake.ext import commands
 from sqlalchemy.exc import IntegrityError
 
-from database.methods import guilds as guild_methods, badges as badge_methods
+from database.methods import guilds as guild_methods, badges as badge_methods, makers as maker_methods, \
+    publications as publication_methods
 from ext.models.checks import is_guild_admin
-from config import DEV_GUILDS
+from config import DEV_GUILDS, temp
 from ext.models.autocompleters import guild_autocomplete, badge_autocomplete
 from ext.profile_getters import get_guild_profile, get_badge_profile
 
@@ -23,6 +26,35 @@ class DeveloperCommands(commands.Cog):
     @is_guild_admin()
     async def dev(self, interaction: disnake.ApplicationCommandInteraction):
         pass
+
+    @dev.sub_command_group(name="service", description="[DEV] Служебные команды")
+    async def dev_service(self, interaction: disnake.ApplicationCommandInteraction):
+        pass
+
+    @dev_service.sub_command(name="stats", description="[DEV] Статистика по использованию приложения")
+    async def dev_service_stats(self, interaction: disnake.ApplicationCommandInteraction):
+        await interaction.response.defer()
+
+        all_makers = await maker_methods.get_all_makers()
+        all_publications = await publication_methods.get_all_publications()
+        startup_time = temp.get("startup_time")
+
+        stats_message = (f"- Кол-во серверов, на которых бот находится: `{len(self.bot.guilds)}`\n"
+                         f"- Всего зарегистрировано пользователей: `{len(all_makers)}`\n"
+                         f"- Всего создано выпусков: `{len(all_publications)}`\n\n"
+                         f"- Приложение было запущено {disnake.utils.format_dt(startup_time, style='R')}")
+
+        embed = disnake.Embed(
+            title="Статистика по использованию приложения",
+            description=stats_message,
+            timestamp=datetime.datetime.now(),
+            colour=0x2B2D31
+        )
+        embed.set_footer(text="Актуальность информации:")
+
+        return await interaction.edit_original_response(
+            embed=embed
+        )
 
     @dev.sub_command_group(name="guild", description="[DEV] Управление серверами")
     async def dev_guild(self, interaction: disnake.ApplicationCommandInteraction):
