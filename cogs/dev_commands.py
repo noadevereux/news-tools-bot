@@ -2,11 +2,11 @@ import disnake
 from disnake.ext import commands
 from sqlalchemy.exc import IntegrityError
 
-from database.methods import guilds as guild_methods
+from database.methods import guilds as guild_methods, badges as badge_methods
 from ext.models.checks import is_guild_admin
 from config import DEV_GUILDS
-from ext.models.autocompleters import guild_autocomplete
-from ext.profile_getters import get_guild_profile
+from ext.models.autocompleters import guild_autocomplete, badge_autocomplete
+from ext.profile_getters import get_guild_profile, get_badge_profile
 
 
 class DeveloperCommands(commands.Cog):
@@ -573,6 +573,56 @@ class DeveloperCommands(commands.Cog):
 
         return await interaction.edit_original_response(
             content=f"**Вы забрали административные права у сервера `{guild.guild_name}`.**"
+        )
+
+    @dev.sub_command_group(name="badge", description="[DEV] Управление значками")
+    async def dev_badge(self, interaction: disnake.ApplicationCommandInteraction):
+        pass
+
+    @dev_badge.sub_command(name="create", description="[DEV] Создать значок")
+    async def dev_badge_create(
+            self,
+            interaction: disnake.ApplicationCommandInteraction,
+            name: str = commands.Param(name="name", description="Название значка"),
+            emoji: str = commands.Param(name="emoji", description="Эмодзи значка")
+    ):
+        await interaction.response.defer()
+
+        if_badge_exists = await badge_methods.if_badge_exists(name=name, emoji=emoji)
+
+        if if_badge_exists:
+            return await interaction.edit_original_response(
+                content=f"**Значок {emoji} `{name}` уже существует.**"
+            )
+
+        badge = await badge_methods.add_badge(name=name, emoji=emoji)
+
+        badge_profile = await get_badge_profile(badge_id=badge.id)
+
+        return await interaction.edit_original_response(
+            content=f"**Вы создали значок {emoji} `{name}`.**",
+            embed=badge_profile
+        )
+
+    @dev_badge.sub_command(name="info", description="[DEV] Посмотреть информацию о значке")
+    async def dev_badge_info(
+            self,
+            interaction: disnake.ApplicationCommandInteraction,
+            badge_id: int = commands.Param(name="badge", description="Значок", autocomplete=badge_autocomplete)
+    ):
+        await interaction.response.defer()
+
+        badge = await badge_methods.get_badge(badge_id=badge_id)
+
+        if not badge:
+            return await interaction.edit_original_response(
+                content="**Значка с указанным ID не существует.**"
+            )
+
+        embed = await get_badge_profile(badge_id=badge_id)
+
+        return await interaction.edit_original_response(
+            embed=embed
         )
 
 
