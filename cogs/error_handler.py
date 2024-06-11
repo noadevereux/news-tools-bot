@@ -14,9 +14,9 @@ class ErrorHandler(commands.Cog):
 
     @commands.Cog.listener(name=disnake.Event.slash_command_error)
     async def on_slash_command_error(
-        self,
-        interaction: disnake.ApplicationCommandInteraction,
-        error: commands.CommandError,
+            self,
+            interaction: disnake.ApplicationCommandInteraction,
+            error: commands.CommandError,
     ):
         error_uid = await self.log.error(log_message=error, exc=error)
 
