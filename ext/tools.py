@@ -26,3 +26,12 @@ def validate_date(date_string: str):
         return True
     else:
         return False
+
+
+def validate_url(url: str, /):
+    url_pattern = re.compile(r"^https://[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)+(:[0-9]{1,5})?(/.*)?$")
+
+    if url_pattern.match(url):
+        return True
+    else:
+        return False

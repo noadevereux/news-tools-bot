@@ -1,4 +1,4 @@
-from typing import Literal
+from typing import Literal, List
 from sqlalchemy import BigInteger, Date, ForeignKey, TIMESTAMP, String, JSON
 from sqlalchemy.orm import relationship, Mapped, mapped_column, DeclarativeBase
 from sqlalchemy.sql import func
@@ -57,6 +57,30 @@ class Publication(Base):
     )
 
 
+class AwardedBadge(Base):
+    __tablename__ = "awarded_badges"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    maker_id: Mapped[int] = mapped_column(ForeignKey("makers.id"))
+    badge_id: Mapped[int] = mapped_column(ForeignKey("badges.id"))
+    awarder_id: Mapped[int] = mapped_column(ForeignKey("makers.id"), nullable=True)
+    award_timestamp: Mapped[datetime] = mapped_column(
+        TIMESTAMP(timezone=True), server_default=func.now()
+    )
+
+    badge: Mapped["Badge"] = relationship(back_populates="awarded_badges")
+    maker: Mapped["Maker"] = relationship(
+        back_populates="awarded_badges",
+        foreign_keys=[maker_id],
+        primaryjoin="AwardedBadge.maker_id == Maker.id"
+    )
+    awarder: Mapped["Maker"] = relationship(
+        back_populates="awards_badges",
+        foreign_keys=[awarder_id],
+        primaryjoin="AwardedBadge.awarder_id == Maker.id"
+    )
+
+
 class Maker(Base):
     __tablename__ = "makers"
 
@@ -107,6 +131,17 @@ class Maker(Base):
         back_populates="salary_payer_rel",
         foreign_keys=[Publication.salary_payer_id],
         primaryjoin="Maker.id == Publication.salary_payer_id",
+    )
+
+    awarded_badges: Mapped[List["AwardedBadge"]] = relationship(
+        back_populates="maker",
+        foreign_keys=[AwardedBadge.maker_id],
+        primaryjoin="Maker.id == AwardedBadge.maker_id"
+    )
+    awards_badges: Mapped[List["AwardedBadge"]] = relationship(
+        back_populates="awarder",
+        foreign_keys=[AwardedBadge.awarder_id],
+        primaryjoin="Maker.id == AwardedBadge.awarder_id"
     )
 
 
@@ -196,6 +231,20 @@ class PublicationAction(Base):
         TIMESTAMP(timezone=True), server_default=func.now()
     )
     reason: Mapped[str] = mapped_column(String(255), nullable=True)
+
+
+class Badge(Base):
+    __tablename__ = "badges"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(String(255))
+    emoji: Mapped[str] = mapped_column(String(255))
+    description: Mapped[str] = mapped_column(String(4000), nullable=True)
+    link: Mapped[str] = mapped_column(String(255), nullable=True)
+    allowed_guilds: Mapped[list] = mapped_column(JSON(), default=[])
+    is_global: Mapped[bool] = mapped_column(server_default="1")
+
+    awarded_badges: Mapped[List["AwardedBadge"]] = relationship(back_populates="badge")
 
 
 async def create_tables():
