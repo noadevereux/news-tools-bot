@@ -50,6 +50,36 @@ async def maker_autocomplete(
         return sorted_makers[:25]
 
 
+async def all_makers_autocomplete(
+        interaction: disnake.ApplicationCommandInteraction, user_input: str
+):
+    guild = await guild_methods.get_guild(interaction.guild.id)
+    if not guild or not guild.is_admin_guild:
+        return
+
+    makers = await maker_methods.get_all_makers()
+    if len(user_input) == 0:
+        return [
+            disnake.OptionChoice(
+                name=f"[ID: {maker.id}] Guild: {maker.guild_id} | {maker.nickname} | LVL: {maker.level} | STS: {maker.account_status}",
+                value=str(maker.id)
+            )
+            for maker in makers[:25]
+        ]
+    else:
+        sorted_makers = [
+            disnake.OptionChoice(
+                name=f"[ID: {maker.id}] Guild: {maker.guild_id} | {maker.nickname} | LVL: {maker.level} | STS: {maker.account_status}",
+                value=str(maker.id)
+            )
+            for maker in makers
+            if (user_input.lower() in maker.nickname.lower())
+               or (user_input.lower() in str(maker.id))
+        ]
+
+        return sorted_makers[:25]
+
+
 async def publication_autocomplete(
         interaction: disnake.ApplicationCommandInteraction, user_input: str
 ):
