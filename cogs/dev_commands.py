@@ -6,7 +6,7 @@ from sqlalchemy.exc import IntegrityError
 
 from database.methods import guilds as guild_methods, badges as badge_methods, makers as maker_methods, \
     publications as publication_methods
-from ext.models.checks import is_guild_admin
+from ext.models.checks import is_guild_admin, is_user_admin
 from config import DEV_GUILDS, temp
 from ext.models.autocompleters import guild_autocomplete, badge_autocomplete
 from ext.profile_getters import get_guild_profile, get_badge_profile
@@ -24,6 +24,7 @@ class DeveloperCommands(commands.Cog):
         dm_permission=False,
     )
     @is_guild_admin()
+    @is_user_admin()
     async def dev(self, interaction: disnake.ApplicationCommandInteraction):
         pass
 
