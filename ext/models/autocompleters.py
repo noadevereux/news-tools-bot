@@ -87,14 +87,14 @@ async def badge_autocomplete(
     if len(user_input) == 0:
         return [
             disnake.OptionChoice(
-                name=f"[ID: {badge.id}] {badge.emoji} {badge.name}", value=str(badge.id)
+                name=f"[ID: {badge.id}] {badge.name}", value=str(badge.id)
             )
             for badge in badges[:25]
         ]
     else:
         sorted_badges = [
             disnake.OptionChoice(
-                name=f"[ID: {badge.id}] {badge.emoji} {badge.name}", value=str(badge.id)
+                name=f"[ID: {badge.id}] {badge.name}", value=str(badge.id)
             )
             for badge in badges
             if (user_input.lower() in badge.name.lower())
