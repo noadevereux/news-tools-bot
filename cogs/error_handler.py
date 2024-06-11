@@ -3,7 +3,7 @@ from disnake.ext import commands
 from ext.logger import Logger
 from datetime import datetime
 
-from ext.models.exceptions import GuildNotExists, CommandCalledInDM, GuildNotAdmin
+from ext.models.exceptions import *
 
 
 class ErrorHandler(commands.Cog):
@@ -14,9 +14,9 @@ class ErrorHandler(commands.Cog):
 
     @commands.Cog.listener(name=disnake.Event.slash_command_error)
     async def on_slash_command_error(
-        self,
-        interaction: disnake.ApplicationCommandInteraction,
-        error: commands.CommandError,
+            self,
+            interaction: disnake.ApplicationCommandInteraction,
+            error: commands.CommandError,
     ):
         error_uid = await self.log.error(log_message=error, exc=error)
 
@@ -69,6 +69,14 @@ class ErrorHandler(commands.Cog):
         elif isinstance(error, GuildNotAdmin):
             return await interaction.edit_original_response(
                 content="**Этот сервер не обладает административным доступом для доступа к этой команде.**"
+            )
+        elif isinstance(error, UserNotExists):
+            return await interaction.edit_original_response(
+                content="**У вас недостаточно прав для использования этой команды.**"
+            )
+        elif isinstance(error, UserNotAdmin):
+            return await interaction.edit_original_response(
+                content="**У вас недостаточно прав для использования этой команды.**"
             )
         else:
             return await interaction.edit_original_response(embed=embed)

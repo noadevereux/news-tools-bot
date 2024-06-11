@@ -1,9 +1,10 @@
+import datetime
 import os
 import asyncio
 import disnake
 from disnake.ext import commands
 
-from config import TOKEN, DEV_GUILDS
+from config import TOKEN, DEV_GUILDS, temp
 from ext.logger import Logger
 
 bot = commands.InteractionBot(intents=disnake.Intents.all())
@@ -108,6 +109,8 @@ async def on_ready():
         ),
         status=disnake.Status.online,
     )
+
+    temp["startup_time"] = datetime.datetime.now()
 
 
 # @tasks.loop(count=1)

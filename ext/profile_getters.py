@@ -3,7 +3,8 @@ from datetime import datetime
 import disnake
 from disnake import User, Member, Embed, Guild
 
-from database.methods import makers as maker_methods, publications as publication_methods, guilds as guild_methods
+from database.methods import makers as maker_methods, publications as publication_methods, guilds as guild_methods, \
+    badges as badge_methods
 from ext.tools import get_status_title
 
 
@@ -11,12 +12,16 @@ async def get_maker_profile(maker_id: int, user: User | Member = None) -> Embed:
     maker = await maker_methods.get_maker_by_id(id=maker_id)
 
     level = int(maker.level)
+
     if maker.post_name:
         post = maker.post_name
     else:
         post = "не установлено"
+
     status = get_status_title(maker.status)
+
     publications_amount = await maker_methods.get_publications_by_maker(id=maker.id)
+
     if not publications_amount:
         publications_amount = 0
     else:
@@ -24,9 +29,33 @@ async def get_maker_profile(maker_id: int, user: User | Member = None) -> Embed:
 
     days = (datetime.now() - maker.appointment_datetime).days
 
-    notes = []
+    makers_awarded_badges = await badge_methods.get_all_makers_awarded_badges(maker_id=maker.id)
+
+    badges = []
+
+    for awarded_badge in makers_awarded_badges:
+        badge = await badge_methods.get_badge(awarded_badge.badge_id)
+
+        if awarded_badge.awarder_id is None:
+            awarder = "News Tools"
+        else:
+            awarder = await maker_methods.get_maker_by_id(awarded_badge.awarder_id)
+            awarder = awarder.nickname
+
+        badges.append(
+            {
+                "emoji": badge.emoji,
+                "name": badge.name,
+                "description": badge.description,
+                "link": badge.link,
+                "timestamp": awarded_badge.award_timestamp,
+                "awarder": awarder
+            }
+        )
 
     embed_description = f"""\
+{" ".join([badge.get("emoji") for badge in badges])}
+
 **<:hashtag:1220792495047184515> ID аккаунта: `{maker.id}`**
 **<:discord_icon:1207328653734584371> Discord: <@{maker.discord_id}>**
 **<:id_card:1207329341227147274> Никнейм: {maker.nickname}**
@@ -43,7 +72,7 @@ async def get_maker_profile(maker_id: int, user: User | Member = None) -> Embed:
     """
 
     if maker.is_admin:
-        notes.append("🛡️ Пользователь обладает административным доступом")
+        embed_description += "\n\n**🛡️ Пользователь обладает административным доступом**"
 
     if maker.account_status:
         title_emoji = "<:user:1220792994328875058>"
@@ -51,9 +80,6 @@ async def get_maker_profile(maker_id: int, user: User | Member = None) -> Embed:
         title_emoji = "<:user_red:1223319477308100641>"
 
     if isinstance(user, (User, Member)):
-        for note in notes:
-            embed_description += f"\n**{note}.**"
-
         embed = Embed(
             title=f"{title_emoji} Профиль редактора {maker.nickname}",
             color=0x2B2D31,
@@ -66,12 +92,7 @@ async def get_maker_profile(maker_id: int, user: User | Member = None) -> Embed:
 
         embed.set_thumbnail(user.display_avatar.url)
     else:
-        notes.append(
-            "🛠️ Внимание, это упрощенная версия информации, т.к. бот не смог найти участника"
-        )
-
-        for note in notes:
-            embed_description += f"\n**{note}.**"
+        embed_description += "\n\n**🛠️ Упрощенная версия профиля, так как редактор не является участником сервера."
 
         embed = Embed(
             title=f"Профиль редактора {maker.nickname}",
@@ -84,6 +105,22 @@ async def get_maker_profile(maker_id: int, user: User | Member = None) -> Embed:
             embed.set_author(name="🔴 АККАУНТ ДЕАКТИВИРОВАН 🔴")
 
     embed.set_footer(text="Дата постановления:")
+
+    badges_description = ""
+
+    for badge in badges:
+        badges_description += (
+            f"\n\n**{badge.get('emoji')} "
+            f"{'[' + badge.get('name') + ']' + '(' + badge.get('link') + ')' if badge.get('link') is not None else badge.get('name')}**"
+            f"{' — ' + badge.get('description') if badge.get('description') is not None else ''}."
+            f"\nБыл награждён {badge.get('awarder')} {disnake.utils.format_dt(badge.get('timestamp'), style='D')}.")
+
+    if len(badges) > 0:
+        embed.add_field(
+            name="Значки",
+            value=badges_description,
+            inline=False
+        )
 
     return embed
 
@@ -293,6 +330,53 @@ async def get_guild_profile(guild_id: int, _guild: Guild = None):
         title=f"Информация о сервере `{guild.guild_name}`",
         description=embed_description,
         color=0x2B2D31,
+    )
+
+    return embed
+
+
+async def get_badge_profile(badge_id: int) -> Embed:
+    badge = await badge_methods.get_badge(badge_id=badge_id)
+
+    if badge.description:
+        badge_description = badge.description
+    else:
+        badge_description = "`не задано`"
+
+    if badge.link:
+        badge_link = badge.link
+    else:
+        badge_link = "`не задана`"
+
+    if badge.is_global:
+        badge_is_global = "`да`"
+    else:
+        badge_is_global = "`нет`"
+
+    guild_names = []
+
+    for guild_id in badge.allowed_guilds:
+        guild = await guild_methods.get_guild_by_id(id=guild_id)
+        guild_names.append(guild.guild_name)
+
+    if len(guild_names) > 0:
+        guild_names = ", ".join(guild_names)
+    else:
+        guild_names = "`нет`"
+
+    embed_description = f"""\
+**ID: {badge.id}**
+**Эмодзи: {badge.emoji}**
+**Название: `{badge.name}`**
+**Описание: {badge_description}**
+**Ссылка: {badge_link}**
+**Разрешенные сервера: {guild_names}**
+**Только глобальный: {badge_is_global}**"""
+
+    embed = disnake.Embed(
+        title=f"Информация о значке {badge.emoji} {badge.name}",
+        description=embed_description,
+        colour=0x2B2D31
     )
 
     return embed
