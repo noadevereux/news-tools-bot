@@ -116,9 +116,17 @@ async def delete_awarded_badge(maker_id: int, badge_id: int):
             await session.commit()
 
 
-async def get_makers_awarded_badge(maker_id: int):
+async def get_all_makers_awarded_badges(maker_id: int):
     async with SessionLocal() as session:
         awarded_badges = await session.execute(
             select(AwardedBadge).filter_by(maker_id=maker_id)
         )
         return awarded_badges.scalars().all()
+
+
+async def get_makers_awarded_badge(maker_id: int, badge_id: int):
+    async with SessionLocal() as session:
+        awarded_badges = await session.execute(
+            select(AwardedBadge).filter_by(maker_id=maker_id, badge_id=badge_id)
+        )
+        return awarded_badges.scalar()

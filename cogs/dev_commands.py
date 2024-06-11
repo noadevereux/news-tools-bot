@@ -8,7 +8,7 @@ from database.methods import guilds as guild_methods, badges as badge_methods, m
     publications as publication_methods
 from ext.models.checks import is_guild_admin, is_user_admin
 from config import DEV_GUILDS, temp
-from ext.models.autocompleters import guild_autocomplete, badge_autocomplete
+from ext.models.autocompleters import guild_autocomplete, badge_autocomplete, all_makers_autocomplete
 from ext.profile_getters import get_guild_profile, get_badge_profile
 from ext.tools import validate_url
 
@@ -818,6 +818,90 @@ class DeveloperCommands(commands.Cog):
                 content=f"**Вы очистили ссылку `{badge.link}` значка `[{badge.id}] {badge.name}`.**"
             )
 
+    @dev_badge.sub_command(name="add_guild", description="[DEV] Добавить сервер к разрешенным")
+    async def dev_badge_add_guild(
+            self,
+            interaction: disnake.ApplicationCommandInteraction,
+            badge_id: int = commands.Param(name="badge", description="Значок", autocomplete=badge_autocomplete),
+            guild_id: int = commands.Param(name="guild", description="Сервер", autocomplete=guild_autocomplete)
+    ):
+        await interaction.response.defer()
+
+        badge = await badge_methods.get_badge(badge_id=badge_id)
+
+        if not badge:
+            return await interaction.edit_original_response(
+                content="**Значка с указанным ID не существует.**"
+            )
+
+        guild = await guild_methods.get_guild_by_id(id=guild_id)
+
+        if not guild:
+            return await interaction.edit_original_response(
+                content="**Сервера с указанным ID не существует.**"
+            )
+
+        new_allowed_guilds = list(badge.allowed_guilds).copy()
+
+        if guild_id in new_allowed_guilds:
+            return await interaction.edit_original_response(
+                content=f"**Сервер `{guild.guild_name}` уже находится в списке разрешенных.**"
+            )
+
+        new_allowed_guilds.append(guild_id)
+
+        await badge_methods.update_badge(
+            badge_id=badge_id,
+            column_name="allowed_guilds",
+            value=new_allowed_guilds
+        )
+
+        return await interaction.edit_original_response(
+            content=f"**Сервер `{guild.guild_name}` добавлен в список разрешенных для значка `[{badge.id}] {badge.name}`.**"
+        )
+
+    @dev_badge.sub_command(name="remove_guild", description="[DEV] Удалить сервер из разрешенных")
+    async def dev_badge_remove_guild(
+            self,
+            interaction: disnake.ApplicationCommandInteraction,
+            badge_id: int = commands.Param(name="badge", description="Значок", autocomplete=badge_autocomplete),
+            guild_id: int = commands.Param(name="guild", description="Сервер", autocomplete=guild_autocomplete)
+    ):
+        await interaction.response.defer()
+
+        badge = await badge_methods.get_badge(badge_id=badge_id)
+
+        if not badge:
+            return await interaction.edit_original_response(
+                content="**Значка с указанным ID не существует.**"
+            )
+
+        guild = await guild_methods.get_guild_by_id(id=guild_id)
+
+        if not guild:
+            return await interaction.edit_original_response(
+                content="**Сервера с указанным ID не существует.**"
+            )
+
+        new_allowed_guilds = list(badge.allowed_guilds).copy()
+
+        if guild_id not in new_allowed_guilds:
+            return await interaction.edit_original_response(
+                content=f"**Сервер `{guild.guild_name}` итак не находится в списке разрешенных.**"
+            )
+
+        new_allowed_guilds.remove(guild_id)
+
+        await badge_methods.update_badge(
+            badge_id=badge_id,
+            column_name="allowed_guilds",
+            value=new_allowed_guilds
+        )
+
+        return await interaction.edit_original_response(
+            content=f"**Сервер `{guild.guild_name}` удалён из списка разрешенных для значка `[{badge.id}] {badge.name}`.**"
+        )
+
     @dev_badge.sub_command(name="global", description="[DEV] Изменить глобальный статус значка")
     async def dev_badge_global(
             self,
@@ -854,6 +938,112 @@ class DeveloperCommands(commands.Cog):
 
         return await interaction.edit_original_response(
             content=f"**Вы изменили глобальный статус значка `[{badge.id}] {badge.name}` с `{badge.is_global}` на `{bool(is_global)}`.**"
+        )
+
+    @dev_badge.sub_command(name="give", description="[DEV] Выдать редактору значок")
+    async def dev_badge_give(
+            self,
+            interaction: disnake.ApplicationCommandInteraction,
+            maker_id: int = commands.Param(name="maker", description="Редактор", autocomplete=all_makers_autocomplete),
+            badge_id: int = commands.Param(name="badge", description="Значок", autocomplete=badge_autocomplete)
+    ):
+        await interaction.response.defer()
+
+        maker = await maker_methods.get_maker_by_id(id=maker_id)
+
+        if not maker:
+            return await interaction.edit_original_response(
+                content="**Редактор с указанным ID не существует.**"
+            )
+
+        badge = await badge_methods.get_badge(badge_id=badge_id)
+
+        if not badge:
+            return await interaction.edit_original_response(
+                content="**Значка с указанным ID не существует.**"
+            )
+
+        awarded_badge = await badge_methods.get_makers_awarded_badge(maker_id=maker.id, badge_id=badge.id)
+
+        if awarded_badge:
+            return await interaction.edit_original_response(
+                content="**Указанный редактор уже был награждён этим значком.**"
+            )
+
+        await badge_methods.add_awarded_badge(maker_id=maker.id, badge_id=badge.id)
+
+        return await interaction.edit_original_response(
+            content=f"**Вы наградили редактора `{maker.nickname}` значком `[{badge.id}] {badge.name}`.**"
+        )
+
+    @dev_badge.sub_command(name="take", description="[DEV] Снять с редактора значок")
+    async def dev_badge_take(
+            self,
+            interaction: disnake.ApplicationCommandInteraction,
+            maker_id: int = commands.Param(name="maker", description="Редактор", autocomplete=all_makers_autocomplete),
+            badge_id: int = commands.Param(name="badge", description="Значок", autocomplete=badge_autocomplete)
+    ):
+        await interaction.response.defer()
+
+        maker = await maker_methods.get_maker_by_id(id=maker_id)
+
+        if not maker:
+            return await interaction.edit_original_response(
+                content="**Редактор с указанным ID не существует.**"
+            )
+
+        badge = await badge_methods.get_badge(badge_id=badge_id)
+
+        if not badge:
+            return await interaction.edit_original_response(
+                content="**Значка с указанным ID не существует.**"
+            )
+
+        awarded_badge = await badge_methods.get_makers_awarded_badge(maker_id=maker.id, badge_id=badge.id)
+
+        if not awarded_badge:
+            return await interaction.edit_original_response(
+                content="**Указанный редактор итак не награждён этим значком.**"
+            )
+
+        await badge_methods.delete_awarded_badge(maker_id=maker.id, badge_id=badge.id)
+
+        return await interaction.edit_original_response(
+            content=f"**Вы забрали у редактора `{maker.nickname}` значок `[{badge.id}] {badge.name}`.**"
+        )
+
+    @dev_badge.sub_command(name="giveaway", description="[DEV] Начать глобальную раздачу значка")
+    async def dev_badge_giveaway(
+            self,
+            interaction: disnake.ApplicationCommandInteraction,
+            badge_id: int = commands.Param(name="badge", description="Значок", autocomplete=badge_autocomplete),
+            channel: disnake.TextChannel = commands.Param(name="channel", description="Канал куда отправить раздачу")
+    ):
+        await interaction.response.defer(ephemeral=True)
+
+        badge = await badge_methods.get_badge(badge_id=badge_id)
+
+        if not badge:
+            return await interaction.edit_original_response(
+                content="**Значка с указанным ID не существует.**"
+            )
+
+        button = disnake.ui.Button(style=disnake.ButtonStyle.green, label="Получить значок",
+                                   custom_id=f"badge_giveaway:{badge.id}", emoji=badge.emoji)
+
+        await channel.send(
+            content=f"## {interaction.author.mention} запустил раздачу значка\n"
+                    f"Нажмите на кнопку чтобы получить значок на все свои аккаунты.\n\n"
+                    f"**Информация о значке:**\n"
+                    f"**Эмодзи:** {badge.emoji}\n"
+                    f"**Название:** {badge.name}\n"
+                    f"**Описание:** {badge.description if badge.description is not None else 'не задано'}\n"
+                    f"**Ссылка значка:** {badge.link if badge.link is not None else 'не задана'}",
+            components=button
+        )
+
+        return await interaction.edit_original_response(
+            content=f"**Вы запустили раздачу значка `[{badge.id}] {badge.name}`.**"
         )
 
 
