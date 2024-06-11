@@ -63,7 +63,7 @@ class AwardedBadge(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     maker_id: Mapped[int] = mapped_column(ForeignKey("makers.id"))
     badge_id: Mapped[int] = mapped_column(ForeignKey("badges.id"))
-    awarder_id: Mapped[int] = mapped_column(ForeignKey("makers.id"))
+    awarder_id: Mapped[int] = mapped_column(ForeignKey("makers.id"), nullable=True)
     award_timestamp: Mapped[datetime] = mapped_column(
         TIMESTAMP(timezone=True), server_default=func.now()
     )
