@@ -55,7 +55,9 @@ async def on_badge_giveaway_button_click(interaction: disnake.MessageInteraction
     elif len(given_accounts) > 0 and len(rejected_accounts) > 0:
         message = f"**На все аккаунты был выдан значок {badge.emoji} {badge.name}, которые его еще не получили. Скорее проверяйте!**"
     elif len(given_accounts) == 0 and len(rejected_accounts) > 0:
-        message = f"**Все аккаунты, привязанные к вашему Discord уже получили этот значок.**"
+        message = "**Все аккаунты, привязанные к вашему Discord уже получили этот значок.**"
+    elif len(given_accounts) == 0 and len(rejected_accounts) == 0:
+        message = "У вас нет ни одного аккаунта в системе News Tools. Скорее подавайте заявки в новостные разделы!"
 
     given_accounts_announce = ""
     rejected_accounts_announce = ""
