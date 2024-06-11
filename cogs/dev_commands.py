@@ -10,6 +10,7 @@ from ext.models.checks import is_guild_admin, is_user_admin
 from config import DEV_GUILDS, temp
 from ext.models.autocompleters import guild_autocomplete, badge_autocomplete
 from ext.profile_getters import get_guild_profile, get_badge_profile
+from ext.tools import validate_url
 
 
 class DeveloperCommands(commands.Cog):
@@ -656,6 +657,203 @@ class DeveloperCommands(commands.Cog):
 
         return await interaction.edit_original_response(
             embed=embed
+        )
+
+    @dev_badge.sub_command(name="emoji", description="[DEV] Изменить эмодзи значка")
+    async def dev_badge_emoji(
+            self,
+            interaction: disnake.ApplicationCommandInteraction,
+            badge_id: int = commands.Param(name="badge", description="Значок", autocomplete=badge_autocomplete),
+            emoji: str = commands.Param(name="emoji", description="Новый эмодзи")
+    ):
+        await interaction.response.defer()
+
+        badge = await badge_methods.get_badge(badge_id=badge_id)
+
+        if not badge:
+            return await interaction.edit_original_response(
+                content="**Значка с указанным ID не существует.**"
+            )
+        elif badge.emoji == emoji:
+            return await interaction.edit_original_response(
+                content="**Значку уже установлен эмодзи, который вы указали.**"
+            )
+
+        await badge_methods.update_badge(
+            badge_id=badge_id,
+            column_name="emoji",
+            value=emoji
+        )
+
+        return await interaction.edit_original_response(
+            content=f"**Вы изменили эмодзи значку `[{badge.id}] {badge.name}` с {badge.emoji} на {emoji}.**"
+        )
+
+    @dev_badge.sub_command(name="name", description="[DEV] Изменить название значка")
+    async def dev_badge_name(
+            self,
+            interaction: disnake.ApplicationCommandInteraction,
+            badge_id: int = commands.Param(name="badge", description="Значок", autocomplete=badge_autocomplete),
+            name: str = commands.Param(name="name", description="Новое название")
+    ):
+        await interaction.response.defer()
+
+        badge = await badge_methods.get_badge(badge_id=badge_id)
+
+        if not badge:
+            return await interaction.edit_original_response(
+                content="**Значка с указанным ID не существует.**"
+            )
+        elif badge.name == name:
+            return await interaction.edit_original_response(
+                content="**Значку уже установлено название, которое вы указали.**"
+            )
+
+        await badge_methods.update_badge(
+            badge_id=badge_id,
+            column_name="name",
+            value=name
+        )
+
+        return await interaction.edit_original_response(
+            content=f"**Вы изменили название значку `[ID: {badge.id}]` с `{badge.name}` на `{name}`.**"
+        )
+
+    @dev_badge.sub_command(name="description", description="[DEV] Изменить описание значка")
+    async def dev_badge_description(
+            self,
+            interaction: disnake.ApplicationCommandInteraction,
+            badge_id: int = commands.Param(name="badge", description="Значок", autocomplete=badge_autocomplete),
+            description: str = commands.Param(default=None, name="description", description="Новое описание")
+    ):
+        await interaction.response.defer()
+
+        badge = await badge_methods.get_badge(badge_id=badge_id)
+
+        if not badge:
+            return await interaction.edit_original_response(
+                content="**Значка с указанным ID не существует.**"
+            )
+
+        if description:
+            if badge.description == description:
+                return await interaction.edit_original_response(
+                    content="**Значку уже установлено описание, которое вы указали.**"
+                )
+
+            await badge_methods.update_badge(
+                badge_id=badge_id,
+                column_name="description",
+                value=description
+            )
+
+            return await interaction.edit_original_response(
+                content=f"**Вы изменили описание значку `[{badge.id}] {badge.name}` с `{badge.description if badge.description is not None else 'не задано'}` на `{description}`.**"
+            )
+        else:
+            if not badge.description:
+                return await interaction.edit_original_response(
+                    content="**У значка итак не установлено описание.**"
+                )
+
+            await badge_methods.update_badge(
+                badge_id=badge_id,
+                column_name="description",
+                value=None
+            )
+
+            return await interaction.edit_original_response(
+                content=f"**Вы очистили описание `{badge.description}` значка `[{badge.id}] {badge.name}`.**"
+            )
+
+    @dev_badge.sub_command(name="link", description="[DEV] Изменить ссылку значка")
+    async def dev_badge_link(
+            self,
+            interaction: disnake.ApplicationCommandInteraction,
+            badge_id: int = commands.Param(name="badge", description="Значок", autocomplete=badge_autocomplete),
+            link: str = commands.Param(default=None, name="link", description="Новая ссылка")
+    ):
+        await interaction.response.defer()
+
+        badge = await badge_methods.get_badge(badge_id=badge_id)
+
+        if not badge:
+            return await interaction.edit_original_response(
+                content="**Значка с указанным ID не существует.**"
+            )
+
+        if link:
+            if not validate_url(link):
+                return await interaction.edit_original_response(
+                    content="**Вы указали невалидную ссылку. Ссылка должна начинаться на `https://` и вести куда-либо.**"
+                )
+
+            if badge.link == link:
+                return await interaction.edit_original_response(
+                    content="**Значку уже установлена ссылка, которую вы указали.**"
+                )
+
+            await badge_methods.update_badge(
+                badge_id=badge_id,
+                column_name="link",
+                value=link
+            )
+
+            return await interaction.edit_original_response(
+                content=f"**Вы изменили ссылку значка `[{badge.id}] {badge.name}` с `{badge.link if badge.link is not None else 'не задана'}` на `{link}`.**"
+            )
+        else:
+            if not badge.link:
+                return await interaction.edit_original_response(
+                    content="**У значка итак не установлена ссылка.**"
+                )
+
+            await badge_methods.update_badge(
+                badge_id=badge_id,
+                column_name="link",
+                value=None
+            )
+
+            return await interaction.edit_original_response(
+                content=f"**Вы очистили ссылку `{badge.link}` значка `[{badge.id}] {badge.name}`.**"
+            )
+
+    @dev_badge.sub_command(name="global", description="[DEV] Изменить глобальный статус значка")
+    async def dev_badge_global(
+            self,
+            interaction: disnake.ApplicationCommandInteraction,
+            badge_id: int = commands.Param(name="badge", description="Значок", autocomplete=badge_autocomplete),
+            is_global: bool = commands.Param(
+                default=False,
+                name="is_global",
+                description="Глобальный статус значка",
+                choices=[
+                    disnake.OptionChoice(name="True", value=1),
+                    disnake.OptionChoice(name="False (по-умолчанию)", value=0)
+                ]
+            )
+    ):
+        await interaction.response.defer()
+
+        badge = await badge_methods.get_badge(badge_id=badge_id)
+
+        if not badge:
+            return await interaction.edit_original_response(
+                content="**Значка с указанным ID не существует.**"
+            )
+        elif badge.is_global == bool(is_global):
+            return await interaction.edit_original_response(
+                content="**У значка уже установлен этот глобальный статус.**"
+            )
+
+        await badge_methods.update_badge(
+            badge_id=badge_id,
+            column_name="is_global",
+            value=bool(is_global)
+        )
+
+        return await interaction.edit_original_response(
+            content=f"**Вы изменили глобальный статус значка `[{badge.id}] {badge.name}` с `{badge.is_global}` на `{bool(is_global)}`.**"
         )
 
 
