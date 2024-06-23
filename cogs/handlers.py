@@ -1,7 +1,11 @@
 import disnake
 from disnake.ext import commands
 
-from database.methods import badges as badge_methods, makers as maker_methods, guilds as guild_methods
+from database.methods import (
+    badges as badge_methods,
+    makers as maker_methods,
+    guilds as guild_methods,
+)
 
 
 async def on_badge_giveaway_button_click(interaction: disnake.MessageInteraction):
@@ -19,23 +23,26 @@ async def on_badge_giveaway_button_click(interaction: disnake.MessageInteraction
             content="**Видимо раздача уже неактуальна. Значка, который раздается уже не существует.**"
         )
 
-    makers_accounts = await maker_methods.get_all_makers_by_discord_id(discord_id=interaction.author.id)
+    makers_accounts = await maker_methods.get_all_makers_by_discord_id(
+        discord_id=interaction.author.id
+    )
 
     given_accounts = []
     rejected_accounts = []
 
     for maker in makers_accounts:
-        awarded_badges = await badge_methods.get_all_makers_awarded_badges(maker_id=maker.id)
+        awarded_badges = await badge_methods.get_all_makers_awarded_badges(
+            maker_id=maker.id
+        )
         guild = await guild_methods.get_guild_by_id(maker.guild_id)
 
         should_continue = False
 
         for awarded_badge in awarded_badges:
             if awarded_badge.badge_id == badge.id:
-                rejected_accounts.append({
-                    "nickname": maker.nickname,
-                    "guild_name": guild.guild_name
-                })
+                rejected_accounts.append(
+                    {"nickname": maker.nickname, "guild_name": guild.guild_name}
+                )
 
                 should_continue = True
                 break
@@ -45,17 +52,18 @@ async def on_badge_giveaway_button_click(interaction: disnake.MessageInteraction
 
         await badge_methods.add_awarded_badge(maker_id=maker.id, badge_id=badge.id)
 
-        given_accounts.append({
-            "nickname": maker.nickname,
-            "guild_name": guild.guild_name
-        })
+        given_accounts.append(
+            {"nickname": maker.nickname, "guild_name": guild.guild_name}
+        )
 
     if len(given_accounts) > 0 and len(rejected_accounts) == 0:
         message = f"**На все ваши аккаунты был выдан значок {badge.emoji} {badge.name}. Скорее проверяйте!**"
     elif len(given_accounts) > 0 and len(rejected_accounts) > 0:
         message = f"**На все аккаунты был выдан значок {badge.emoji} {badge.name}, которые его еще не получили. Скорее проверяйте!**"
     elif len(given_accounts) == 0 and len(rejected_accounts) > 0:
-        message = "**Все аккаунты, привязанные к вашему Discord уже получили этот значок.**"
+        message = (
+            "**Все аккаунты, привязанные к вашему Discord уже получили этот значок.**"
+        )
     elif len(given_accounts) == 0 and len(rejected_accounts) == 0:
         message = "У вас нет ни одного аккаунта в системе News Tools. Скорее подавайте заявки в новостные разделы!"
 

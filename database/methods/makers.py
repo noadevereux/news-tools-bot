@@ -103,9 +103,7 @@ async def get_all_makers_sorted_by_lvl(guild_id: int) -> list[Maker] | None:
 
 async def get_all_makers_by_discord_id(discord_id: int) -> list[Maker] | None:
     async with SessionLocal() as session:
-        makers = await session.execute(
-            select(Maker).filter_by(discord_id=discord_id)
-        )
+        makers = await session.execute(select(Maker).filter_by(discord_id=discord_id))
         return makers.scalars().all()
 
 

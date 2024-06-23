@@ -1,6 +1,10 @@
 import disnake
-from database.methods import makers as maker_methods, guilds as guild_methods, publications as publication_methods, \
-    badges as badge_methods
+from database.methods import (
+    makers as maker_methods,
+    guilds as guild_methods,
+    publications as publication_methods,
+    badges as badge_methods,
+)
 
 
 async def guild_autocomplete(
@@ -62,7 +66,7 @@ async def all_makers_autocomplete(
         return [
             disnake.OptionChoice(
                 name=f"[ID: {maker.id}] Guild: {maker.guild_id} | {maker.nickname} | LVL: {maker.level} | STS: {maker.account_status}",
-                value=str(maker.id)
+                value=str(maker.id),
             )
             for maker in makers[:25]
         ]
@@ -70,7 +74,7 @@ async def all_makers_autocomplete(
         sorted_makers = [
             disnake.OptionChoice(
                 name=f"[ID: {maker.id}] Guild: {maker.guild_id} | {maker.nickname} | LVL: {maker.level} | STS: {maker.account_status}",
-                value=str(maker.id)
+                value=str(maker.id),
             )
             for maker in makers
             if (user_input.lower() in maker.nickname.lower())

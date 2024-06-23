@@ -1,8 +1,12 @@
 import disnake
 from disnake.ext import commands
 
-from database.methods import publication_actions as action_methods, makers as maker_methods, guilds as guild_methods, \
-    publications as publication_methods
+from database.methods import (
+    publication_actions as action_methods,
+    makers as maker_methods,
+    guilds as guild_methods,
+    publications as publication_methods,
+)
 from ext.logger import Logger
 from ext.models.autocompleters import publication_autocomplete
 from ext.models.checks import is_guild_exists
@@ -27,7 +31,9 @@ class Publications(commands.Cog):
     async def publication_create(
             self,
             interaction: disnake.ApplicationCommandInteraction,
-            publication_number: int = commands.Param(name="number", description="Номер выпуска"),
+            publication_number: int = commands.Param(
+                name="number", description="Номер выпуска"
+            ),
     ):
         await interaction.response.defer()
 
@@ -75,7 +81,7 @@ class Publications(commands.Cog):
         return await interaction.edit_original_response(
             content=f"**Вы создали выпуск `#{new_publication.publication_number}`.**",
             embed=embed,
-            view=view
+            view=view,
         )
 
     @publication.sub_command(name="info", description="Посмотреть информацию о выпуске")
@@ -127,7 +133,9 @@ class Publications(commands.Cog):
             return await interaction.edit_original_response(embed=embed, view=view)
 
     @publication.sub_command(name="list", description="Посмотреть список выпусков")
-    async def publication_list(self, interaction: disnake.ApplicationCommandInteraction):
+    async def publication_list(
+            self, interaction: disnake.ApplicationCommandInteraction
+    ):
         await interaction.response.defer(ephemeral=True)
 
         guild = await guild_methods.get_guild(discord_id=interaction.guild.id)

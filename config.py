@@ -5,9 +5,7 @@ load_dotenv("./venv/.env")
 
 # Temp variables ###
 
-temp = {
-    "startup_time": None
-}
+temp = {"startup_time": None}
 
 ####################
 
