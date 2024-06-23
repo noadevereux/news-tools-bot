@@ -7,7 +7,9 @@ from ..models import Publication
 
 
 async def add_publication(guild_id: int, publication_number: int) -> Publication:
-    new_publication = Publication(guild_id=guild_id, publication_number=publication_number)
+    new_publication = Publication(
+        guild_id=guild_id, publication_number=publication_number
+    )
     async with SessionLocal() as session:
         session.add(new_publication)
         await session.commit()

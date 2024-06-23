@@ -72,12 +72,12 @@ class AwardedBadge(Base):
     maker: Mapped["Maker"] = relationship(
         back_populates="awarded_badges",
         foreign_keys=[maker_id],
-        primaryjoin="AwardedBadge.maker_id == Maker.id"
+        primaryjoin="AwardedBadge.maker_id == Maker.id",
     )
     awarder: Mapped["Maker"] = relationship(
         back_populates="awards_badges",
         foreign_keys=[awarder_id],
-        primaryjoin="AwardedBadge.awarder_id == Maker.id"
+        primaryjoin="AwardedBadge.awarder_id == Maker.id",
     )
 
 
@@ -136,12 +136,12 @@ class Maker(Base):
     awarded_badges: Mapped[List["AwardedBadge"]] = relationship(
         back_populates="maker",
         foreign_keys=[AwardedBadge.maker_id],
-        primaryjoin="Maker.id == AwardedBadge.maker_id"
+        primaryjoin="Maker.id == AwardedBadge.maker_id",
     )
     awards_badges: Mapped[List["AwardedBadge"]] = relationship(
         back_populates="awarder",
         foreign_keys=[AwardedBadge.awarder_id],
-        primaryjoin="Maker.id == AwardedBadge.awarder_id"
+        primaryjoin="Maker.id == AwardedBadge.awarder_id",
     )
 
 

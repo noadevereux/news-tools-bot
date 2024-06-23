@@ -46,9 +46,13 @@ def is_user_admin():
             raise CommandCalledInDM(message="This command is not allowed in DMs")
         guild = await guild_methods.get_guild(discord_id=interaction.guild.id)
         if not guild:
-            raise GuildNotExists(message=f"Guild {interaction.guild.id} doesn't exist in the database")
+            raise GuildNotExists(
+                message=f"Guild {interaction.guild.id} doesn't exist in the database"
+            )
 
-        user = await maker_methods.get_maker(guild_id=guild.id, discord_id=interaction.author.id)
+        user = await maker_methods.get_maker(
+            guild_id=guild.id, discord_id=interaction.author.id
+        )
 
         if not user:
             raise UserNotExists()

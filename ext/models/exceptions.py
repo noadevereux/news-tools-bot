@@ -1,6 +1,12 @@
 from disnake.ext.commands import CommandError
 
-__all__ = ["GuildNotExists", "CommandCalledInDM", "GuildNotAdmin", "UserNotExists", "UserNotAdmin"]
+__all__ = [
+    "GuildNotExists",
+    "CommandCalledInDM",
+    "GuildNotAdmin",
+    "UserNotExists",
+    "UserNotAdmin",
+]
 
 
 class GuildNotExists(CommandError):

@@ -3,8 +3,12 @@ from datetime import datetime
 import disnake
 from disnake import User, Member, Embed, Guild
 
-from database.methods import makers as maker_methods, publications as publication_methods, guilds as guild_methods, \
-    badges as badge_methods
+from database.methods import (
+    makers as maker_methods,
+    publications as publication_methods,
+    guilds as guild_methods,
+    badges as badge_methods,
+)
 from ext.tools import get_status_title
 
 
@@ -29,7 +33,9 @@ async def get_maker_profile(maker_id: int, user: User | Member = None) -> Embed:
 
     days = (datetime.now() - maker.appointment_datetime).days
 
-    makers_awarded_badges = await badge_methods.get_all_makers_awarded_badges(maker_id=maker.id)
+    makers_awarded_badges = await badge_methods.get_all_makers_awarded_badges(
+        maker_id=maker.id
+    )
 
     badges = []
 
@@ -49,7 +55,7 @@ async def get_maker_profile(maker_id: int, user: User | Member = None) -> Embed:
                 "description": badge.description,
                 "link": badge.link,
                 "timestamp": awarded_badge.award_timestamp,
-                "awarder": awarder
+                "awarder": awarder,
             }
         )
 
@@ -72,7 +78,9 @@ async def get_maker_profile(maker_id: int, user: User | Member = None) -> Embed:
     """
 
     if maker.is_admin:
-        embed_description += "\n\n**🛡️ Пользователь обладает административным доступом**"
+        embed_description += (
+            "\n\n**🛡️ Пользователь обладает административным доступом**"
+        )
 
     if maker.account_status:
         title_emoji = "<:user:1220792994328875058>"
@@ -113,14 +121,11 @@ async def get_maker_profile(maker_id: int, user: User | Member = None) -> Embed:
             f"\n\n**{badge.get('emoji')} "
             f"{'[' + badge.get('name') + ']' + '(' + badge.get('link') + ')' if badge.get('link') is not None else badge.get('name')}**"
             f"{' — ' + badge.get('description') if badge.get('description') is not None else ''}."
-            f"\nБыл награждён {badge.get('awarder')} {disnake.utils.format_dt(badge.get('timestamp'), style='D')}.")
+            f"\nБыл награждён {badge.get('awarder')} {disnake.utils.format_dt(badge.get('timestamp'), style='D')}."
+        )
 
     if len(badges) > 0:
-        embed.add_field(
-            name="Значки",
-            value=badges_description,
-            inline=False
-        )
+        embed.add_field(name="Значки", value=badges_description, inline=False)
 
     return embed
 
@@ -376,7 +381,7 @@ async def get_badge_profile(badge_id: int) -> Embed:
     embed = disnake.Embed(
         title=f"Информация о значке {badge.emoji} {badge.name}",
         description=embed_description,
-        colour=0x2B2D31
+        colour=0x2B2D31,
     )
 
     return embed

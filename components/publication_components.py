@@ -4,8 +4,12 @@ from typing import Literal
 import disnake
 from disnake import ui, ModalInteraction, MessageInteraction
 
-from database.methods import publication_actions as action_methods, makers as maker_methods, guilds as guild_methods, \
-    publications as publication_methods
+from database.methods import (
+    publication_actions as action_methods,
+    makers as maker_methods,
+    guilds as guild_methods,
+    publications as publication_methods,
+)
 from ext.tools import validate_date, get_status_title
 from ext.profile_getters import get_publication_profile
 
@@ -31,7 +35,7 @@ class PublicationListPaginator(ui.View):
             embed = disnake.Embed(
                 title=f"🧾 Выпуски новостного раздела {guild.guild_name}",
                 colour=0x2B2D31,
-                description="**На сервере нет выпусков. Создайте один и вы сможете увидеть его здесь! ||А можете создать сразу много :)||.**"
+                description="**На сервере нет выпусков. Создайте один и вы сможете увидеть его здесь! ||А можете создать сразу много :)||.**",
             )
 
             return None, embed
@@ -73,7 +77,9 @@ class PublicationListPaginator(ui.View):
                 next_embed_iteration += 10
                 continue
 
-            embeds[-1].description += f"- **[ID: {publications[i].id}] | #{publications[i].publication_number} | {maker} | {status} | {date}**\n"  # @formatter:off
+            embeds[
+                -1
+            ].description += f"- **[ID: {publications[i].id}] | #{publications[i].publication_number} | {maker} | {status} | {date}**\n"  # @formatter:off
 
         return cls(embeds=embeds), embeds[0]
 
@@ -112,7 +118,7 @@ class GearButton(ui.View):
 
     @ui.button(emoji="<:service_gear:1207389592815407137>")
     async def open_editor(
-            self, button: ui.Button, interaction: disnake.MessageInteraction
+        self, button: ui.Button, interaction: disnake.MessageInteraction
     ):
         if not interaction.author == self.author:
             return await interaction.send(
@@ -178,7 +184,7 @@ class MainMenu(ui.View):
         ],
     )
     async def option_select_callback(
-            self, string_select: ui.StringSelect, interaction: disnake.MessageInteraction
+        self, string_select: ui.StringSelect, interaction: disnake.MessageInteraction
     ):
         if not interaction.author == self.author:
             return await interaction.send(
@@ -275,7 +281,7 @@ class MainMenu(ui.View):
 
                     return await interaction.edit_original_response(
                         content="**Произошло что-то странное. Выпуска, с которым вы взаимодействуете"
-                                " не существует.**"
+                        " не существует.**"
                     )
 
                 elif not publication.guild_id == interaction_author.guild_id:
@@ -283,7 +289,7 @@ class MainMenu(ui.View):
 
                     return await interaction.edit_original_response(
                         content="**Произошло что-то странное. Выпуска, с которым вы взаимодействуете"
-                                " не существует.**"
+                        " не существует.**"
                     )
 
                 await publication_methods.delete_publication_by_id(
@@ -305,7 +311,7 @@ class MainMenu(ui.View):
 
     @ui.button(label="Отмена", style=disnake.ButtonStyle.red, row=2)
     async def cancel_callback(
-            self, button: ui.Button, interaction: disnake.MessageInteraction
+        self, button: ui.Button, interaction: disnake.MessageInteraction
     ):
         if not interaction.author == self.author:
             return await interaction.send(
@@ -338,12 +344,12 @@ class BackToMenu(ui.Button):
 
 class SubmitText(ui.Modal):
     def __init__(
-            self,
-            modal_title: str,
-            modal_type: Literal["number", "date", "salary"],
-            components,
-            author: disnake.Member,
-            publication_id: int,
+        self,
+        modal_title: str,
+        modal_type: Literal["number", "date", "salary"],
+        components,
+        author: disnake.Member,
+        publication_id: int,
     ):
         super().__init__(title=modal_title, components=components, timeout=120)
         self.modal_type = modal_type
@@ -352,10 +358,10 @@ class SubmitText(ui.Modal):
 
     @classmethod
     def create(
-            cls,
-            modal_type: Literal["number", "date", "salary"],
-            author: disnake.Member,
-            publication_id: int,
+        cls,
+        modal_type: Literal["number", "date", "salary"],
+        author: disnake.Member,
+        publication_id: int,
     ):
         match modal_type:
             case "number":
@@ -463,7 +469,7 @@ class SubmitText(ui.Modal):
 
                     return await interaction.edit_original_response(
                         content="**Произошло что-то странное. Выпуска, с которым вы взаимодействуете"
-                                " не существует.**"
+                        " не существует.**"
                     )
 
                 elif not publication.guild_id == interaction_author.guild_id:
@@ -471,7 +477,7 @@ class SubmitText(ui.Modal):
 
                     return await interaction.edit_original_response(
                         content="**Произошло что-то странное. Выпуска, с которым вы взаимодействуете"
-                                " не существует.**"
+                        " не существует.**"
                     )
 
                 elif publication.publication_number == new_number:
@@ -518,7 +524,7 @@ class SubmitText(ui.Modal):
 
                 return await interaction.edit_original_response(
                     content=f"**Вы изменили номер выпуска с уникальным `ID: {publication.id}` с"
-                            f" `#{publication.publication_number}` на `#{new_number}`.**"
+                    f" `#{publication.publication_number}` на `#{new_number}`.**"
                 )
 
             case "date":
@@ -574,7 +580,7 @@ class SubmitText(ui.Modal):
 
                     return await interaction.edit_original_response(
                         content="**Произошло что-то странное. Выпуска, с которым вы взаимодействуете"
-                                " не существует.**"
+                        " не существует.**"
                     )
 
                 elif not publication.guild_id == interaction_author.guild_id:
@@ -582,7 +588,7 @@ class SubmitText(ui.Modal):
 
                     return await interaction.edit_original_response(
                         content="**Произошло что-то странное. Выпуска, с которым вы взаимодействуете"
-                                " не существует.**"
+                        " не существует.**"
                     )
 
                 if date:
@@ -677,7 +683,7 @@ class SubmitText(ui.Modal):
 
                     return await interaction.edit_original_response(
                         content="**Произошло что-то странное. Выпуска, с которым вы взаимодействуете"
-                                " не существует.**"
+                        " не существует.**"
                     )
 
                 elif not publication.guild_id == interaction_author.guild_id:
@@ -685,7 +691,7 @@ class SubmitText(ui.Modal):
 
                     return await interaction.edit_original_response(
                         content="**Произошло что-то странное. Выпуска, с которым вы взаимодействуете"
-                                " не существует.**"
+                        " не существует.**"
                     )
 
                 salary = interaction.text_values.get("salary")
@@ -762,11 +768,11 @@ class SubmitText(ui.Modal):
 
 class ChooseMaker(ui.View):
     def __init__(
-            self,
-            author: disnake.Member,
-            publication_id: int,
-            choose_type: Literal["maker", "info_creator", "salary_payer"],
-            options_list: list[list[disnake.SelectOption]],
+        self,
+        author: disnake.Member,
+        publication_id: int,
+        choose_type: Literal["maker", "info_creator", "salary_payer"],
+        options_list: list[list[disnake.SelectOption]],
     ):
         super().__init__(timeout=120)
         self.author = author
@@ -837,7 +843,7 @@ class ChooseMaker(ui.View):
 
     @ui.button(emoji="◀", style=disnake.ButtonStyle.secondary, row=3)
     async def previous_page(
-            self, button: ui.Button, interaction: disnake.MessageInteraction
+        self, button: ui.Button, interaction: disnake.MessageInteraction
     ):
         self.page_index -= 1
         self._update_state()
@@ -849,7 +855,7 @@ class ChooseMaker(ui.View):
 
     @ui.button(emoji="▶", style=disnake.ButtonStyle.secondary, row=3)
     async def next_page(
-            self, button: ui.Button, interaction: disnake.MessageInteraction
+        self, button: ui.Button, interaction: disnake.MessageInteraction
     ):
         self.page_index += 1
         self._update_state()
@@ -861,10 +867,10 @@ class ChooseMaker(ui.View):
 
     @classmethod
     async def create(
-            cls,
-            author: disnake.Member,
-            publication_id: int,
-            choose_type: Literal["maker", "info_creator", "salary_payer"],
+        cls,
+        author: disnake.Member,
+        publication_id: int,
+        choose_type: Literal["maker", "info_creator", "salary_payer"],
     ):
         guild = await guild_methods.get_guild(discord_id=author.guild.id)
         makers = await maker_methods.get_all_makers_sorted_by_lvl(guild_id=guild.id)
@@ -918,11 +924,11 @@ class ChooseMaker(ui.View):
 
 class SelectMaker(ui.StringSelect):
     def __init__(
-            self,
-            author: disnake.Member,
-            publication_id: int,
-            options: list[disnake.SelectOption],
-            choose_type: Literal["maker", "info_creator", "salary_payer"],
+        self,
+        author: disnake.Member,
+        publication_id: int,
+        options: list[disnake.SelectOption],
+        choose_type: Literal["maker", "info_creator", "salary_payer"],
     ):
         super().__init__(
             placeholder="🧾 | Выберите редактора из списка", row=2, options=options
@@ -988,7 +994,7 @@ class SelectMaker(ui.StringSelect):
 
                     return await interaction.edit_original_response(
                         content="**Произошло что-то странное. Выпуска, с которым вы взаимодействуете"
-                                " не существует.**"
+                        " не существует.**"
                     )
 
                 elif not publication.guild_id == interaction_author.guild_id:
@@ -996,7 +1002,7 @@ class SelectMaker(ui.StringSelect):
 
                     return await interaction.edit_original_response(
                         content="**Произошло что-то странное. Выпуска, с которым вы взаимодействуете"
-                                " не существует.**"
+                        " не существует.**"
                     )
 
                 if maker_id:
@@ -1101,7 +1107,7 @@ class SelectMaker(ui.StringSelect):
 
                     return await interaction.edit_original_response(
                         content="**Произошло что-то странное. Выпуска, с которым вы взаимодействуете"
-                                " не существует.**"
+                        " не существует.**"
                     )
 
                 elif not publication.guild_id == interaction_author.guild_id:
@@ -1109,7 +1115,7 @@ class SelectMaker(ui.StringSelect):
 
                     return await interaction.edit_original_response(
                         content="**Произошло что-то странное. Выпуска, с которым вы взаимодействуете"
-                                " не существует.**"
+                        " не существует.**"
                     )
 
                 if maker_id:
@@ -1214,7 +1220,7 @@ class SelectMaker(ui.StringSelect):
 
                     return await interaction.edit_original_response(
                         content="**Произошло что-то странное. Выпуска, с которым вы взаимодействуете"
-                                " не существует.**"
+                        " не существует.**"
                     )
 
                 elif not publication.guild_id == interaction_author.guild_id:
@@ -1222,7 +1228,7 @@ class SelectMaker(ui.StringSelect):
 
                     return await interaction.edit_original_response(
                         content="**Произошло что-то странное. Выпуска, с которым вы взаимодействуете"
-                                " не существует.**"
+                        " не существует.**"
                     )
 
                 if maker_id:
@@ -1257,7 +1263,7 @@ class SelectMaker(ui.StringSelect):
 
                     await interaction.edit_original_response(
                         content=f"**Вы изменили человека, который выплатил зарплату за"
-                                f" выпуск `#{publication.publication_number}` на <@{salary_payer.discord_id}> `{salary_payer.nickname}`.**"
+                        f" выпуск `#{publication.publication_number}` на <@{salary_payer.discord_id}> `{salary_payer.nickname}`.**"
                     )
 
                 else:
@@ -1333,7 +1339,7 @@ class SetStatus(ui.View):
         ],
     )
     async def select_status(
-            self, string_select: ui.StringSelect, interaction: disnake.MessageInteraction
+        self, string_select: ui.StringSelect, interaction: disnake.MessageInteraction
     ):
         await interaction.response.defer(with_message=True)
 
@@ -1375,7 +1381,7 @@ class SetStatus(ui.View):
 
             return await interaction.edit_original_response(
                 content="**Произошло что-то странное. Выпуска, с которым вы взаимодействуете"
-                        " не существует.**"
+                " не существует.**"
             )
 
         elif not publication.guild_id == interaction_author.guild_id:
@@ -1383,7 +1389,7 @@ class SetStatus(ui.View):
 
             return await interaction.edit_original_response(
                 content="**Произошло что-то странное. Выпуска, с которым вы взаимодействуете"
-                        " не существует.**"
+                " не существует.**"
             )
 
         elif publication.status == status:

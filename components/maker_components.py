@@ -6,7 +6,11 @@ import disnake
 from disnake import ui, MessageInteraction, ModalInteraction
 
 from config import DEFAULT_POST_TITLES
-from database.methods import makers as maker_methods, guilds as guild_methods, maker_actions as action_methods
+from database.methods import (
+    makers as maker_methods,
+    guilds as guild_methods,
+    maker_actions as action_methods,
+)
 from ext.tools import validate_date, get_status_title
 from ext.profile_getters import get_maker_profile
 
@@ -33,7 +37,7 @@ class MakersListPaginator(ui.View):
                 title=f"🧾 Состав новостного раздела {guild.guild_name}",
                 colour=0x2B2D31,
                 description="**На сервере нет зарегистрированных редакторов. "
-                            "Интересно, как вы смогли использовать команду? Держите промокод на бесплатную пиццу: ||ilovenewstools||.**"
+                            "Интересно, как вы смогли использовать команду? Держите промокод на бесплатную пиццу: ||ilovenewstools||.**",
             )
 
             return None, embed

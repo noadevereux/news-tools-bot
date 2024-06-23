@@ -4,11 +4,19 @@ import disnake
 from disnake.ext import commands
 from sqlalchemy.exc import IntegrityError
 
-from database.methods import guilds as guild_methods, badges as badge_methods, makers as maker_methods, \
-    publications as publication_methods
+from database.methods import (
+    guilds as guild_methods,
+    badges as badge_methods,
+    makers as maker_methods,
+    publications as publication_methods,
+)
 from ext.models.checks import is_guild_admin, is_user_admin
 from config import DEV_GUILDS, temp
-from ext.models.autocompleters import guild_autocomplete, badge_autocomplete, all_makers_autocomplete
+from ext.models.autocompleters import (
+    guild_autocomplete,
+    badge_autocomplete,
+    all_makers_autocomplete,
+)
 from ext.profile_getters import get_guild_profile, get_badge_profile
 from ext.tools import validate_url
 
@@ -33,30 +41,34 @@ class DeveloperCommands(commands.Cog):
     async def dev_service(self, interaction: disnake.ApplicationCommandInteraction):
         pass
 
-    @dev_service.sub_command(name="stats", description="[DEV] Статистика по использованию приложения")
-    async def dev_service_stats(self, interaction: disnake.ApplicationCommandInteraction):
+    @dev_service.sub_command(
+        name="stats", description="[DEV] Статистика по использованию приложения"
+    )
+    async def dev_service_stats(
+            self, interaction: disnake.ApplicationCommandInteraction
+    ):
         await interaction.response.defer()
 
         all_makers = await maker_methods.get_all_makers()
         all_publications = await publication_methods.get_all_publications()
         startup_time = temp.get("startup_time")
 
-        stats_message = (f"- Кол-во серверов, на которых бот находится: `{len(self.bot.guilds)}`\n"
-                         f"- Всего зарегистрировано пользователей: `{len(all_makers)}`\n"
-                         f"- Всего создано выпусков: `{len(all_publications)}`\n\n"
-                         f"- Приложение было запущено {disnake.utils.format_dt(startup_time, style='R')}")
+        stats_message = (
+            f"- Кол-во серверов, на которых бот находится: `{len(self.bot.guilds)}`\n"
+            f"- Всего зарегистрировано пользователей: `{len(all_makers)}`\n"
+            f"- Всего создано выпусков: `{len(all_publications)}`\n\n"
+            f"- Приложение было запущено {disnake.utils.format_dt(startup_time, style='R')}"
+        )
 
         embed = disnake.Embed(
             title="Статистика по использованию приложения",
             description=stats_message,
             timestamp=datetime.datetime.now(),
-            colour=0x2B2D31
+            colour=0x2B2D31,
         )
         embed.set_footer(text="Актуальность информации:")
 
-        return await interaction.edit_original_response(
-            embed=embed
-        )
+        return await interaction.edit_original_response(embed=embed)
 
     @dev.sub_command_group(name="guild", description="[DEV] Управление серверами")
     async def dev_guild(self, interaction: disnake.ApplicationCommandInteraction):
@@ -618,7 +630,7 @@ class DeveloperCommands(commands.Cog):
             self,
             interaction: disnake.ApplicationCommandInteraction,
             name: str = commands.Param(name="name", description="Название значка"),
-            emoji: str = commands.Param(name="emoji", description="Эмодзи значка")
+            emoji: str = commands.Param(name="emoji", description="Эмодзи значка"),
     ):
         await interaction.response.defer()
 
@@ -634,15 +646,18 @@ class DeveloperCommands(commands.Cog):
         badge_profile = await get_badge_profile(badge_id=badge.id)
 
         return await interaction.edit_original_response(
-            content=f"**Вы создали значок {emoji} `{name}`.**",
-            embed=badge_profile
+            content=f"**Вы создали значок {emoji} `{name}`.**", embed=badge_profile
         )
 
-    @dev_badge.sub_command(name="info", description="[DEV] Посмотреть информацию о значке")
+    @dev_badge.sub_command(
+        name="info", description="[DEV] Посмотреть информацию о значке"
+    )
     async def dev_badge_info(
             self,
             interaction: disnake.ApplicationCommandInteraction,
-            badge_id: int = commands.Param(name="badge", description="Значок", autocomplete=badge_autocomplete)
+            badge_id: int = commands.Param(
+                name="badge", description="Значок", autocomplete=badge_autocomplete
+            ),
     ):
         await interaction.response.defer()
 
@@ -655,16 +670,16 @@ class DeveloperCommands(commands.Cog):
 
         embed = await get_badge_profile(badge_id=badge_id)
 
-        return await interaction.edit_original_response(
-            embed=embed
-        )
+        return await interaction.edit_original_response(embed=embed)
 
     @dev_badge.sub_command(name="emoji", description="[DEV] Изменить эмодзи значка")
     async def dev_badge_emoji(
             self,
             interaction: disnake.ApplicationCommandInteraction,
-            badge_id: int = commands.Param(name="badge", description="Значок", autocomplete=badge_autocomplete),
-            emoji: str = commands.Param(name="emoji", description="Новый эмодзи")
+            badge_id: int = commands.Param(
+                name="badge", description="Значок", autocomplete=badge_autocomplete
+            ),
+            emoji: str = commands.Param(name="emoji", description="Новый эмодзи"),
     ):
         await interaction.response.defer()
 
@@ -680,9 +695,7 @@ class DeveloperCommands(commands.Cog):
             )
 
         await badge_methods.update_badge(
-            badge_id=badge_id,
-            column_name="emoji",
-            value=emoji
+            badge_id=badge_id, column_name="emoji", value=emoji
         )
 
         return await interaction.edit_original_response(
@@ -693,8 +706,10 @@ class DeveloperCommands(commands.Cog):
     async def dev_badge_name(
             self,
             interaction: disnake.ApplicationCommandInteraction,
-            badge_id: int = commands.Param(name="badge", description="Значок", autocomplete=badge_autocomplete),
-            name: str = commands.Param(name="name", description="Новое название")
+            badge_id: int = commands.Param(
+                name="badge", description="Значок", autocomplete=badge_autocomplete
+            ),
+            name: str = commands.Param(name="name", description="Новое название"),
     ):
         await interaction.response.defer()
 
@@ -710,21 +725,25 @@ class DeveloperCommands(commands.Cog):
             )
 
         await badge_methods.update_badge(
-            badge_id=badge_id,
-            column_name="name",
-            value=name
+            badge_id=badge_id, column_name="name", value=name
         )
 
         return await interaction.edit_original_response(
             content=f"**Вы изменили название значку `[ID: {badge.id}]` с `{badge.name}` на `{name}`.**"
         )
 
-    @dev_badge.sub_command(name="description", description="[DEV] Изменить описание значка")
+    @dev_badge.sub_command(
+        name="description", description="[DEV] Изменить описание значка"
+    )
     async def dev_badge_description(
             self,
             interaction: disnake.ApplicationCommandInteraction,
-            badge_id: int = commands.Param(name="badge", description="Значок", autocomplete=badge_autocomplete),
-            description: str = commands.Param(default=None, name="description", description="Новое описание")
+            badge_id: int = commands.Param(
+                name="badge", description="Значок", autocomplete=badge_autocomplete
+            ),
+            description: str = commands.Param(
+                default=None, name="description", description="Новое описание"
+            ),
     ):
         await interaction.response.defer()
 
@@ -742,9 +761,7 @@ class DeveloperCommands(commands.Cog):
                 )
 
             await badge_methods.update_badge(
-                badge_id=badge_id,
-                column_name="description",
-                value=description
+                badge_id=badge_id, column_name="description", value=description
             )
 
             return await interaction.edit_original_response(
@@ -757,9 +774,7 @@ class DeveloperCommands(commands.Cog):
                 )
 
             await badge_methods.update_badge(
-                badge_id=badge_id,
-                column_name="description",
-                value=None
+                badge_id=badge_id, column_name="description", value=None
             )
 
             return await interaction.edit_original_response(
@@ -770,8 +785,12 @@ class DeveloperCommands(commands.Cog):
     async def dev_badge_link(
             self,
             interaction: disnake.ApplicationCommandInteraction,
-            badge_id: int = commands.Param(name="badge", description="Значок", autocomplete=badge_autocomplete),
-            link: str = commands.Param(default=None, name="link", description="Новая ссылка")
+            badge_id: int = commands.Param(
+                name="badge", description="Значок", autocomplete=badge_autocomplete
+            ),
+            link: str = commands.Param(
+                default=None, name="link", description="Новая ссылка"
+            ),
     ):
         await interaction.response.defer()
 
@@ -794,9 +813,7 @@ class DeveloperCommands(commands.Cog):
                 )
 
             await badge_methods.update_badge(
-                badge_id=badge_id,
-                column_name="link",
-                value=link
+                badge_id=badge_id, column_name="link", value=link
             )
 
             return await interaction.edit_original_response(
@@ -809,21 +826,25 @@ class DeveloperCommands(commands.Cog):
                 )
 
             await badge_methods.update_badge(
-                badge_id=badge_id,
-                column_name="link",
-                value=None
+                badge_id=badge_id, column_name="link", value=None
             )
 
             return await interaction.edit_original_response(
                 content=f"**Вы очистили ссылку `{badge.link}` значка `[{badge.id}] {badge.name}`.**"
             )
 
-    @dev_badge.sub_command(name="add_guild", description="[DEV] Добавить сервер к разрешенным")
+    @dev_badge.sub_command(
+        name="add_guild", description="[DEV] Добавить сервер к разрешенным"
+    )
     async def dev_badge_add_guild(
             self,
             interaction: disnake.ApplicationCommandInteraction,
-            badge_id: int = commands.Param(name="badge", description="Значок", autocomplete=badge_autocomplete),
-            guild_id: int = commands.Param(name="guild", description="Сервер", autocomplete=guild_autocomplete)
+            badge_id: int = commands.Param(
+                name="badge", description="Значок", autocomplete=badge_autocomplete
+            ),
+            guild_id: int = commands.Param(
+                name="guild", description="Сервер", autocomplete=guild_autocomplete
+            ),
     ):
         await interaction.response.defer()
 
@@ -851,21 +872,25 @@ class DeveloperCommands(commands.Cog):
         new_allowed_guilds.append(guild_id)
 
         await badge_methods.update_badge(
-            badge_id=badge_id,
-            column_name="allowed_guilds",
-            value=new_allowed_guilds
+            badge_id=badge_id, column_name="allowed_guilds", value=new_allowed_guilds
         )
 
         return await interaction.edit_original_response(
             content=f"**Сервер `{guild.guild_name}` добавлен в список разрешенных для значка `[{badge.id}] {badge.name}`.**"
         )
 
-    @dev_badge.sub_command(name="remove_guild", description="[DEV] Удалить сервер из разрешенных")
+    @dev_badge.sub_command(
+        name="remove_guild", description="[DEV] Удалить сервер из разрешенных"
+    )
     async def dev_badge_remove_guild(
             self,
             interaction: disnake.ApplicationCommandInteraction,
-            badge_id: int = commands.Param(name="badge", description="Значок", autocomplete=badge_autocomplete),
-            guild_id: int = commands.Param(name="guild", description="Сервер", autocomplete=guild_autocomplete)
+            badge_id: int = commands.Param(
+                name="badge", description="Значок", autocomplete=badge_autocomplete
+            ),
+            guild_id: int = commands.Param(
+                name="guild", description="Сервер", autocomplete=guild_autocomplete
+            ),
     ):
         await interaction.response.defer()
 
@@ -893,29 +918,31 @@ class DeveloperCommands(commands.Cog):
         new_allowed_guilds.remove(guild_id)
 
         await badge_methods.update_badge(
-            badge_id=badge_id,
-            column_name="allowed_guilds",
-            value=new_allowed_guilds
+            badge_id=badge_id, column_name="allowed_guilds", value=new_allowed_guilds
         )
 
         return await interaction.edit_original_response(
             content=f"**Сервер `{guild.guild_name}` удалён из списка разрешенных для значка `[{badge.id}] {badge.name}`.**"
         )
 
-    @dev_badge.sub_command(name="global", description="[DEV] Изменить глобальный статус значка")
+    @dev_badge.sub_command(
+        name="global", description="[DEV] Изменить глобальный статус значка"
+    )
     async def dev_badge_global(
             self,
             interaction: disnake.ApplicationCommandInteraction,
-            badge_id: int = commands.Param(name="badge", description="Значок", autocomplete=badge_autocomplete),
+            badge_id: int = commands.Param(
+                name="badge", description="Значок", autocomplete=badge_autocomplete
+            ),
             is_global: bool = commands.Param(
                 default=False,
                 name="is_global",
                 description="Глобальный статус значка",
                 choices=[
                     disnake.OptionChoice(name="True", value=1),
-                    disnake.OptionChoice(name="False (по-умолчанию)", value=0)
-                ]
-            )
+                    disnake.OptionChoice(name="False (по-умолчанию)", value=0),
+                ],
+            ),
     ):
         await interaction.response.defer()
 
@@ -931,9 +958,7 @@ class DeveloperCommands(commands.Cog):
             )
 
         await badge_methods.update_badge(
-            badge_id=badge_id,
-            column_name="is_global",
-            value=bool(is_global)
+            badge_id=badge_id, column_name="is_global", value=bool(is_global)
         )
 
         return await interaction.edit_original_response(
@@ -944,8 +969,12 @@ class DeveloperCommands(commands.Cog):
     async def dev_badge_give(
             self,
             interaction: disnake.ApplicationCommandInteraction,
-            maker_id: int = commands.Param(name="maker", description="Редактор", autocomplete=all_makers_autocomplete),
-            badge_id: int = commands.Param(name="badge", description="Значок", autocomplete=badge_autocomplete)
+            maker_id: int = commands.Param(
+                name="maker", description="Редактор", autocomplete=all_makers_autocomplete
+            ),
+            badge_id: int = commands.Param(
+                name="badge", description="Значок", autocomplete=badge_autocomplete
+            ),
     ):
         await interaction.response.defer()
 
@@ -963,7 +992,9 @@ class DeveloperCommands(commands.Cog):
                 content="**Значка с указанным ID не существует.**"
             )
 
-        awarded_badge = await badge_methods.get_makers_awarded_badge(maker_id=maker.id, badge_id=badge.id)
+        awarded_badge = await badge_methods.get_makers_awarded_badge(
+            maker_id=maker.id, badge_id=badge.id
+        )
 
         if awarded_badge:
             return await interaction.edit_original_response(
@@ -980,8 +1011,12 @@ class DeveloperCommands(commands.Cog):
     async def dev_badge_take(
             self,
             interaction: disnake.ApplicationCommandInteraction,
-            maker_id: int = commands.Param(name="maker", description="Редактор", autocomplete=all_makers_autocomplete),
-            badge_id: int = commands.Param(name="badge", description="Значок", autocomplete=badge_autocomplete)
+            maker_id: int = commands.Param(
+                name="maker", description="Редактор", autocomplete=all_makers_autocomplete
+            ),
+            badge_id: int = commands.Param(
+                name="badge", description="Значок", autocomplete=badge_autocomplete
+            ),
     ):
         await interaction.response.defer()
 
@@ -999,7 +1034,9 @@ class DeveloperCommands(commands.Cog):
                 content="**Значка с указанным ID не существует.**"
             )
 
-        awarded_badge = await badge_methods.get_makers_awarded_badge(maker_id=maker.id, badge_id=badge.id)
+        awarded_badge = await badge_methods.get_makers_awarded_badge(
+            maker_id=maker.id, badge_id=badge.id
+        )
 
         if not awarded_badge:
             return await interaction.edit_original_response(
@@ -1012,12 +1049,18 @@ class DeveloperCommands(commands.Cog):
             content=f"**Вы забрали у редактора `{maker.nickname}` значок `[{badge.id}] {badge.name}`.**"
         )
 
-    @dev_badge.sub_command(name="giveaway", description="[DEV] Начать глобальную раздачу значка")
+    @dev_badge.sub_command(
+        name="giveaway", description="[DEV] Начать глобальную раздачу значка"
+    )
     async def dev_badge_giveaway(
             self,
             interaction: disnake.ApplicationCommandInteraction,
-            badge_id: int = commands.Param(name="badge", description="Значок", autocomplete=badge_autocomplete),
-            channel: disnake.TextChannel = commands.Param(name="channel", description="Канал куда отправить раздачу")
+            badge_id: int = commands.Param(
+                name="badge", description="Значок", autocomplete=badge_autocomplete
+            ),
+            channel: disnake.TextChannel = commands.Param(
+                name="channel", description="Канал куда отправить раздачу"
+            ),
     ):
         await interaction.response.defer(ephemeral=True)
 
@@ -1028,8 +1071,12 @@ class DeveloperCommands(commands.Cog):
                 content="**Значка с указанным ID не существует.**"
             )
 
-        button = disnake.ui.Button(style=disnake.ButtonStyle.green, label="Получить значок",
-                                   custom_id=f"badge_giveaway:{badge.id}", emoji=badge.emoji)
+        button = disnake.ui.Button(
+            style=disnake.ButtonStyle.green,
+            label="Получить значок",
+            custom_id=f"badge_giveaway:{badge.id}",
+            emoji=badge.emoji,
+        )
 
         await channel.send(
             content=f"## {interaction.author.mention} запустил раздачу значка\n"
@@ -1039,7 +1086,7 @@ class DeveloperCommands(commands.Cog):
                     f"**Название:** {badge.name}\n"
                     f"**Описание:** {badge.description if badge.description is not None else 'не задано'}\n"
                     f"**Ссылка значка:** {badge.link if badge.link is not None else 'не задана'}",
-            components=button
+            components=button,
         )
 
         return await interaction.edit_original_response(
