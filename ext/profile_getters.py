@@ -54,7 +54,7 @@ async def get_maker_profile(maker_id: int, user: User | Member = None) -> Embed:
         )
 
     embed_description = f"""\
-{" ".join([badge.get("emoji") for badge in badges])}
+{"**Значки: " + " ".join([badge.get("emoji") for badge in badges]) + "**" if len(badges) > 0 else ""}
 
 **<:hashtag:1220792495047184515> ID аккаунта: `{maker.id}`**
 **<:discord_icon:1207328653734584371> Discord: <@{maker.discord_id}>**
