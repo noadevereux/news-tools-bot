@@ -9,7 +9,7 @@ from config import DEFAULT_POST_TITLES
 from database.methods import (
     makers as maker_methods,
     guilds as guild_methods,
-    maker_actions as action_methods,
+    maker_logs as logs_methods
 )
 from ext.tools import validate_date, get_status_title
 from ext.profile_getters import get_maker_profile
@@ -431,11 +431,9 @@ class OptionSelect(ui.StringSelect):
                     )
 
                 tasks.append(
-                    action_methods.add_maker_action(
+                    logs_methods.add_log(
                         maker_id=maker.id,
-                        made_by=interaction_author.id,
-                        action="addmaker",
-                        meta=maker.nickname,
+                        log=f"{interaction_author.nickname} активировал аккаунт редактору {maker.nickname}"
                     )
                 )
 
@@ -700,11 +698,9 @@ class SetLevel(ui.View):
 
         await asyncio.gather(*tasks)
 
-        await action_methods.add_maker_action(
+        await logs_methods.add_log(
             maker_id=maker.id,
-            made_by=interaction_author.id,
-            action="setlevel",
-            meta=str(level),
+            log=f"{interaction_author.nickname} установил редактору {maker.nickname} {level} уровень"
         )
 
         embed = await get_maker_profile(
@@ -827,11 +823,9 @@ class SetStatus(ui.View):
             value=status,
         )
 
-        await action_methods.add_maker_action(
+        await logs_methods.add_log(
             maker_id=maker.id,
-            made_by=interaction_author.id,
-            action="setstatus",
-            meta=status,
+            log=f"{interaction_author.nickname} установил редактору {maker.nickname} статус на {get_status_title(status)}"
         )
 
         status_title = get_status_title(status)
@@ -940,11 +934,9 @@ class SubmitReason(ui.Modal):
                     value=(maker.warns + 1),
                 )
 
-                await action_methods.add_maker_action(
+                await logs_methods.add_log(
                     maker_id=maker.id,
-                    made_by=interaction_author.id,
-                    action="warn",
-                    reason=reason,
+                    log=f"{interaction_author.nickname} выдал выговор редактору {maker.nickname}. Причина: {reason}"
                 )
 
                 embed = await get_maker_profile(
@@ -1013,11 +1005,9 @@ class SubmitReason(ui.Modal):
                     value=(maker.warns - 1),
                 )
 
-                await action_methods.add_maker_action(
+                await logs_methods.add_log(
                     maker_id=maker.id,
-                    made_by=interaction_author.id,
-                    action="unwarn",
-                    reason=reason,
+                    log=f"{interaction_author.nickname} снял выговор редактору {maker.nickname}. Причина: {reason}"
                 )
 
                 embed = await get_maker_profile(
@@ -1082,11 +1072,9 @@ class SubmitReason(ui.Modal):
                         value=(maker.preds + 1),
                     )
 
-                    await action_methods.add_maker_action(
+                    await logs_methods.add_log(
                         maker_id=maker.id,
-                        made_by=interaction_author.id,
-                        action="pred",
-                        reason=reason,
+                        log=f"{interaction_author.nickname} выдал предупреждение редактору {maker.nickname}. Причина: {reason}"
                     )
 
                     embed = await get_maker_profile(
@@ -1100,11 +1088,9 @@ class SubmitReason(ui.Modal):
                         content=f"**Вы выдали предупреждение редактору <@{maker.discord_id}> `{maker.nickname}`. Причина: {reason}**"
                     )
                 else:
-                    await action_methods.add_maker_action(
+                    await logs_methods.add_log(
                         maker_id=maker.id,
-                        made_by=interaction_author.id,
-                        action="pred",
-                        reason=reason,
+                        log=f"{interaction_author.nickname} выдал предупреждение редактору {maker.nickname}. Причина: {reason}"
                     )
 
                     await maker_methods.update_maker(
@@ -1121,11 +1107,9 @@ class SubmitReason(ui.Modal):
                         value=(maker.warns + 1),
                     )
 
-                    await action_methods.add_maker_action(
+                    await logs_methods.add_log(
                         maker_id=maker.id,
-                        made_by=-1,
-                        action="warn",
-                        reason="3/3 предупреждений",
+                        log=f"Система выдала выговор редактору {maker.nickname}. Причина: 3/3 предупреждений"
                     )
 
                     embed = await get_maker_profile(
@@ -1191,11 +1175,9 @@ class SubmitReason(ui.Modal):
                         value=(maker.preds - 1),
                     )
 
-                    await action_methods.add_maker_action(
+                    await logs_methods.add_log(
                         maker_id=maker.id,
-                        made_by=interaction_author.id,
-                        action="unpred",
-                        reason=reason,
+                        log=f"{interaction_author.nickname} снял предупреждение редактору {maker.nickname}. Причина: {reason}"
                     )
 
                     embed = await get_maker_profile(
@@ -1224,18 +1206,14 @@ class SubmitReason(ui.Modal):
                         value=(maker.warns - 1),
                     )
 
-                    await action_methods.add_maker_action(
+                    await logs_methods.add_log(
                         maker_id=maker.id,
-                        made_by=-1,
-                        action="unwarn",
-                        reason="распадение выговора на 3 предупреждения",
+                        log=f"Система сняла выговор редактору {maker.nickname}. Причина: распад выговора на 3 предупреждения."
                     )
 
-                    await action_methods.add_maker_action(
+                    await logs_methods.add_log(
                         maker_id=maker.id,
-                        made_by=interaction_author.id,
-                        action="unpred",
-                        reason=reason,
+                        log=f"{interaction_author.nickname} снял предупреждение редактору {maker.nickname}. Причина: {reason}"
                     )
 
                     embed = await get_maker_profile(
@@ -1333,11 +1311,9 @@ class SubmitReason(ui.Modal):
 
                 await asyncio.gather(*tasks)
 
-                await action_methods.add_maker_action(
+                await logs_methods.add_log(
                     maker_id=maker.id,
-                    made_by=interaction_author.id,
-                    action="deactivate",
-                    reason=reason,
+                    log=f"{interaction_author.nickname} деактивировал аккаунт редактора {maker.nickname}. Причина: {reason}"
                 )
 
                 main_menu = await MainMenu.create(
@@ -1564,11 +1540,9 @@ class SubmitText(ui.Modal):
                     value=new_member.id,
                 )
 
-                await action_methods.add_maker_action(
+                await logs_methods.add_log(
                     maker_id=maker.id,
-                    made_by=interaction_author.id,
-                    action="setdiscord",
-                    meta=str(new_member.id),
+                    log=f"{interaction_author.nickname} сменил Discord редактора {maker.nickname} с {maker.discord_id} на {new_member.id}"
                 )
 
                 main_menu = await MainMenu.create(
@@ -1686,11 +1660,9 @@ class SubmitText(ui.Modal):
                     value=nickname,
                 )
 
-                await action_methods.add_maker_action(
+                await logs_methods.add_log(
                     maker_id=maker.id,
-                    made_by=interaction_author.id,
-                    action="setnickname",
-                    meta=nickname,
+                    log=f"{interaction_author.nickname} сменил редактору никнейм с {maker.nickname} на {nickname}"
                 )
 
                 main_menu = await MainMenu.create(
@@ -1820,11 +1792,9 @@ class SubmitText(ui.Modal):
                         value=post,
                     )
 
-                    await action_methods.add_maker_action(
+                    await logs_methods.add_log(
                         maker_id=maker.id,
-                        made_by=interaction_author.id,
-                        action="setpost",
-                        meta=post,
+                        log=f"{interaction_author.nickname} установил редактору {maker.nickname} должность {post}"
                     )
 
                     main_menu = await MainMenu.create(
@@ -1861,11 +1831,9 @@ class SubmitText(ui.Modal):
                         value=DEFAULT_POST_TITLES.get(int(maker.level)),
                     )
 
-                    await action_methods.add_maker_action(
+                    await logs_methods.add_log(
                         maker_id=maker.id,
-                        made_by=interaction_author.id,
-                        action="setpost",
-                        meta=DEFAULT_POST_TITLES.get(int(maker.level)),
+                        log=f"{interaction_author.nickname} установил редактору {maker.nickname} должность {DEFAULT_POST_TITLES.get(int(maker.level))}"
                     )
 
                     main_menu = await MainMenu.create(
@@ -1998,11 +1966,9 @@ class SubmitText(ui.Modal):
                     value=new_datetime,
                 )
 
-                await action_methods.add_maker_action(
+                await logs_methods.add_log(
                     maker_id=maker.id,
-                    made_by=interaction_author.id,
-                    action="setdate",
-                    meta=date_str,
+                    log=f"{interaction_author.nickname} установил редактору {maker.nickname} дату постановления на {date_str}"
                 )
 
                 main_menu = await MainMenu.create(
