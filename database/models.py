@@ -178,35 +178,6 @@ class Guild(Base):
     )
 
 
-class MakerAction(Base):
-    __tablename__ = "maker_actions"
-
-    id: Mapped[int] = mapped_column(primary_key=True)
-    maker_id: Mapped[int] = mapped_column(nullable=True)
-    made_by: Mapped[int] = mapped_column(nullable=True)
-    action: Mapped[
-        Literal[
-            "addmaker",
-            "deactivate",
-            "setnickname",
-            "setdiscord",
-            "setlevel",
-            "setpost",
-            "setstatus",
-            "setdate",
-            "warn",
-            "unwarn",
-            "pred",
-            "unpred",
-        ]
-    ] = mapped_column()
-    meta: Mapped[str] = mapped_column(String(255), nullable=True)
-    timestamp: Mapped[datetime] = mapped_column(
-        TIMESTAMP(timezone=True), server_default=func.now()
-    )
-    reason: Mapped[str] = mapped_column(String(255), nullable=True)
-
-
 class MakerLog(Base):
     __tablename__ = "maker_logs"
 
