@@ -1,7 +1,7 @@
 from asyncio import run
 
 from database.database import SessionLocal
-from database.models import MakerAction, MakerLogs
+from database.models import MakerAction, MakerLog
 
 from database.methods import (
     makers as maker_methods
@@ -75,7 +75,7 @@ async def run_migration():
             else:
                 continue
 
-            new_log = MakerLogs(maker_id=action.maker_id, timestamp=action.timestamp, log=log)
+            new_log = MakerLog(maker_id=action.maker_id, timestamp=action.timestamp, log=log)
             session.add(new_log)
 
         await session.commit()
