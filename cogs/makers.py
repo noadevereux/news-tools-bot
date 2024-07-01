@@ -3,7 +3,7 @@ from disnake.ext import commands
 
 from database.methods import (
     makers as maker_methods,
-    maker_actions as action_methods,
+    maker_logs as logs_methods,
     guilds as guild_methods,
 )
 from ext.logger import Logger
@@ -81,11 +81,9 @@ class Makers(commands.Cog):
             guild_id=guild.id, discord_id=member.id, nickname=nickname
         )
 
-        await action_methods.add_maker_action(
+        await logs_methods.add_log(
             maker_id=maker.id,
-            made_by=interaction_author.id,
-            action="addmaker",
-            meta=nickname,
+            log=f"{interaction_author.nickname} зарегистрировал аккаунт редактору {maker.nickname}"
         )
 
         embed = await get_maker_profile(maker_id=maker.id, user=member)
