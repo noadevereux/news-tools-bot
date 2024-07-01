@@ -207,6 +207,15 @@ class MakerAction(Base):
     reason: Mapped[str] = mapped_column(String(255), nullable=True)
 
 
+class MakerLogs(Base):
+    __tablename__ = "maker_logs"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    maker_id: Mapped[int] = mapped_column(nullable=False)
+    timestamp: Mapped[datetime] = mapped_column(TIMESTAMP(), server_default=func.now(), nullable=False)
+    log: Mapped[str] = mapped_column(String(2000), nullable=False)
+
+
 class PublicationAction(Base):
     __tablename__ = "publication_actions"
 
