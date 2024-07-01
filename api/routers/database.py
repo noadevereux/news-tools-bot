@@ -213,57 +213,6 @@ async def get_publications_by_maker(id: int):
 
 
 @db_router.post(
-    "/add_maker_action",
-    dependencies=[Depends(JWTBearer())],
-    tags=["Database", "Maker Actions"],
-)
-async def add_maker_action(
-        maker_id: int,
-        made_by: int,
-        action: Literal[
-            "addmaker",
-            "deactivate",
-            "setnickname",
-            "setdiscord",
-            "setlevel",
-            "setpost",
-            "setstatus",
-            "setdate",
-            "warn",
-            "unwarn",
-            "pred",
-            "unpred",
-        ],
-        meta: str = None,
-        reason: str = None,
-):
-    new_action = models.MakerAction(
-        maker_id=maker_id, made_by=made_by, action=action, meta=meta, reason=reason
-    )
-    async with SessionLocal() as session:
-        session.add(new_action)
-        await session.commit()
-
-    return {"status": "ok", "message": None}
-
-
-@db_router.get(
-    "/get_maker_actions",
-    dependencies=[Depends(JWTBearer())],
-    tags=["Database", "Maker Actions"],
-)
-async def get_makers_actions(maker_id: int):
-    async with SessionLocal() as session:
-        actions = await session.execute(
-            select(models.MakerAction)
-            .filter_by(maker_id=maker_id)
-            .order_by(models.MakerAction.timestamp.desc())
-        )
-
-    return {"status": "ok", "actions": actions.scalars().all()}
-
-
-@db_router.post(
     "/add_publication",
     dependencies=[Depends(JWTBearer())],
     tags=["Database", "Publication"],
