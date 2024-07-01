@@ -34,6 +34,10 @@ async def run_migration():
                     madeby_nickname = "Неизвестно"
 
             maker = await maker_methods.get_maker_by_id(id=action.maker_id)
+            if maker:
+                maker_nickname = maker.nickname
+            else:
+                maker_nickname = "Неизвестно"
 
             action_datetime_l = action.timestamp.isoformat().split("T")
             action_datetime = f"{action_datetime_l[0]} {action_datetime_l[1]}"
@@ -44,30 +48,30 @@ async def run_migration():
             if action_type == "addmaker":
                 log = f"{madeby_nickname} зарегистрировал/активировал аккаунт редактору {meta}"
             elif action_type == "deactivate":
-                log = f"{madeby_nickname} деактивировал аккаунт редактора {maker.nickname}. Причина: {reason}"
+                log = f"{madeby_nickname} деактивировал аккаунт редактора {maker_nickname}. Причина: {reason}"
             elif action_type == "setnickname":
                 log = f"{madeby_nickname} установил редактору никнейм {meta}"
             elif action_type == "setdiscord":
-                log = f"{madeby_nickname} установил Discord редактору {maker.nickname} на {meta}"
+                log = f"{madeby_nickname} установил Discord редактору {maker_nickname} на {meta}"
             elif action_type == "setlevel":
                 log = (
-                    f"{madeby_nickname} установил редактору {maker.nickname} {meta} уровень"
+                    f"{madeby_nickname} установил редактору {maker_nickname} {meta} уровень"
                 )
             elif action_type == "setpost":
-                log = f"{madeby_nickname} установил редактору {maker.nickname} должность {meta}"
+                log = f"{madeby_nickname} установил редактору {maker_nickname} должность {meta}"
             elif action_type == "setstatus":
                 status_title = get_status_title(status_kw=meta)
-                log = f"{madeby_nickname} установил редактору {maker.nickname} статус на {status_title}"
+                log = f"{madeby_nickname} установил редактору {maker_nickname} статус на {status_title}"
             elif action_type == "setdate":
-                log = f"{madeby_nickname} установил редактору {maker.nickname} дату постановления на {meta}"
+                log = f"{madeby_nickname} установил редактору {maker_nickname} дату постановления на {meta}"
             elif action_type == "warn":
-                log = f"{madeby_nickname} выдал выговор редактору {maker.nickname}. Причина: {reason}"
+                log = f"{madeby_nickname} выдал выговор редактору {maker_nickname}. Причина: {reason}"
             elif action_type == "unwarn":
-                log = f"{madeby_nickname} снял выговор редактору {maker.nickname}. Причина: {reason}"
+                log = f"{madeby_nickname} снял выговор редактору {maker_nickname}. Причина: {reason}"
             elif action_type == "pred":
-                log = f"{madeby_nickname} выдал предупреждение редактору {maker.nickname}. Причина: {reason}"
+                log = f"{madeby_nickname} выдал предупреждение редактору {maker_nickname}. Причина: {reason}"
             elif action_type == "unpred":
-                log = f"{madeby_nickname} снял предупреждение редактору {maker.nickname}. Причина: {reason}"
+                log = f"{madeby_nickname} снял предупреждение редактору {maker_nickname}. Причина: {reason}"
             else:
                 continue
 
