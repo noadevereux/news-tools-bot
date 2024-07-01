@@ -207,7 +207,7 @@ class MakerAction(Base):
     reason: Mapped[str] = mapped_column(String(255), nullable=True)
 
 
-class MakerLogs(Base):
+class MakerLog(Base):
     __tablename__ = "maker_logs"
 
     id: Mapped[int] = mapped_column(primary_key=True)
