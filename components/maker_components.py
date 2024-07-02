@@ -108,6 +108,91 @@ class MakersListPaginator(ui.View):
         )
 
 
+class LogsPaginator(ui.View):
+    def __init__(self, embeds: list[disnake.Embed]):
+        super().__init__(timeout=180)
+        self.embeds = embeds
+        self.current_page = 0
+
+        embed: disnake.Embed
+        for i, embed in enumerate(self.embeds):
+            embed.set_footer(text=f"Страница {i + 1} из {len(embeds)}")
+
+        self._update_state()
+
+    @classmethod
+    async def create(cls, maker_id: int):
+        maker = await maker_methods.get_maker_by_id(id=maker_id)
+
+        if not maker:
+            return None, disnake.Embed(
+                colour=0x2B2D31,
+                description=f"**Редактор не найден в базе данных.**"
+            )
+
+        maker_logs = await logs_methods.get_maker_logs(maker_id=maker.id)
+
+        if len(maker_logs) == 0:
+            embed = disnake.Embed(
+                colour=0x2B2D31,
+                description="**Записи отсутствуют.**",
+            )
+
+            return None, embed
+
+        next_embed_iteration = 10
+        embeds = []
+        for i in range(len(maker_logs)):
+            if i == 0:
+                new_embed = disnake.Embed(
+                    title=f"<:log:1257710061112004669> Логи редактора {maker.nickname}",
+                    colour=0x2B2D31,
+                    description=f"- **`{maker_logs[i].log}`** ({disnake.utils.format_dt(maker_logs[i].timestamp)})\n",
+                )
+                embeds.append(new_embed)
+                continue
+
+            if i == next_embed_iteration:
+                new_embed = disnake.Embed(
+                    title=f"<:log:1257710061112004669> Логи редактора {maker.nickname}",
+                    colour=0x2B2D31,
+                    description=f"- **`{maker_logs[i].log}`** ({disnake.utils.format_dt(maker_logs[i].timestamp)})\n",
+                )
+                embeds.append(new_embed)
+                next_embed_iteration += 10
+                continue
+
+            embeds[-1].description += f"- **`{maker_logs[i].log}`** ({disnake.utils.format_dt(maker_logs[i].timestamp)})\n"  # @formatter:off
+
+        return cls(embeds=embeds), embeds[0]
+
+    def _update_state(self) -> None:
+        self.prev_page.disabled = self.current_page == 0
+        self.next_page.disabled = self.current_page == len(self.embeds) - 1
+
+    @disnake.ui.button(emoji="◀", style=disnake.ButtonStyle.secondary)
+    async def prev_page(
+        self, button: disnake.ui.Button, interaction: disnake.MessageInteraction
+    ):
+        self.current_page -= 1
+        self._update_state()
+
+        await interaction.response.edit_message(
+            embed=self.embeds[self.current_page], view=self
+        )
+
+    @disnake.ui.button(emoji="▶", style=disnake.ButtonStyle.secondary)
+    async def next_page(
+        self, button: disnake.ui.Button, interaction: disnake.MessageInteraction
+    ):
+        self.current_page += 1
+        self._update_state()
+
+        await interaction.response.edit_message(
+            embed=self.embeds[self.current_page], view=self
+        )
+
+
 class GearButton(ui.View):
     def __init__(self, author: disnake.Member, maker_id: int):
         super().__init__(timeout=120)
@@ -246,6 +331,12 @@ class OptionSelect(ui.StringSelect):
                 value="activate",
                 emoji="<:activate:1207344226300596264>",
             )
+
+        self.add_option(
+            label="Посмотреть логи действий",
+            value="logs",
+            emoji="<:log:1257710061112004669>"
+        )
 
         return self
 
@@ -453,6 +544,13 @@ class OptionSelect(ui.StringSelect):
                 return await interaction.edit_original_response(
                     content=f"**Вы активировали аккаунт редактора <@{maker.discord_id}> `{maker.nickname}`.**",
                 )
+
+            case "logs":
+                await interaction.response.defer(with_message=True, ephemeral=True)
+
+                view, embed = await LogsPaginator.create(maker_id=self.maker_id)
+
+                return await interaction.edit_original_response(view=view, embed=embed)
 
 
 class WarnsControl(ui.View):
