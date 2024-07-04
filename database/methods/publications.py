@@ -2,7 +2,7 @@ from typing import Literal
 
 from sqlalchemy import select
 
-from ..database import SessionLocal
+from ..database import SessionManager
 from ..models import Publication
 
 
@@ -10,7 +10,7 @@ async def add_publication(guild_id: int, publication_number: int) -> Publication
     new_publication = Publication(
         guild_id=guild_id, publication_number=publication_number
     )
-    async with SessionLocal() as session:
+    async with SessionManager() as session:
         session.add(new_publication)
         await session.commit()
         publication = await session.execute(
@@ -37,7 +37,7 @@ async def update_publication(
         ],
         value: int | str | None,
 ) -> None:
-    async with SessionLocal() as session:
+    async with SessionManager() as session:
         publication = await session.execute(
             select(Publication).filter_by(
                 guild_id=guild_id, publication_number=publication_number
@@ -64,7 +64,7 @@ async def update_publication_by_id(
         ],
         value: int | str | None,
 ) -> None:
-    async with SessionLocal() as session:
+    async with SessionManager() as session:
         publication = await session.execute(
             select(Publication).filter_by(id=publication_id)
         )
@@ -75,7 +75,7 @@ async def update_publication_by_id(
 
 
 async def delete_publication(guild_id: int, publication_number: int) -> None:
-    async with SessionLocal() as session:
+    async with SessionManager() as session:
         publication = await session.execute(
             select(Publication).filter_by(
                 guild_id=guild_id, publication_number=publication_number
@@ -88,7 +88,7 @@ async def delete_publication(guild_id: int, publication_number: int) -> None:
 
 
 async def delete_publication_by_id(publication_id: int) -> None:
-    async with SessionLocal() as session:
+    async with SessionManager() as session:
         publication = await session.execute(
             select(Publication).filter_by(id=publication_id)
         )
@@ -99,7 +99,7 @@ async def delete_publication_by_id(publication_id: int) -> None:
 
 
 async def is_publication_exists(guild_id: int, publication_id: int) -> bool:
-    async with SessionLocal() as session:
+    async with SessionManager() as session:
         publication = await session.execute(
             select(Publication).filter_by(
                 guild_id=guild_id, publication_number=publication_id
@@ -109,7 +109,7 @@ async def is_publication_exists(guild_id: int, publication_id: int) -> bool:
 
 
 async def get_publication(guild_id: int, publication_number: int) -> Publication | None:
-    async with SessionLocal() as session:
+    async with SessionManager() as session:
         publication = await session.execute(
             select(Publication).filter_by(
                 guild_id=guild_id, publication_number=publication_number
@@ -119,13 +119,13 @@ async def get_publication(guild_id: int, publication_number: int) -> Publication
 
 
 async def get_publication_by_id(id: int) -> Publication | None:
-    async with SessionLocal() as session:
+    async with SessionManager() as session:
         publication = await session.execute(select(Publication).filter_by(id=id))
         return publication.scalar()
 
 
 async def get_all_publications(guild_id: int = None) -> list[Publication] | None:
-    async with SessionLocal() as session:
+    async with SessionManager() as session:
         if guild_id:
             publications = await session.execute(
                 select(Publication).filter_by(guild_id=guild_id)

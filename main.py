@@ -7,6 +7,8 @@ from disnake.ext import commands
 from config import TOKEN, DEV_GUILDS, temp
 from ext.logger import Logger
 
+from database.database import SessionManager
+
 bot = commands.InteractionBot(intents=disnake.Intents.all())
 
 log = Logger("main.py.log")
@@ -118,22 +120,23 @@ async def on_ready():
 #     await create_tables()
 
 
-async def main():
+async def load_cogs():
     for file in os.listdir("cogs"):
         if (file.endswith(".py")) and (not file.startswith(".") and "__" not in file):
             try:
                 bot.load_extension(f"cogs.{file[:-3]}")
             except Exception as error:
                 print(error)
-    try:
-        await bot.start(TOKEN)
-    except RuntimeError:
-        pass
+
+
+async def main():
+    await SessionManager().startup()
+
+    await load_cogs()
+
+    await bot.start(TOKEN)
 
 
 if __name__ == "__main__":
     loop = asyncio.get_event_loop()
-    try:
-        loop.run_until_complete(main())
-    except KeyboardInterrupt:
-        pass
+    loop.run_until_complete(main())
