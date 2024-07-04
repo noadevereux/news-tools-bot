@@ -2,12 +2,12 @@ from typing import Literal
 
 from sqlalchemy import select
 
-from ..database import SessionLocal
+from ..database import SessionManager
 from ..models import Maker, Publication
 
 
 async def is_maker_exists(guild_id: int, discord_id: int) -> bool:
-    async with SessionLocal() as session:
+    async with SessionManager() as session:
         maker = await session.execute(
             select(Maker).filter_by(guild_id=guild_id, discord_id=discord_id)
         )
@@ -15,14 +15,14 @@ async def is_maker_exists(guild_id: int, discord_id: int) -> bool:
 
 
 async def is_maker_exists_by_id(id: int) -> bool:
-    async with SessionLocal() as session:
+    async with SessionManager() as session:
         maker = await session.execute(select(Maker).filter_by(id=id))
         return maker.scalar() is not None
 
 
 async def add_maker(guild_id: int, discord_id: int, nickname: str) -> Maker | None:
     new_maker = Maker(guild_id=guild_id, discord_id=discord_id, nickname=nickname)
-    async with SessionLocal() as session:
+    async with SessionManager() as session:
         session.add(new_maker)
         await session.commit()
         maker = await session.execute(
@@ -49,7 +49,7 @@ async def update_maker(
         ],
         value,
 ) -> None:
-    async with SessionLocal() as session:
+    async with SessionManager() as session:
         maker = await session.execute(
             select(Maker).filter_by(guild_id=guild_id, discord_id=discord_id)
         )
@@ -76,7 +76,7 @@ async def update_maker_by_id(
         ],
         value,
 ) -> None:
-    async with SessionLocal() as session:
+    async with SessionManager() as session:
         maker = await session.execute(select(Maker).filter_by(id=id))
         if maker:
             maker = maker.scalar()
@@ -85,7 +85,7 @@ async def update_maker_by_id(
 
 
 async def get_all_makers(guild_id: int = None) -> list[Maker] | None:
-    async with SessionLocal() as session:
+    async with SessionManager() as session:
         if guild_id:
             makers = await session.execute(select(Maker).filter_by(guild_id=guild_id))
         else:
@@ -94,7 +94,7 @@ async def get_all_makers(guild_id: int = None) -> list[Maker] | None:
 
 
 async def get_all_makers_sorted_by_lvl(guild_id: int) -> list[Maker] | None:
-    async with SessionLocal() as session:
+    async with SessionManager() as session:
         makers = await session.execute(
             select(Maker).filter_by(guild_id=guild_id).order_by(Maker.level.desc())
         )
@@ -102,13 +102,13 @@ async def get_all_makers_sorted_by_lvl(guild_id: int) -> list[Maker] | None:
 
 
 async def get_all_makers_by_discord_id(discord_id: int) -> list[Maker] | None:
-    async with SessionLocal() as session:
+    async with SessionManager() as session:
         makers = await session.execute(select(Maker).filter_by(discord_id=discord_id))
         return makers.scalars().all()
 
 
 async def get_maker(guild_id: int, discord_id: int) -> Maker | None:
-    async with SessionLocal() as session:
+    async with SessionManager() as session:
         maker = await session.execute(
             select(Maker).filter_by(guild_id=guild_id, discord_id=discord_id)
         )
@@ -116,13 +116,13 @@ async def get_maker(guild_id: int, discord_id: int) -> Maker | None:
 
 
 async def get_maker_by_id(id: int) -> Maker | None:
-    async with SessionLocal() as session:
+    async with SessionManager() as session:
         maker = await session.execute(select(Maker).filter_by(id=id))
         return maker.scalar()
 
 
 async def get_publications_by_maker(id: int) -> list[Publication]:
-    async with SessionLocal() as session:
+    async with SessionManager() as session:
         publications = await session.execute(
             select(Publication).filter_by(maker_id=id, status="completed")
         )

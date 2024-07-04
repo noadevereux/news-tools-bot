@@ -2,13 +2,13 @@ from typing import Literal
 
 from sqlalchemy import select
 
-from ..database import SessionLocal
+from ..database import SessionManager
 from ..models import Badge, AwardedBadge
 
 
 async def add_badge(name: str, emoji: str):
     new_badge = Badge(name=name, emoji=emoji)
-    async with SessionLocal() as session:
+    async with SessionManager() as session:
         session.add(new_badge)
         await session.commit()
         badge = await session.execute(select(Badge).filter_by(name=name, emoji=emoji))
@@ -22,7 +22,7 @@ async def update_badge(
         ],
         value,
 ) -> None:
-    async with SessionLocal() as session:
+    async with SessionManager() as session:
         badge = await session.execute(select(Badge).filter_by(id=badge_id))
         if badge:
             badge = badge.scalar()
@@ -31,7 +31,7 @@ async def update_badge(
 
 
 async def delete_badge(badge_id: int):
-    async with SessionLocal() as session:
+    async with SessionManager() as session:
         badge = await session.execute(select(Badge).filter_by(id=badge_id))
         if badge:
             badge = badge.scalar()
@@ -42,7 +42,7 @@ async def delete_badge(badge_id: int):
 async def if_badge_exists(
         name: str = None, emoji: str = None, badge_id: int = None, by_id: bool = False
 ) -> bool:
-    async with SessionLocal() as session:
+    async with SessionManager() as session:
         if not by_id:
             badge = await session.execute(
                 select(Badge).filter_by(name=name, emoji=emoji)
@@ -54,13 +54,13 @@ async def if_badge_exists(
 
 
 async def get_badge(badge_id: int):
-    async with SessionLocal() as session:
+    async with SessionManager() as session:
         badge = await session.execute(select(Badge).filter_by(id=badge_id))
         return badge.scalar()
 
 
 async def get_all_badges():
-    async with SessionLocal() as session:
+    async with SessionManager() as session:
         badges = await session.execute(select(Badge))
         return badges.scalars().all()
 
@@ -71,13 +71,13 @@ async def add_awarded_badge(
     new_awarded_badge = AwardedBadge(
         maker_id=maker_id, badge_id=badge_id, awarder_id=awarder_id
     )
-    async with SessionLocal() as session:
+    async with SessionManager() as session:
         session.add(new_awarded_badge)
         await session.commit()
 
 
 async def delete_awarded_badge(maker_id: int, badge_id: int):
-    async with SessionLocal() as session:
+    async with SessionManager() as session:
         awarded_badge = await session.execute(
             select(AwardedBadge).filter_by(maker_id=maker_id, badge_id=badge_id)
         )
@@ -88,7 +88,7 @@ async def delete_awarded_badge(maker_id: int, badge_id: int):
 
 
 async def get_all_makers_awarded_badges(maker_id: int):
-    async with SessionLocal() as session:
+    async with SessionManager() as session:
         awarded_badges = await session.execute(
             select(AwardedBadge).filter_by(maker_id=maker_id)
         )
@@ -96,7 +96,7 @@ async def get_all_makers_awarded_badges(maker_id: int):
 
 
 async def get_makers_awarded_badge(maker_id: int, badge_id: int):
-    async with SessionLocal() as session:
+    async with SessionManager() as session:
         awarded_badges = await session.execute(
             select(AwardedBadge).filter_by(maker_id=maker_id, badge_id=badge_id)
         )
