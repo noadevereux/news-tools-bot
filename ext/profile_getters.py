@@ -31,7 +31,11 @@ async def get_maker_profile(maker_id: int, user: User | Member = None) -> Embed:
     else:
         publications_amount = len(publications_amount)
 
-    days = (datetime.now() - maker.appointment_datetime).days
+    maker_appointment_datetime = maker.appointment_datetime
+    if isinstance(maker_appointment_datetime, str):
+        maker_appointment_datetime = datetime.fromisoformat(maker_appointment_datetime)
+
+    days = (datetime.now() - maker_appointment_datetime).days
 
     makers_awarded_badges = await badge_methods.get_all_makers_awarded_badges(
         maker_id=maker.id
@@ -92,7 +96,7 @@ async def get_maker_profile(maker_id: int, user: User | Member = None) -> Embed:
             title=f"{title_emoji} Профиль редактора {maker.nickname}",
             color=0x2B2D31,
             description=embed_description,
-            timestamp=maker.appointment_datetime,
+            timestamp=maker_appointment_datetime,
         )
 
         if not maker.account_status:
