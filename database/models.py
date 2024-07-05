@@ -1,10 +1,12 @@
+from datetime import datetime, date
 from typing import Literal, List
+
 from sqlalchemy import BigInteger, Date, ForeignKey, TIMESTAMP, String, JSON
+from sqlalchemy.ext.asyncio import AsyncAttrs
 from sqlalchemy.orm import relationship, Mapped, mapped_column, DeclarativeBase
 from sqlalchemy.sql import func
+
 from .database import engine
-from sqlalchemy.ext.asyncio import AsyncAttrs
-from datetime import datetime, date
 
 
 class Base(AsyncAttrs, DeclarativeBase):
