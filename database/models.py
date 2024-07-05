@@ -28,29 +28,25 @@ class Publication(Base):
     amount_dp: Mapped[float] = mapped_column(nullable=True)
     salary_payer_id: Mapped[int] = mapped_column(ForeignKey("makers.id"), nullable=True)
 
-    maker_rel = relationship(
-        "Maker",
+    maker: Mapped["Maker"] = relationship(
         back_populates="publications_made",
         foreign_keys=[maker_id],
         primaryjoin="Publication.maker_id == Maker.id",
     )
 
-    information_creator_rel = relationship(
-        "Maker",
+    information_creator: Mapped["Maker"] = relationship(
         back_populates="publications_created",
         foreign_keys=[information_creator_id],
         primaryjoin="Publication.information_creator_id == Maker.id",
     )
 
-    salary_payer_rel = relationship(
-        "Maker",
+    salary_payer: Mapped["Maker"] = relationship(
         back_populates="publications_paid",
         foreign_keys=[salary_payer_id],
         primaryjoin="Publication.salary_payer_id == Maker.id",
     )
 
-    guild_id_rel = relationship(
-        "Guild",
+    guild: Mapped["Guild"] = relationship(
         back_populates="publications",
         foreign_keys=[guild_id],
         primaryjoin="Publication.guild_id == Guild.id",
@@ -105,30 +101,26 @@ class Maker(Base):
     is_admin: Mapped[bool] = mapped_column(server_default="0")
     account_status: Mapped[bool] = mapped_column(server_default="1")
 
-    guild_id_rel = relationship(
-        "Guild",
+    guild: Mapped["Guild"] = relationship(
         back_populates="makers",
         foreign_keys=[guild_id],
         primaryjoin="Maker.guild_id == Guild.id",
     )
 
-    publications_made = relationship(
-        "Publication",
-        back_populates="maker_rel",
+    publications_made: Mapped["Publication"] = relationship(
+        back_populates="maker",
         foreign_keys=[Publication.maker_id],
         primaryjoin="Maker.id == Publication.maker_id",
     )
 
-    publications_created = relationship(
-        "Publication",
-        back_populates="information_creator_rel",
+    publications_created: Mapped["Publication"] = relationship(
+        back_populates="information_creator",
         foreign_keys=[Publication.information_creator_id],
         primaryjoin="Maker.id == Publication.information_creator_id",
     )
 
-    publications_paid = relationship(
-        "Publication",
-        back_populates="salary_payer_rel",
+    publications_paid: Mapped["Publication"] = relationship(
+        back_populates="salary_payer",
         foreign_keys=[Publication.salary_payer_id],
         primaryjoin="Maker.id == Publication.salary_payer_id",
     )
@@ -163,16 +155,14 @@ class Guild(Base):
     is_admin_guild: Mapped[bool] = mapped_column(server_default="0")
     is_active: Mapped[bool] = mapped_column(server_default="1")
 
-    publications = relationship(
-        "Publication",
-        back_populates="guild_id_rel",
+    publications: Mapped[List["Publication"]] = relationship(
+        back_populates="guild",
         foreign_keys=[Publication.guild_id],
         primaryjoin="Guild.id == Publication.guild_id",
     )
 
-    makers = relationship(
-        "Maker",
-        back_populates="guild_id_rel",
+    makers: Mapped[List["Maker"]] = relationship(
+        back_populates="guild",
         foreign_keys=[Maker.guild_id],
         primaryjoin="Guild.id == Maker.guild_id",
     )
