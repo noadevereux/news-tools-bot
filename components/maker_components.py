@@ -456,79 +456,87 @@ class OptionSelect(ui.StringSelect):
 
                 timestamp = datetime.now().isoformat()
 
-                tasks = [
-                    maker_methods.update_maker(
-                        guild_id=guild.id,
-                        discord_id=maker.discord_id,
-                        column_name="account_status",
-                        value=True,
-                    ),
-                    maker_methods.update_maker(
-                        guild_id=guild.id,
-                        discord_id=maker.discord_id,
-                        column_name="appointment_datetime",
-                        value=timestamp,
-                    ),
-                ]
+                await maker_methods.update_maker(
+                    guild_id=guild.id,
+                    discord_id=maker.discord_id,
+                    column_name="account_status",
+                    value=True,
+                )
+
+                await maker_methods.update_maker(
+                    guild_id=guild.id,
+                    discord_id=maker.discord_id,
+                    column_name="appointment_datetime",
+                    value=timestamp,
+                )
 
                 if not maker.level == "1":
-                    tasks.append(
-                        maker_methods.update_maker(
-                            guild_id=guild.id,
-                            discord_id=maker.discord_id,
-                            column_name="level",
-                            value="1",
-                        )
+                    await maker_methods.update_maker(
+                        guild_id=guild.id,
+                        discord_id=maker.discord_id,
+                        column_name="level",
+                        value="1",
                     )
 
                 if not maker.post_name == DEFAULT_POST_TITLES.get(1):
-                    tasks.append(
-                        maker_methods.update_maker(
-                            guild_id=guild.id,
-                            discord_id=maker.discord_id,
-                            column_name="post_name",
-                            value=DEFAULT_POST_TITLES.get(1),
-                        )
+                    await maker_methods.update_maker(
+                        guild_id=guild.id,
+                        discord_id=maker.discord_id,
+                        column_name="post_name",
+                        value=DEFAULT_POST_TITLES.get(1),
                     )
 
                 if not maker.status == "active":
-                    tasks.append(
-                        maker_methods.update_maker(
-                            guild_id=guild.id,
-                            discord_id=maker.discord_id,
-                            column_name="status",
-                            value="active",
-                        )
+                    await maker_methods.update_maker(
+                        guild_id=guild.id,
+                        discord_id=maker.discord_id,
+                        column_name="status",
+                        value="active",
                     )
 
                 if not maker.warns == 0:
-                    tasks.append(
-                        maker_methods.update_maker(
-                            guild_id=guild.id,
-                            discord_id=maker.discord_id,
-                            column_name="warns",
-                            value=0,
-                        )
+                    await maker_methods.update_maker(
+                        guild_id=guild.id,
+                        discord_id=maker.discord_id,
+                        column_name="warns",
+                        value=0,
                     )
 
                 if not maker.preds == 0:
-                    tasks.append(
-                        maker_methods.update_maker(
-                            guild_id=guild.id,
-                            discord_id=maker.discord_id,
-                            column_name="preds",
-                            value=0,
-                        )
+                    await maker_methods.update_maker(
+                        guild_id=guild.id,
+                        discord_id=maker.discord_id,
+                        column_name="preds",
+                        value=0,
                     )
 
-                tasks.append(
-                    logs_methods.add_log(
-                        maker_id=maker.id,
-                        log=f"{interaction_author.nickname} активировал аккаунт редактору {maker.nickname}"
-                    )
+                await logs_methods.add_log(
+                    maker_id=maker.id,
+                    log=f"{interaction_author.nickname} активировал аккаунт редактору {maker.nickname}"
                 )
 
-                await asyncio.gather(*tasks)
+                if guild.duty_role_id:
+                    member = interaction.guild.get_member(maker.discord_id)
+                    duty_role = interaction.guild.get_role(guild.duty_role_id)
+
+                    try:
+                        await member.add_roles(duty_role, reason=f"{interaction_author.nickname} активировал аккаунт")
+                    except (disnake.HTTPException, disnake.Forbidden) as error:
+                        channel = interaction.guild.get_channel(guild.channel_id)
+
+                        try:
+                            if isinstance(error, disnake.HTTPException):
+                                await channel.send(
+                                    content=f"**Мне не удалось выдать роль {duty_role.mention} участнику {member.mention}.**\n"
+                                            f"**Произошла внутренняя ошибка при выполнении запроса.**"
+                                )
+                            elif isinstance(error, disnake.Forbidden):
+                                await channel.send(
+                                    content=f"**Мне не удалось выдать роль {duty_role.mention} участнику {member.mention}.**\n"
+                                            f"**У меня недостаточно прав для выполнения данного действия.**"
+                                )
+                        except (disnake.HTTPException, disnake.Forbidden):
+                            pass
 
                 main_menu = await MainMenu.create(
                     author=self.author, maker_id=self.maker_id
@@ -779,22 +787,19 @@ class SetLevel(ui.View):
                 content="**Изменений не произошло, уровень, который вы указали, итак установлен редактору.**"
             )
 
-        tasks = [
-            maker_methods.update_maker(
-                guild_id=guild.id,
-                discord_id=maker.discord_id,
-                column_name="level",
-                value=level,
-            ),
-            maker_methods.update_maker(
-                guild_id=guild.id,
-                discord_id=maker.discord_id,
-                column_name="post_name",
-                value=DEFAULT_POST_TITLES.get(int(level)),
-            ),
-        ]
+        await maker_methods.update_maker(
+            guild_id=guild.id,
+            discord_id=maker.discord_id,
+            column_name="level",
+            value=level,
+        )
 
-        await asyncio.gather(*tasks)
+        await maker_methods.update_maker(
+            guild_id=guild.id,
+            discord_id=maker.discord_id,
+            column_name="post_name",
+            value=DEFAULT_POST_TITLES.get(int(level)),
+        )
 
         await logs_methods.add_log(
             maker_id=maker.id,
@@ -1380,39 +1385,61 @@ class SubmitReason(ui.Modal):
                         content="**Аккаунт редактора итак деактивирован.**"
                     )
 
-                tasks = [
-                    maker_methods.update_maker(
-                        guild_id=guild.id,
-                        discord_id=maker.discord_id,
-                        column_name="account_status",
-                        value=False,
-                    ),
-                    maker_methods.update_maker(
-                        guild_id=guild.id,
-                        discord_id=maker.discord_id,
-                        column_name="level",
-                        value="0",
-                    ),
-                    maker_methods.update_maker(
-                        guild_id=guild.id,
-                        discord_id=maker.discord_id,
-                        column_name="post_name",
-                        value=None,
-                    ),
-                    maker_methods.update_maker(
-                        guild_id=guild.id,
-                        discord_id=maker.discord_id,
-                        column_name="status",
-                        value="inactive",
-                    ),
-                ]
+                await maker_methods.update_maker(
+                    guild_id=guild.id,
+                    discord_id=maker.discord_id,
+                    column_name="account_status",
+                    value=False,
+                )
 
-                await asyncio.gather(*tasks)
+                await maker_methods.update_maker(
+                    guild_id=guild.id,
+                    discord_id=maker.discord_id,
+                    column_name="level",
+                    value="0",
+                )
+
+                await maker_methods.update_maker(
+                    guild_id=guild.id,
+                    discord_id=maker.discord_id,
+                    column_name="post_name",
+                    value=None,
+                )
+
+                await maker_methods.update_maker(
+                    guild_id=guild.id,
+                    discord_id=maker.discord_id,
+                    column_name="status",
+                    value="inactive",
+                )
 
                 await logs_methods.add_log(
                     maker_id=maker.id,
                     log=f"{interaction_author.nickname} деактивировал аккаунт редактора {maker.nickname}. Причина: {reason}"
                 )
+
+                if guild.duty_role_id:
+                    member = interaction.guild.get_member(maker.discord_id)
+                    duty_role = interaction.guild.get_role(guild.duty_role_id)
+
+                    try:
+                        await member.remove_roles(duty_role, reason=f"{interaction_author.nickname} деактивировал аккаунт")
+                    except (disnake.HTTPException, disnake.Forbidden) as error:
+                        channel = interaction.guild.get_channel(guild.channel_id)
+
+                        try:
+                            if isinstance(error, disnake.HTTPException):
+                                await channel.send(
+                                    content=f"**Мне не удалось снять роль {duty_role.mention} участнику {member.mention}.**\n"
+                                            f"**Произошла внутренняя ошибка при выполнении запроса.**"
+                                )
+                            elif isinstance(error, disnake.Forbidden):
+                                await channel.send(
+                                    content=f"**Мне не удалось снять роль {duty_role.mention} участнику {member.mention}.**\n"
+                                            f"**У меня недостаточно прав для выполнения данного действия.**"
+                                )
+                        except (disnake.HTTPException, disnake.Forbidden):
+                            pass
 
                 main_menu = await MainMenu.create(
                     author=self.author, maker_id=self.maker_id
