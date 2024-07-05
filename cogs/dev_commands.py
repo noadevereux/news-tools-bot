@@ -246,6 +246,59 @@ class DeveloperCommands(commands.Cog):
         )
 
     @dev_guild.sub_command(
+        name="set_duty_role", description="[DEV] Установить основную должностную роль"
+    )
+    async def dev_guild_set_duty_role(
+            self,
+            interaction: disnake.ApplicationCommandInteraction,
+            guild_id: int = commands.Param(
+                name="guild", description="Сервер", autocomplete=guild_autocomplete
+            ),
+            role_id: commands.LargeInt = commands.Param(
+                default=None, name="role_id", description="Discord ID роли"
+            ),
+    ):
+        await interaction.response.defer()
+
+        guild = await guild_methods.get_guild_by_id(id=guild_id)
+
+        if not guild:
+            return await interaction.edit_original_response(
+                content="**Сервер с указаным Discord ID не зарегистрирован.**"
+            )
+
+        if role_id:
+            if role_id == guild.duty_role_id:
+                return await interaction.edit_original_response(
+                    content="**Данная роль итак указана в качестве основной для этого сервера.**"
+                )
+
+            await guild_methods.update_guild_by_id(
+                id=guild.id,
+                column_name="duty_role_id",
+                value=role_id
+            )
+
+            return await interaction.edit_original_response(
+                content=f"**Вы установили роль с ID `{role_id}` в качестве основной роли для сервера `{guild.guild_name}`.**"
+            )
+        else:
+            if not guild.duty_role_id:
+                return await interaction.edit_original_response(
+                    content="**Основная роль итак не указана для сервера.**"
+                )
+
+            await guild_methods.update_guild_by_id(
+                id=guild.id,
+                column_name="duty_role_id",
+                value=None
+            )
+
+            return await interaction.edit_original_response(
+                content=f"**Вы удалили основную роль для сервера `{guild.guild_name}`.**"
+            )
+
+    @dev_guild.sub_command(
         name="add_role", description="[DEV] Подключить роль к серверу"
     )
     async def dev_guild_add_role(
