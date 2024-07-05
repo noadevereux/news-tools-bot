@@ -34,24 +34,28 @@ class Publication(Base):
         back_populates="publications_made",
         foreign_keys=[maker_id],
         primaryjoin="Publication.maker_id == Maker.id",
+        lazy="selectin"
     )
 
     information_creator: Mapped["Maker"] = relationship(
         back_populates="publications_created",
         foreign_keys=[information_creator_id],
         primaryjoin="Publication.information_creator_id == Maker.id",
+        lazy="selectin"
     )
 
     salary_payer: Mapped["Maker"] = relationship(
         back_populates="publications_paid",
         foreign_keys=[salary_payer_id],
         primaryjoin="Publication.salary_payer_id == Maker.id",
+        lazy="selectin"
     )
 
     guild: Mapped["Guild"] = relationship(
         back_populates="publications",
         foreign_keys=[guild_id],
         primaryjoin="Publication.guild_id == Guild.id",
+        lazy="selectin"
     )
 
 
@@ -66,16 +70,18 @@ class AwardedBadge(Base):
         TIMESTAMP(timezone=True), server_default=func.now()
     )
 
-    badge: Mapped["Badge"] = relationship(back_populates="awarded_badges")
+    badge: Mapped["Badge"] = relationship(back_populates="awarded_badges", lazy="selectin")
     maker: Mapped["Maker"] = relationship(
         back_populates="awarded_badges",
         foreign_keys=[maker_id],
         primaryjoin="AwardedBadge.maker_id == Maker.id",
+        lazy="selectin"
     )
     awarder: Mapped["Maker"] = relationship(
         back_populates="awards_badges",
         foreign_keys=[awarder_id],
         primaryjoin="AwardedBadge.awarder_id == Maker.id",
+        lazy="selectin"
     )
 
 
@@ -107,35 +113,41 @@ class Maker(Base):
         back_populates="makers",
         foreign_keys=[guild_id],
         primaryjoin="Maker.guild_id == Guild.id",
+        lazy="selectin"
     )
 
     publications_made: Mapped["Publication"] = relationship(
         back_populates="maker",
         foreign_keys=[Publication.maker_id],
         primaryjoin="Maker.id == Publication.maker_id",
+        lazy="selectin"
     )
 
     publications_created: Mapped["Publication"] = relationship(
         back_populates="information_creator",
         foreign_keys=[Publication.information_creator_id],
         primaryjoin="Maker.id == Publication.information_creator_id",
+        lazy="selectin"
     )
 
     publications_paid: Mapped["Publication"] = relationship(
         back_populates="salary_payer",
         foreign_keys=[Publication.salary_payer_id],
         primaryjoin="Maker.id == Publication.salary_payer_id",
+        lazy="selectin"
     )
 
     awarded_badges: Mapped[List["AwardedBadge"]] = relationship(
         back_populates="maker",
         foreign_keys=[AwardedBadge.maker_id],
         primaryjoin="Maker.id == AwardedBadge.maker_id",
+        lazy="selectin"
     )
     awards_badges: Mapped[List["AwardedBadge"]] = relationship(
         back_populates="awarder",
         foreign_keys=[AwardedBadge.awarder_id],
         primaryjoin="Maker.id == AwardedBadge.awarder_id",
+        lazy="selectin"
     )
 
 
@@ -161,12 +173,14 @@ class Guild(Base):
         back_populates="guild",
         foreign_keys=[Publication.guild_id],
         primaryjoin="Guild.id == Publication.guild_id",
+        lazy="selectin"
     )
 
     makers: Mapped[List["Maker"]] = relationship(
         back_populates="guild",
         foreign_keys=[Maker.guild_id],
         primaryjoin="Guild.id == Maker.guild_id",
+        lazy="selectin"
     )
 
 
@@ -216,7 +230,7 @@ class Badge(Base):
     allowed_guilds: Mapped[list] = mapped_column(JSON(), default=[])
     is_global: Mapped[bool] = mapped_column(server_default="1")
 
-    awarded_badges: Mapped[List["AwardedBadge"]] = relationship(back_populates="badge")
+    awarded_badges: Mapped[List["AwardedBadge"]] = relationship(back_populates="badge", lazy="selectin")
 
 
 async def create_tables():
