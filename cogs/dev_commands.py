@@ -43,7 +43,7 @@ class DeveloperCommands(commands.Cog):
 
         makers = await maker_methods.get_all_makers(2)
 
-        makers_guild = [maker.guild.guild_name for maker in makers]
+        makers_guild = [(await maker.awaitable_attrs.guild).guild_name for maker in makers]
 
         print(makers_guild)
 
