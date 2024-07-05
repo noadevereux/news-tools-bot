@@ -260,10 +260,17 @@ async def get_guild_profile(guild_id: int, _guild: Guild = None):
         if log_roles == "":
             log_roles = "`нет`"
 
+        if guild.duty_role_id:
+            duty_role = f"`{guild.duty_role_id} [{_guild.get_role(guild.duty_role_id).name}]`"
+        else:
+            duty_role = "`не установлена`"
+
         embed_description = f"""\
 **ID сервера: `{guild.id}`**
 **Discord ID сервера: `{guild.discord_id}`**
 **Имя сервера: `{guild.guild_name}`**
+
+**Основная роль: {duty_role}**
 
 **ID подключённых ролей: {roles}**
 **Подключённый канал: {channel_id}**
@@ -312,10 +319,17 @@ async def get_guild_profile(guild_id: int, _guild: Guild = None):
         if log_roles == "":
             log_roles = "`нет`"
 
+        if guild.duty_role_id:
+            duty_role = f"`{guild.duty_role_id}`"
+        else:
+            duty_role = "`не установлена`"
+
         embed_description = f"""\
 **ID сервера: `{guild.id}`**
 **Discord ID сервера: `{guild.discord_id}`**
 **Имя сервера: `{guild.guild_name}`**
+
+**Основная роль: {duty_role}**
 
 **ID подключённых ролей: {roles}**
 **Подключённый канал: {channel_id}**
