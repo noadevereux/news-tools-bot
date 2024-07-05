@@ -37,6 +37,18 @@ class DeveloperCommands(commands.Cog):
     async def dev(self, interaction: disnake.ApplicationCommandInteraction):
         pass
 
+    @dev.sub_command(name="test", description="[DEV] Выполнить тестовую функцию")
+    async def dev_test(self, interaction: disnake.ApplicationCommandInteraction):
+        await interaction.response.defer(ephemeral=True)
+
+        makers = await maker_methods.get_all_makers(2)
+
+        makers_guild = [maker for maker in makers]
+
+        print(makers_guild)
+
+        return await interaction.edit_original_response(content="Check console")
+
     @dev.sub_command_group(name="service", description="[DEV] Служебные команды")
     async def dev_service(self, interaction: disnake.ApplicationCommandInteraction):
         pass
