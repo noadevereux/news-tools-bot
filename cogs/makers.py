@@ -86,6 +86,29 @@ class Makers(commands.Cog):
             log=f"{interaction_author.nickname} зарегистрировал аккаунт редактору {maker.nickname}"
         )
 
+        if guild.duty_role_id:
+            member = interaction.guild.get_member(maker.discord_id)
+            duty_role = interaction.guild.get_role(guild.duty_role_id)
+
+            try:
+                await member.add_roles(duty_role, reason=f"{interaction_author.nickname} зарегистрировал аккаунт")
+            except (disnake.HTTPException, disnake.Forbidden) as error:
+                channel = interaction.guild.get_channel(guild.channel_id)
+
+                try:
+                    if isinstance(error, disnake.HTTPException):
+                        await channel.send(
+                            content=f"**Мне не удалось выдать роль {duty_role.mention} участнику {member.mention}.**\n"
+                                    f"**Произошла внутренняя ошибка при выполнении запроса.**"
+                        )
+                    elif isinstance(error, disnake.Forbidden):
+                        await channel.send(
+                            content=f"**Мне не удалось выдать роль {duty_role.mention} участнику {member.mention}.**\n"
+                                    f"**У меня недостаточно прав для выполнения данного действия.**"
+                        )
+                except (disnake.HTTPException, disnake.Forbidden):
+                    pass
+
         embed = await get_maker_profile(maker_id=maker.id, user=member)
 
         return await interaction.edit_original_response(
