@@ -1,6 +1,7 @@
 import disnake
 from disnake.ext import commands
 
+from components.maker_components import GearButton, MakersListPaginator
 from database.methods import (
     makers as maker_methods,
     maker_logs as logs_methods,
@@ -11,7 +12,6 @@ from ext.models.autocompleters import (
     maker_autocomplete,
 )
 from ext.models.checks import is_guild_exists
-from components.maker_components import GearButton, MakersListPaginator
 from ext.profile_getters import get_maker_profile
 
 
@@ -34,8 +34,7 @@ class Makers(commands.Cog):
     async def maker_register(
             self,
             interaction: disnake.ApplicationCommandInteraction,
-            member: disnake.User
-                    | disnake.Member = commands.Param(
+            member: disnake.User | disnake.Member = commands.Param(
                 name="user", description="Пользователь или его Discord ID"
             ),
             nickname: str = commands.Param(
