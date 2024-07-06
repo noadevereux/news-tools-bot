@@ -110,10 +110,12 @@ class Makers(commands.Cog):
                     pass
 
         embed = await get_maker_profile(maker_id=maker.id, user=member)
+        view = GearButton(author=interaction.author, maker_id=maker.id)
 
         return await interaction.edit_original_response(
             content=f"**Вы зарегистрировали редактора {member.mention} `{nickname}` в системе.**",
             embed=embed,
+            view=view
         )
 
     @commands.slash_command(
