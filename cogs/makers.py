@@ -69,7 +69,7 @@ class Makers(commands.Cog):
 
         if maker and (not maker.account_status):
             return await interaction.edit_original_response(
-                content="**Редактор уже зарегистрирован в системе, используйте `/maker activate` чтобы активировать его аккаунт.**"
+                content="**Редактор уже зарегистрирован в системе.**"
             )
 
         elif maker and maker.account_status:
