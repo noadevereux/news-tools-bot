@@ -6,6 +6,7 @@ from api.auth.auth_handler import sign_jwt
 from config import DEV_GUILDS
 
 from ext.models.checks import is_guild_admin
+from ext.models.reusable import get_pending_embed
 
 
 class API(commands.Cog):
@@ -26,18 +27,19 @@ class API(commands.Cog):
     @commands.is_owner()
     @is_guild_admin()
     async def api_token(
-        self,
-        interaction: disnake.ApplicationCommandInteraction,
-        username: str = commands.Param(
-            name="username", description="Имя пользователя токена"
-        ),
+            self,
+            interaction: disnake.ApplicationCommandInteraction,
+            username: str = commands.Param(
+                name="username", description="Имя пользователя токена"
+            ),
     ):
-        await interaction.response.defer(ephemeral=True)
+        await interaction.response.send_message(embed=get_pending_embed(), ephemeral=True)
 
         token = await sign_jwt(username)
 
         return await interaction.edit_original_response(
-            content=f"**JWT для пользователя {username}**\n**||```{token}```||**\n*Храните токен в безопасном месте, никому его не передавайте.*\n*Токен подлежит замене через 30 дней.*"
+            embed=None,
+            content=f"JWT для пользователя **{username}**\n||```{token}```||\n*Храните токен в безопасном месте, никому его не передавайте.*\n*Токен подлежит замене через 30 дней.*"
         )
 
     @tasks.loop(count=1)
