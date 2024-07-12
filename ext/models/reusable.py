@@ -2,6 +2,8 @@ from disnake import Embed
 
 from config import REUSABLE_EMOJI
 
+__all__ = ["get_pending_embed", "get_success_embed", "get_failed_embed"]
+
 
 def get_pending_embed(message: str = "Действие выполняется...", /) -> Embed:
     return Embed(
