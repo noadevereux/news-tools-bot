@@ -549,7 +549,7 @@ class OptionSelect(ui.StringSelect):
                 )
 
             case "logs":
-                await interaction.response.defer(with_message=True, ephemeral=True)
+                await interaction.response.send_message(embed=get_pending_embed(), ephemeral=True)
 
                 view, embed = await LogsPaginator.create(maker_id=self.maker_id)
 
@@ -719,7 +719,7 @@ class SetLevel(ui.View):
                 ephemeral=True,
             )
 
-        await interaction.response.defer(with_message=True)
+        await interaction.response.send_message(embed=get_pending_embed())
 
         level = interaction.values[0]
 
@@ -859,7 +859,7 @@ class SetStatus(ui.View):
                 ephemeral=True,
             )
 
-        await interaction.response.defer(with_message=True)
+        await interaction.response.send_message(embed=get_pending_embed())
 
         status = interaction.values[0]
 
@@ -906,12 +906,12 @@ class SetStatus(ui.View):
 
         elif not maker.account_status:
             return await interaction.edit_original_response(
-                content="**Невозможно изменить статус деактивированному редактору.**"
+                embed=get_failed_embed("Невозможно изменить статус деактивированному редактору.")
             )
 
         elif maker.status == status:
             return await interaction.edit_original_response(
-                content="**Изменений не произошло, статус, который вы указали, уже установлен редактору.**"
+                embed=get_failed_embed(f"Статус **{get_status_title(status)}** уже установлен редактору **{maker.nickname}**.")
             )
 
         await maker_methods.update_maker(
@@ -938,7 +938,7 @@ class SetStatus(ui.View):
         )
 
         return await interaction.edit_original_response(
-            content=f"**Вы установили редактору <@{maker.discord_id}> `{maker.nickname}` статус `{status_title}`.**"
+            embed=get_success_embed(f"Вы установили редактору **{maker.nickname}** статус **{status_title}**.")
         )
 
 
@@ -982,7 +982,7 @@ class SubmitReason(ui.Modal):
 
         match self.action:
             case "give_warn":
-                await interaction.response.defer()
+                await interaction.response.send_message(embed=get_pending_embed())
 
                 guild = await guild_methods.get_guild(discord_id=interaction.guild.id)
 
@@ -1045,10 +1045,10 @@ class SubmitReason(ui.Modal):
                 await interaction.message.edit(embed=embed)
 
                 return await interaction.edit_original_response(
-                    content=f"**Вы выдали выговор редактору <@{maker.discord_id}> `{maker.nickname}`. Причина: {reason}**"
+                    embed=get_success_embed(f"Вы выдали выговор редактору **{maker.nickname}**. Причина: **{reason}**.")
                 )
             case "take_warn":
-                await interaction.response.defer()
+                await interaction.response.send_message(embed=get_pending_embed())
 
                 guild = await guild_methods.get_guild(discord_id=interaction.guild.id)
 
@@ -1093,7 +1093,7 @@ class SubmitReason(ui.Modal):
 
                 if maker.warns <= 0:
                     return await interaction.edit_original_response(
-                        content="**Вы не можете установить отрицательное кол-во выговоров редактору.**"
+                        embed=get_failed_embed("Невозможно установить отрицательное количество выговоров.")
                     )
 
                 await maker_methods.update_maker(
@@ -1116,10 +1116,10 @@ class SubmitReason(ui.Modal):
                 await interaction.message.edit(embed=embed)
 
                 return await interaction.edit_original_response(
-                    content=f"**Вы сняли выговор редактору <@{maker.discord_id}> `{maker.nickname}`. Причина: {reason}**"
+                    embed=get_success_embed(f"Вы сняли выговор редактору **{maker.nickname}**. Причина: **{reason}**.")
                 )
             case "give_pred":
-                await interaction.response.defer()
+                await interaction.response.send_message(embed=get_pending_embed())
 
                 guild = await guild_methods.get_guild(discord_id=interaction.guild.id)
 
@@ -1183,7 +1183,7 @@ class SubmitReason(ui.Modal):
                     await interaction.message.edit(embed=embed)
 
                     return await interaction.edit_original_response(
-                        content=f"**Вы выдали предупреждение редактору <@{maker.discord_id}> `{maker.nickname}`. Причина: {reason}**"
+                        embed=get_success_embed(f"Вы выдали предупреждение редактору **{maker.nickname}**. Причина: **{reason}**.")
                     )
                 else:
                     await logs_methods.add_log(
@@ -1218,11 +1218,11 @@ class SubmitReason(ui.Modal):
                     await interaction.message.edit(embed=embed)
 
                     return await interaction.edit_original_response(
-                        content=f"**Вы выдали предупреждение редактору <@{maker.discord_id}> `{maker.nickname}`. Причина: {reason}**\n"
-                        f"**⚠️ Система выдала выговор редактору. Причина: 3/3 предупреждений.**"
+                        embed=get_success_embed(f"Вы выдали предупреждение редактору **{maker.nickname}**. Причина: **{reason}**.\n"
+                                                "⚠️ Система выдала выговор редактору. Причина: 3/3 предупреждений.")
                     )
             case "take_pred":
-                await interaction.response.defer()
+                await interaction.response.send_message(embed=get_pending_embed())
 
                 guild = await guild_methods.get_guild(discord_id=interaction.guild.id)
 
@@ -1286,7 +1286,7 @@ class SubmitReason(ui.Modal):
                     await interaction.message.edit(embed=embed)
 
                     return await interaction.edit_original_response(
-                        content=f"**Вы сняли предупреждение редактору <@{maker.discord_id}> `{maker.nickname}`. Причина: {reason}**"
+                        embed=get_success_embed(f"Вы сняли предупреждение редактору **{maker.nickname}**. Причина: **{reason}**.")
                     )
 
                 elif (maker.preds == 0) and (maker.warns > 0):
@@ -1322,17 +1322,17 @@ class SubmitReason(ui.Modal):
                     await interaction.message.edit(embed=embed)
 
                     return await interaction.edit_original_response(
-                        content=f"**Вы сняли предупреждение редактору <@{maker.discord_id}> `{maker.nickname}`. Причина: {reason}**\n"
-                        f"**⚠️ Система сняла выговор редактору. Причина: распад выговора на 3 предупреждения.**"
+                        embed=get_success_embed(f"Вы сняли предупреждение редактору **{maker.nickname}**. Причина: **{reason}**.\n"
+                                                "⚠️ Система сняла выговор редактору. Причина: распад выговора на 3 предупреждения.")
                     )
 
                 else:
                     return await interaction.edit_original_response(
-                        content="**Вы не можете установить отрицательное количество предупреждений редактору.**"
+                        embed=get_failed_embed("Невозможно установить отрицательное количество предупреждений редактору.")
                     )
 
             case "deactivate":
-                await interaction.response.defer()
+                await interaction.response.send_message(embed=get_pending_embed())
 
                 guild = await guild_methods.get_guild(discord_id=interaction.guild.id)
 
@@ -1377,7 +1377,7 @@ class SubmitReason(ui.Modal):
 
                 elif not maker.account_status:
                     return await interaction.edit_original_response(
-                        content="**Аккаунт редактора итак деактивирован.**"
+                        embed=get_failed_embed(f"Аккаунт редактора **{maker.nickname}** уже деактивирован.")
                     )
 
                 await maker_methods.update_maker(
@@ -1448,7 +1448,7 @@ class SubmitReason(ui.Modal):
                 await interaction.message.edit(embed=embed, view=main_menu)
 
                 return await interaction.edit_original_response(
-                    content=f"**Вы деактивировали аккаунт редактора <@{maker.discord_id}> `{maker.nickname}`. Причина: {reason}.**"
+                    embed=get_success_embed(f"Вы деактивировали аккаунт редактора **{maker.nickname}**. Причина: **{reason}**.")
                 )
 
 
@@ -1546,7 +1546,7 @@ class SubmitText(ui.Modal):
 
         match self.modal_type:
             case "discord":
-                await interaction.response.defer()
+                await interaction.response.send_message(embed=get_pending_embed())
 
                 new_member = disnake.Object(
                     int(interaction.text_values.get("discord_id"))
@@ -1637,7 +1637,7 @@ class SubmitText(ui.Modal):
                     await interaction.message.edit(view=main_menu)
 
                     return await interaction.edit_original_response(
-                        content="**Изменений не произошло, к аккаунту редактора итак привязан указанный дискорд.**"
+                        embed=get_failed_embed(f"К аккаунту редактора **{maker.nickname}** уже привязан Discord ID **{new_member.id}**.")
                     )
 
                 if await maker_methods.is_maker_exists(
@@ -1650,7 +1650,7 @@ class SubmitText(ui.Modal):
                     await interaction.message.edit(view=main_menu)
 
                     return await interaction.edit_original_response(
-                        content="**Пользователь, которого вы указали, уже привязан к какому-то аккаунту.**"
+                        embed=get_failed_embed(f"Discord ID **{new_member.id}** уже привязан другому аккаунту.")
                     )
 
                 await maker_methods.update_maker(
@@ -1677,11 +1677,11 @@ class SubmitText(ui.Modal):
                 await interaction.message.edit(embed=embed, view=main_menu)
 
                 return await interaction.edit_original_response(
-                    content=f"**Вы изменили Discord редактору `{maker.nickname}` с ID `{maker.id}` с <@{maker.discord_id}> на <@{new_member.id}>.**"
+                    embed=get_success_embed(f"Вы изменили Discord ID редактору **{maker.nickname}** с **{maker.discord_id}** на **{new_member.id}**.")
                 )
 
             case "nickname":
-                await interaction.response.defer()
+                await interaction.response.send_message(embed=get_pending_embed())
 
                 nickname = interaction.text_values.get("nickname")
 
@@ -1770,7 +1770,7 @@ class SubmitText(ui.Modal):
                     await interaction.message.edit(view=main_menu)
 
                     return await interaction.edit_original_response(
-                        content="**Изменений не произошло, никнейм, который вы указали, итак принадлежит редактору.**"
+                        embed=get_failed_embed(f"Никнейм **{nickname}** уже установлен редактору.")
                     )
 
                 await maker_methods.update_maker(
@@ -1797,11 +1797,11 @@ class SubmitText(ui.Modal):
                 await interaction.message.edit(embed=embed, view=main_menu)
 
                 return await interaction.edit_original_response(
-                    content=f"**Вы изменили никнейм редактора <@{maker.discord_id}> с `{maker.nickname}` на `{nickname}`.**"
+                    embed=get_success_embed(f"Вы изменили никнейм редактора <@{maker.discord_id}> с **{maker.nickname}** на **{nickname}**.")
                 )
 
             case "post_name":
-                await interaction.response.defer()
+                await interaction.response.send_message(embed=get_pending_embed())
 
                 post = interaction.text_values.get("post_name")
 
@@ -1890,7 +1890,7 @@ class SubmitText(ui.Modal):
                     await interaction.message.edit(view=main_menu)
 
                     return await interaction.edit_original_response(
-                        content="**Невозможно изменить должность деактивированному редактору.**"
+                        embed=get_failed_embed("Невозможно изменить должность деактивированному редактору.")
                     )
 
                 if not post == "":
@@ -1902,7 +1902,7 @@ class SubmitText(ui.Modal):
                         await interaction.message.edit(view=main_menu)
 
                         return await interaction.edit_original_response(
-                            content="**Изменений не произошло, должность, которую вы указали, итак принадлежит редактору.**"
+                            embed=get_failed_embed(f"Должность **{post}** уже установлена редактору **{maker.nickname}**.")
                         )
 
                     await maker_methods.update_maker(
@@ -1929,7 +1929,7 @@ class SubmitText(ui.Modal):
                     await interaction.message.edit(embed=embed, view=main_menu)
 
                     return await interaction.edit_original_response(
-                        content=f"**Вы установили редактору <@{maker.discord_id}> `{maker.nickname}` должность `{post}`.**"
+                        embed=get_success_embed(f"Вы установили редактору **{maker.nickname}** должность **{post}**.")
                     )
 
                 else:
@@ -1941,7 +1941,7 @@ class SubmitText(ui.Modal):
                         await interaction.message.edit(view=main_menu)
 
                         return await interaction.edit_original_response(
-                            content=f"**Изменений не произошло, у редактора итак установлена стандартная должность.**"
+                            embed=get_failed_embed(f"У редактора **{maker.nickname}** уже установлена стандартная должность **{maker.post_name}**.")
                         )
 
                     await maker_methods.update_maker(
@@ -1968,11 +1968,11 @@ class SubmitText(ui.Modal):
                     await interaction.message.edit(embed=embed, view=main_menu)
 
                     return await interaction.edit_original_response(
-                        content=f"**Вы установили редактору <@{maker.discord_id}> `{maker.nickname}` стандартную должность `{DEFAULT_POST_TITLES.get(int(maker.level))}`.**"
+                        embed=get_success_embed(f"Вы установили редактору **{maker.nickname}** стандартную должность **{DEFAULT_POST_TITLES.get(int(maker.level))}**.")
                     )
 
             case "date":
-                await interaction.response.defer()
+                await interaction.response.send_message(embed=get_pending_embed())
 
                 date_str = interaction.text_values.get("date")
 
@@ -1986,7 +1986,7 @@ class SubmitText(ui.Modal):
                     await interaction.message.edit(view=main_menu)
 
                     return await interaction.edit_original_response(
-                        content="**Указана дата в неверном формате. Укажите дату в формате `ГГГГ-ММ-ДД`.**"
+                        embed=get_failed_embed("Неверный формат даты. Укажите дату в формате `ГГГГ-ММ-ДД`.")
                     )
 
                 new_datetime = datetime.fromisoformat(date_str)
@@ -1999,7 +1999,7 @@ class SubmitText(ui.Modal):
                     await interaction.message.edit(view=main_menu)
 
                     return await interaction.edit_original_response(
-                        content="**Дату постановления нельзя указать в будущем.**"
+                        embed=get_failed_embed("Дату постановления нельзя указать в будещем.")
                     )
 
                 guild = await guild_methods.get_guild(discord_id=interaction.guild.id)
@@ -2103,5 +2103,5 @@ class SubmitText(ui.Modal):
                 await interaction.message.edit(embed=embed, view=main_menu)
 
                 return await interaction.edit_original_response(
-                    content=f"**Вы установили дату постановления редактора <@{maker.discord_id}> `{maker.nickname}` на <t:{int(new_datetime.timestamp())}:D>**"
+                    embed=get_success_embed(f"Вы установили дату постановления редактора **{maker.nickname}** на <t:{int(new_datetime.timestamp())}:D>.")
                 )
