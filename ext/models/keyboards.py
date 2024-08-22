@@ -5,6 +5,7 @@ from asyncio import sleep
 from os import system
 
 from database.methods import makers as maker_methods, guilds as guild_methods
+from ext.models.reusable import *
 
 
 class ConfirmRoleAction(View):
@@ -19,7 +20,7 @@ class ConfirmRoleAction(View):
 
         if not guild:
             return await interaction.send(
-                content="**Этот сервер не зарегистрирован в системе.**",
+                embed=get_failed_embed("Этот сервер не зарегистрирован в системе."),
                 ephemeral=True,
             )
 
@@ -29,22 +30,22 @@ class ConfirmRoleAction(View):
 
         if not interaction_author:
             return await interaction.send(
-                content="**У вас недостаточно прав чтобы подтвердить это действие**",
-                ephemeral=True,
+                embed=get_failed_embed("У вас недостаточно прав чтобы подтвердить это действие."),
+                ephemeral=True
             )
         if not interaction_author.account_status:
             return await interaction.send(
-                content="**У вас недостаточно прав чтобы подтвердить это действие**",
-                ephemeral=True,
+                embed=get_failed_embed("У вас недостаточно прав чтобы подтвердить это действие."),
+                ephemeral=True
             )
         if not int(interaction_author.level) >= 3:
             return await interaction.send(
-                content="**У вас недостаточно прав чтобы подтвердить это действие**",
-                ephemeral=True,
+                embed=get_failed_embed("У вас недостаточно прав чтобы подтвердить это действие."),
+                ephemeral=True
             )
 
         await interaction.message.edit(
-            content=f"{interaction.message.content}\n**`Подтвердил действие` -> {interaction.author.mention}**",
+            content=f"{interaction.message.content}\n`Подтвердил действие` -> {interaction.author.mention}",
             components=[
                 Button(
                     style=disnake.ButtonStyle.blurple,
@@ -74,32 +75,32 @@ class ConfirmReboot(View):
     async def confirm(self, button: Button, interaction: disnake.MessageInteraction):
         if not interaction.author.id == self.member.id:
             return await interaction.send(
-                content="**У вас нет прав для взаимодействия с этой кнопкой.**",
+                embed=get_failed_embed("У вас недостаточно прав для взаимодействия с этой кнопкой."),
                 ephemeral=True,
             )
 
         await interaction.message.edit(
-            content="**Сервер будет перезагружен через 5 секунд. Перезагрузка займет примерно 3 минуты.**",
+            content="Сервер будет перезагружен через 5 секунд. Перезагрузка займет примерно 3 минуты.",
             view=None,
         )
         await self.bot.change_presence(
             activity=disnake.Activity(
-                name="ПЕРЕЗАГРУЗКА СИСТЕМ", type=disnake.ActivityType.watching
+                name="ПЕРЕЗАГРУЗКА", type=disnake.ActivityType.watching
             ),
             status=disnake.Status.idle,
         )
         await sleep(5)
-        await interaction.channel.send("**Начинаю перезагрузку сервера.**")
+        await interaction.channel.send("Начинаю перезагрузку сервера...")
         return system("sudo reboot")
 
     @button(label="Отменить", style=disnake.ButtonStyle.green, emoji="❌")
     async def cancel(self, button: Button, interaction: disnake.MessageInteraction):
         if not interaction.author.id == self.member.id:
             return await interaction.send(
-                content="**У вас нет прав для взаимодействия с этой кнопкой.**",
-                ephemeral=True,
+                embed=get_failed_embed("У вас недостаточно прав для взаимодействия с этой кнопкой."),
+                ephemeral=True
             )
 
         return await interaction.message.edit(
-            content="**Вы отменили перезагрузку сервера.**", view=None
+            content="Вы отменили перезагрузку сервера.", view=None
         )
