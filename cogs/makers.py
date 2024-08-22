@@ -13,6 +13,7 @@ from ext.models.autocompleters import (
 )
 from ext.models.checks import is_guild_exists
 from ext.profile_getters import get_maker_profile
+from ext.models.reusable import *
 
 
 class Makers(commands.Cog):
@@ -41,7 +42,7 @@ class Makers(commands.Cog):
                 name="nickname", description="Никнейм редактора"
             ),
     ):
-        await interaction.response.defer()
+        await interaction.response.send_message(embed=get_pending_embed())
 
         guild = await guild_methods.get_guild(discord_id=interaction.guild.id)
 
@@ -51,29 +52,29 @@ class Makers(commands.Cog):
 
         if not interaction_author:
             return await interaction.edit_original_response(
-                content="**У вас недостаточно прав для выполнения данной команды.**"
+                embed=get_failed_embed("У вас недостаточно прав для выполнения данной команды.")
             )
 
         elif not interaction_author.account_status:
             return await interaction.edit_original_response(
-                content="**У вас недостаточно прав для выполнения данной команды.**"
+                embed=get_failed_embed("У вас недостаточно прав для выполнения данной команды.")
             )
 
         elif int(interaction_author.level) < 2:
             return await interaction.edit_original_response(
-                content="**У вас недостаточно прав для выполнения данной команды.**"
+                embed=get_failed_embed("У вас недостаточно прав для выполнения данной команды.")
             )
 
         maker = await maker_methods.get_maker(guild_id=guild.id, discord_id=member.id)
 
         if maker and (not maker.account_status):
             return await interaction.edit_original_response(
-                content="**Редактор уже зарегистрирован в системе.**"
+                embed=get_failed_embed(f"Редактор уже зарегистрирован в системе с никнеймом **{maker.nickname}**.")
             )
 
         elif maker and maker.account_status:
             return await interaction.edit_original_response(
-                content="**Редактор уже зарегистрирован в системе и его аккаунт активен.**"
+                embed=get_failed_embed(f"Редактор уже зарегистрирован в системе с нмкнйемом **{maker.nickname}** и его аккаунт активен.")
             )
 
         maker = await maker_methods.add_maker(
@@ -97,13 +98,13 @@ class Makers(commands.Cog):
                 try:
                     if isinstance(error, disnake.HTTPException):
                         await channel.send(
-                            content=f"**Мне не удалось выдать роль {duty_role.mention} участнику {member.mention}.**\n"
-                                    f"**Произошла внутренняя ошибка при выполнении запроса.**"
+                            content=f"Мне не удалось выдать роль {duty_role.mention} участнику {member.mention}.\n"
+                                    f"Произошла внутренняя ошибка при выполнении запроса."
                         )
                     elif isinstance(error, disnake.Forbidden):
                         await channel.send(
-                            content=f"**Мне не удалось выдать роль {duty_role.mention} участнику {member.mention}.**\n"
-                                    f"**У меня недостаточно прав для выполнения данного действия.**"
+                            content=f"Мне не удалось выдать роль {duty_role.mention} участнику {member.mention}.\n"
+                                    f"У меня недостаточно прав для выполнения данного действия."
                         )
                 except (disnake.HTTPException, disnake.Forbidden):
                     pass
@@ -112,8 +113,7 @@ class Makers(commands.Cog):
         view = GearButton(author=interaction.author, maker_id=maker.id)
 
         return await interaction.edit_original_response(
-            content=f"**Вы зарегистрировали редактора {member.mention} `{nickname}` в системе.**",
-            embed=embed,
+            embeds=[get_success_embed("Вы зарегистрировали редактора **** в системе."), embed],
             view=view
         )
 
@@ -131,7 +131,7 @@ class Makers(commands.Cog):
                 autocomplete=maker_autocomplete,
             ),
     ):
-        await interaction.response.defer()
+        await interaction.response.send_message(embed=get_pending_embed())
 
         guild = await guild_methods.get_guild(discord_id=interaction.guild.id)
 
@@ -141,11 +141,11 @@ class Makers(commands.Cog):
 
         if not interaction_author:
             return await interaction.edit_original_response(
-                content="**У вас недостаточно прав для выполнения данной команды.**"
+                embed=get_failed_embed("У вас недостаточно прав для выполнения данной команды.")
             )
         elif not interaction_author.account_status:
             return await interaction.edit_original_response(
-                content="**У вас недостаточно прав для выполнения данной команды.**"
+                embed=get_failed_embed("У вас недостаточно прав для выполнения данной команды.")
             )
 
         if not maker_id:
@@ -157,12 +157,12 @@ class Makers(commands.Cog):
 
         if not maker:
             return await interaction.edit_original_response(
-                content="**Пользователь, которого вы указали, не зарегистрирован в системе.**"
+                embed=get_failed_embed(f"Пользователь с ID **{maker_id}** не зарегистрирован в системе.")
             )
 
         elif not interaction_author.guild_id == maker.guild_id:
             return await interaction.edit_original_response(
-                content="**Пользователь, которого вы указали, не зарегистрирован в системе.**"
+                embed=get_failed_embed(f"Пользователь с ID **{maker_id}** не зарегистрирован в системе.")
             )
 
         member = interaction.guild.get_member(maker.discord_id)
@@ -191,7 +191,7 @@ class Makers(commands.Cog):
     )
     @is_guild_exists()
     async def makers_list(self, interaction: disnake.ApplicationCommandInteraction):
-        await interaction.response.defer(ephemeral=True)
+        await interaction.response.send_message(embed=get_pending_embed(), ephemeral=True)
 
         guild = await guild_methods.get_guild(discord_id=interaction.guild.id)
 
@@ -201,17 +201,17 @@ class Makers(commands.Cog):
 
         if not interaction_author:
             return await interaction.edit_original_response(
-                content="**У вас недостаточно прав для выполнения данной команды.**"
+                embed=get_failed_embed("У вас недостаточно прав для выполнения данной команды.")
             )
 
         elif not interaction_author.account_status:
             return await interaction.edit_original_response(
-                content="**У вас недостаточно прав для выполнения данной команды.**"
+                embed=get_failed_embed("У вас недостаточно прав для выполнения данной команды.")
             )
 
         elif int(interaction_author.level) < 2:
             return await interaction.edit_original_response(
-                content="**У вас недостаточно прав для выполнения данной команды.**"
+                embed=get_failed_embed("У вас недостаточно прав для выполнения данной команды.")
             )
 
         view, embed = await MakersListPaginator.create(guild_id=guild.id)
