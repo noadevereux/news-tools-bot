@@ -12,6 +12,7 @@ from ext.models.autocompleters import publication_autocomplete
 from ext.models.checks import is_guild_exists
 from components.publication_components import GearButton, PublicationListPaginator
 from ext.profile_getters import get_publication_profile
+from ext.models.reusable import *
 
 
 class Publications(commands.Cog):
@@ -35,7 +36,7 @@ class Publications(commands.Cog):
                 name="number", description="Номер выпуска"
             ),
     ):
-        await interaction.response.defer()
+        await interaction.response.send_message(embed=get_pending_embed())
 
         guild = await guild_methods.get_guild(discord_id=interaction.guild.id)
 
@@ -45,17 +46,17 @@ class Publications(commands.Cog):
 
         if not interaction_author:
             return await interaction.edit_original_response(
-                content="**У вас недостаточно прав для выполнения данной команды.**"
+                embed=get_failed_embed("У вас недостаточно прав для выполнения данной команды.")
             )
 
         elif not interaction_author.account_status:
             return await interaction.edit_original_response(
-                content="**У вас недостаточно прав для выполнения данной команды.**"
+                embed=get_failed_embed("У вас недостаточно прав для выполнения данной команды.")
             )
 
         elif int(interaction_author.level) < 2:
             return await interaction.edit_original_response(
-                content="**У вас недостаточно прав для выполнения данной команды.**"
+                embed=get_failed_embed("У вас недостаточно прав для выполнения данной команды.")
             )
 
         publication = await publication_methods.get_publication(
@@ -64,7 +65,7 @@ class Publications(commands.Cog):
 
         if publication:
             return await interaction.edit_original_response(
-                content=f"**Выпуск с номером `#{publication_number}` уже существует.**"
+                embed=get_failed_embed(f"Выпуск **#{publication_number}** уже существует.")
             )
 
         new_publication = await publication_methods.add_publication(
@@ -79,8 +80,7 @@ class Publications(commands.Cog):
         view = GearButton(author=interaction.author, publication_id=new_publication.id)
 
         return await interaction.edit_original_response(
-            content=f"**Вы создали выпуск `#{new_publication.publication_number}`.**",
-            embed=embed,
+            embeds=[get_success_embed(f"Вы создали выпуск **#{publication_number}**."), embed],
             view=view,
         )
 
@@ -94,7 +94,7 @@ class Publications(commands.Cog):
                 autocomplete=publication_autocomplete,
             ),
     ):
-        await interaction.response.defer()
+        await interaction.response.send_message(embed=get_pending_embed())
 
         guild = await guild_methods.get_guild(discord_id=interaction.guild.id)
 
@@ -104,24 +104,24 @@ class Publications(commands.Cog):
 
         if not interaction_author:
             return await interaction.edit_original_response(
-                content="**У вас недостаточно прав для выполнения данной команды.**"
+                embed=get_failed_embed("У вас недостаточно прав для выполнения данной команды.")
             )
 
         elif not interaction_author.account_status:
             return await interaction.edit_original_response(
-                content="**У вас недостаточно прав для выполнения данной команды.**"
+                embed=get_failed_embed("У вас недостаточно прав для выполнения данной команды.")
             )
 
         publication = await publication_methods.get_publication_by_id(id=publication_id)
 
         if not publication:
             return await interaction.edit_original_response(
-                content=f"**Выпуска с указанным `ID: {publication_id}` не существует.**"
+                embed=get_failed_embed(f"Выпуска с ID **{publication_id}** не существует.")
             )
 
         elif not publication.guild_id == interaction_author.guild_id:
             return await interaction.edit_original_response(
-                content=f"**Выпуска с указанным `ID: {publication_id}` не существует.**"
+                embed=get_failed_embed(f"Выпуска с ID **{publication_id}** не существует.")
             )
 
         embed = await get_publication_profile(publication_id=publication.id)
@@ -136,7 +136,7 @@ class Publications(commands.Cog):
     async def publication_list(
             self, interaction: disnake.ApplicationCommandInteraction
     ):
-        await interaction.response.defer(ephemeral=True)
+        await interaction.response.send_message(embed=get_pending_embed(), ephemeral=True)
 
         guild = await guild_methods.get_guild(discord_id=interaction.guild.id)
 
@@ -146,12 +146,12 @@ class Publications(commands.Cog):
 
         if not interaction_author:
             return await interaction.edit_original_response(
-                content="**У вас недостаточно прав для выполнения данной команды.**"
+                embed=get_failed_embed("У вас недостаточно прав для выполнения данной команды.")
             )
 
         elif not interaction_author.account_status:
             return await interaction.edit_original_response(
-                content="**У вас недостаточно прав для выполнения данной команды.**"
+                embed=get_failed_embed("У вас недостаточно прав для выполнения данной команды.")
             )
 
         view, embed = await PublicationListPaginator.create(guild_id=guild.id)
