@@ -12,6 +12,7 @@ from database.methods import (
 )
 from ext.tools import validate_date, get_status_title
 from ext.profile_getters import get_publication_profile
+from ext.models.reusable import *
 
 
 class PublicationListPaginator(ui.View):
@@ -35,7 +36,7 @@ class PublicationListPaginator(ui.View):
             embed = disnake.Embed(
                 title=f"🧾 Выпуски новостного раздела {guild.guild_name}",
                 colour=0x2B2D31,
-                description="**На сервере нет выпусков. Создайте один и вы сможете увидеть его здесь! ||А можете создать сразу много :)||.**",
+                description="На сервере нет выпусков. Создайте один и вы сможете увидеть его здесь. ||А можете создать сразу много :)||.",
             )
 
             return None, embed
@@ -243,7 +244,7 @@ class MainMenu(ui.View):
                 )
                 return await interaction.response.edit_message(view=view)
             case "delete_publication":
-                await interaction.response.defer(with_message=True)
+                await interaction.response.send_message(embed=get_pending_embed())
 
                 guild = await guild_methods.get_guild(discord_id=interaction.guild.id)
 
@@ -255,21 +256,21 @@ class MainMenu(ui.View):
                     await interaction.message.edit(view=view)
 
                     return await interaction.edit_original_response(
-                        content="**У вас недостаточно прав для выполнения данной команды.**"
+                        embed=get_failed_embed("У вас недостаточно прав для выполнения данного взаимодействия.")
                     )
 
                 elif not interaction_author.account_status:
                     await interaction.message.edit(view=view)
 
                     return await interaction.edit_original_response(
-                        content="**У вас недостаточно прав для выполнения данной команды.**"
+                        embed=get_failed_embed("У вас недостаточно прав для выполнения данного взаимодействия.")
                     )
 
                 elif int(interaction_author.level) < 3:
                     await interaction.message.edit(view=view)
 
                     return await interaction.edit_original_response(
-                        content="**У вас недостаточно прав для выполнения данной команды.**"
+                        embed=get_failed_embed("У вас недостаточно прав для выполнения данного взаимодействия.")
                     )
 
                 publication = await publication_methods.get_publication_by_id(
@@ -280,16 +281,14 @@ class MainMenu(ui.View):
                     await interaction.message.edit(view=None)
 
                     return await interaction.edit_original_response(
-                        content="**Произошло что-то странное. Выпуска, с которым вы взаимодействуете"
-                        " не существует.**"
+                        embed=get_failed_embed("Выпуск с которым вы взаимодействуете был удалён.")
                     )
 
                 elif not publication.guild_id == interaction_author.guild_id:
                     await interaction.message.edit(view=None)
 
                     return await interaction.edit_original_response(
-                        content="**Произошло что-то странное. Выпуска, с которым вы взаимодействуете"
-                        " не существует.**"
+                        embed=get_failed_embed("Выпуск с которым вы взаимодействуете был удалён.")
                     )
 
                 await publication_methods.delete_publication_by_id(
@@ -304,7 +303,7 @@ class MainMenu(ui.View):
                 )
 
                 await interaction.edit_original_response(
-                    content=f"**Вы удалили выпуск с номером `#{publication.publication_number}` `[ID: {publication.id}]`.**"
+                    embed=get_success_embed(f"Вы удалили выпуск **#{publication.publication_number}**.")
                 )
 
                 return await interaction.message.delete()
@@ -422,7 +421,7 @@ class SubmitText(ui.Modal):
 
         match self.modal_type:
             case "number":
-                await interaction.response.defer()
+                await interaction.response.send_message(embed=get_pending_embed())
 
                 guild = await guild_methods.get_guild(discord_id=interaction.guild.id)
 
@@ -440,51 +439,49 @@ class SubmitText(ui.Modal):
                     await interaction.message.edit(view=view)
 
                     return await interaction.edit_original_response(
-                        content="**Номер указан неверно, укажите только число.**"
+                        embed=get_failed_embed(f"Номер указан неверно. В качестве номера может быть указано только число. Вы указали **«{interaction.text_values.get('publication_number')}»**.")
                     )
 
                 if not interaction_author:
                     await interaction.message.edit(view=view)
 
                     return await interaction.edit_original_response(
-                        content="**У вас недостаточно прав для выполнения данной команды.**"
+                        embed=get_failed_embed("У вас недостаточно прав для выполнения данного взаимодействия.")
                     )
 
                 elif not interaction_author.account_status:
                     await interaction.message.edit(view=view)
 
                     return await interaction.edit_original_response(
-                        content="**У вас недостаточно прав для выполнения данной команды.**"
+                        embed=get_failed_embed("У вас недостаточно прав для выполнения данного взаимодействия.")
                     )
 
                 elif int(interaction_author.level) < 2:
                     await interaction.message.edit(view=view)
 
                     return await interaction.edit_original_response(
-                        content="**У вас недостаточно прав для выполнения данной команды.**"
+                        embed=get_failed_embed("У вас недостаточно прав для выполнения данного взаимодействия.")
                     )
 
                 if not publication:
                     await interaction.message.edit(view=None)
 
                     return await interaction.edit_original_response(
-                        content="**Произошло что-то странное. Выпуска, с которым вы взаимодействуете"
-                        " не существует.**"
+                        embed=get_failed_embed("Выпуск с которым вы взаимодействуете был удалён.")
                     )
 
                 elif not publication.guild_id == interaction_author.guild_id:
                     await interaction.message.edit(view=None)
 
                     return await interaction.edit_original_response(
-                        content="**Произошло что-то странное. Выпуска, с которым вы взаимодействуете"
-                        " не существует.**"
+                        embed=get_failed_embed("Выпуск с которым вы взаимодействуете был удалён.")
                     )
 
                 elif publication.publication_number == new_number:
                     await interaction.message.edit(view=view)
 
                     return await interaction.edit_original_response(
-                        content="**Изменений не произошло, номера старого и нового выпусков совпадают.**"
+                        embed=get_failed_embed(f"Выпуску уже присвоен номер **#{new_number}**.")
                     )
 
                 _new_publication = await publication_methods.get_publication(
@@ -496,8 +493,7 @@ class SubmitText(ui.Modal):
 
                     embed = await get_publication_profile(publication_id=new_number)
                     return await interaction.edit_original_response(
-                        content=f"**Номер выпуска `#{new_number}` уже занят. Информация о выпуске:**",
-                        embed=embed,
+                        embeds=[get_failed_embed(f"Номер **#{new_number}** занят другим выпуском."), embed],
                         view=GearButton(
                             author=self.author, publication_id=_new_publication.id
                         ),
@@ -523,12 +519,11 @@ class SubmitText(ui.Modal):
                 await interaction.message.edit(embed=embed, view=view)
 
                 return await interaction.edit_original_response(
-                    content=f"**Вы изменили номер выпуска с уникальным `ID: {publication.id}` с"
-                    f" `#{publication.publication_number}` на `#{new_number}`.**"
+                    embed=get_success_embed(f"Вы изменили номер выпуска с **#{publication.publication_number}** на **#{new_number}**.")
                 )
 
             case "date":
-                await interaction.response.defer()
+                await interaction.response.send_message(embed=get_pending_embed())
 
                 guild = await guild_methods.get_guild(discord_id=interaction.guild.id)
 
@@ -540,21 +535,21 @@ class SubmitText(ui.Modal):
                     await interaction.message.edit(view=view)
 
                     return await interaction.edit_original_response(
-                        content="**У вас недостаточно прав для выполнения данной команды.**"
+                        embed=get_failed_embed("У вас недостаточно прав для выполнения данного взаимодействия.")
                     )
 
                 elif not interaction_author.account_status:
                     await interaction.message.edit(view=view)
 
                     return await interaction.edit_original_response(
-                        content="**У вас недостаточно прав для выполнения данной команды.**"
+                        embed=get_failed_embed("У вас недостаточно прав для выполнения данного взаимодействия.")
                     )
 
                 elif int(interaction_author.level) < 2:
                     await interaction.message.edit(view=view)
 
                     return await interaction.edit_original_response(
-                        content="**У вас недостаточно прав для выполнения данной команды.**"
+                        embed=get_failed_embed("У вас недостаточно прав для выполнения данного взаимодействия.")
                     )
 
                 date = interaction.text_values.get("date")
@@ -568,7 +563,7 @@ class SubmitText(ui.Modal):
                         await interaction.message.edit(view=view)
 
                         return await interaction.edit_original_response(
-                            content="**Неверно указана дата. Укажите дату в формате `ГГГГ-ММ-ДД`, например `2023-01-15`.**"
+                            embed=get_failed_embed("Дата указана неверно. Укажите дату в формате `ГГГГ-ММ-ДД`.")
                         )
 
                 publication = await publication_methods.get_publication_by_id(
@@ -579,16 +574,14 @@ class SubmitText(ui.Modal):
                     await interaction.message.edit(view=None)
 
                     return await interaction.edit_original_response(
-                        content="**Произошло что-то странное. Выпуска, с которым вы взаимодействуете"
-                        " не существует.**"
+                        embed=get_failed_embed("Выпуск с которым вы взаимодействуете был удалён.")
                     )
 
                 elif not publication.guild_id == interaction_author.guild_id:
                     await interaction.message.edit(view=None)
 
                     return await interaction.edit_original_response(
-                        content="**Произошло что-то странное. Выпуска, с которым вы взаимодействуете"
-                        " не существует.**"
+                        embed=get_failed_embed("Выпуск с которым вы взаимодействуете был удалён.")
                     )
 
                 if date:
@@ -596,7 +589,7 @@ class SubmitText(ui.Modal):
                         await interaction.message.edit(view=view)
 
                         return await interaction.edit_original_response(
-                            content=f"**Изменений не произошло, дата выпуска такая же, какую вы указали.**"
+                            embed=get_failed_embed(f"Дата **{date}** уже установлена для выпуска **#{publication.publication_number}**.")
                         )
 
                     await publication_methods.update_publication_by_id(
@@ -611,14 +604,14 @@ class SubmitText(ui.Modal):
                     )
 
                     await interaction.edit_original_response(
-                        content=f"**Вы изменили дату выпуска `#{publication.publication_number}` на `{date}`.**"
+                        embed=get_success_embed(f"Вы изменили дату публикации выпуска **#{publication.publication_number}** на **{date}**.")
                     )
                 else:
                     if not publication.date:
                         await interaction.message.edit(view=view)
 
                         return await interaction.edit_original_response(
-                            content=f"**Изменений не произошло, дата выпуска итак не указана.**"
+                            embed=get_failed_embed(f"Дата публикации выпуска **#{publication.publication_number}** не установлена.")
                         )
 
                     await publication_methods.update_publication_by_id(
@@ -635,7 +628,7 @@ class SubmitText(ui.Modal):
                     )
 
                     await interaction.edit_original_response(
-                        content=f"**Вы очистили дату выпуска `#{publication.publication_number}`.**"
+                        embed=get_success_embed(f"Вы очистили дату публикации выпуска **#{publication.publication_number}**.")
                     )
 
                 embed = await get_publication_profile(
@@ -645,7 +638,7 @@ class SubmitText(ui.Modal):
                 return await interaction.message.edit(embed=embed, view=view)
 
             case "salary":
-                await interaction.response.defer()
+                await interaction.response.send_message(embed=get_pending_embed())
 
                 guild = await guild_methods.get_guild(discord_id=interaction.guild.id)
 
@@ -657,21 +650,21 @@ class SubmitText(ui.Modal):
                     await interaction.message.edit(view=view)
 
                     return await interaction.edit_original_response(
-                        content="**У вас недостаточно прав для выполнения данной команды.**"
+                        embed=get_failed_embed("У вас недостаточно прав для выполнения данного взаимодействия.")
                     )
 
                 elif not interaction_author.account_status:
                     await interaction.message.edit(view=view)
 
                     return await interaction.edit_original_response(
-                        content="**У вас недостаточно прав для выполнения данной команды.**"
+                        embed=get_failed_embed("У вас недостаточно прав для выполнения данного взаимодействия.")
                     )
 
                 elif int(interaction_author.level) < 2:
                     await interaction.message.edit(view=view)
 
                     return await interaction.edit_original_response(
-                        content="**У вас недостаточно прав для выполнения данной команды.**"
+                        embed=get_failed_embed("У вас недостаточно прав для выполнения данного взаимодействия.")
                     )
 
                 publication = await publication_methods.get_publication_by_id(
@@ -682,16 +675,14 @@ class SubmitText(ui.Modal):
                     await interaction.message.edit(view=None)
 
                     return await interaction.edit_original_response(
-                        content="**Произошло что-то странное. Выпуска, с которым вы взаимодействуете"
-                        " не существует.**"
+                        embed=get_failed_embed("Выпуск с которым вы взаимодействуете был удалён.")
                     )
 
                 elif not publication.guild_id == interaction_author.guild_id:
                     await interaction.message.edit(view=None)
 
                     return await interaction.edit_original_response(
-                        content="**Произошло что-то странное. Выпуска, с которым вы взаимодействуете"
-                        " не существует.**"
+                        embed=get_failed_embed("Выпуск с которым вы взаимодействуете был удалён.")
                     )
 
                 salary = interaction.text_values.get("salary")
@@ -704,7 +695,7 @@ class SubmitText(ui.Modal):
                         await interaction.message.edit(view=view)
 
                         return await interaction.edit_original_response(
-                            content=f"**Зарплата может быть указана только в качестве числа.**"
+                            embed=get_failed_embed(f"Неверно указана зарплата выпуска. Значение может быть только числом. Вы указали **«{interaction.text_values.get('salary')}»**.")
                         )
 
                 if salary:
@@ -712,7 +703,7 @@ class SubmitText(ui.Modal):
                         await interaction.message.edit(view=view)
 
                         return await interaction.edit_original_response(
-                            content=f"**Изменений не произошло, зарплата за выпуск установлена такая же, какую вы указали.**"
+                            embed=get_failed_embed(f"За выпуск **#{publication.publication_number}** уже установлена зарплата **{salary}**.")
                         )
 
                     await publication_methods.update_publication_by_id(
@@ -729,14 +720,14 @@ class SubmitText(ui.Modal):
                     )
 
                     await interaction.edit_original_response(
-                        content=f"**Вы изменили зарплату за выпуск `#{publication.publication_number}` на `{salary}`.**"
+                        embed=get_success_embed(f"Вы установили зарплату за выпуск **#{publication.publication_number}** на **{salary}**.")
                     )
                 else:
                     if not publication.amount_dp:
                         await interaction.message.edit(view=view)
 
                         return await interaction.edit_original_response(
-                            content=f"**Изменений не произошло, зарплата за выпуск итак не указана.**"
+                            embed=get_failed_embed(f"Зарплата за выпуск **#{publication.publication_number}** не установлена.")
                         )
 
                     await publication_methods.update_publication_by_id(
@@ -753,7 +744,7 @@ class SubmitText(ui.Modal):
                     )
 
                     await interaction.edit_original_response(
-                        content=f"**Вы очистили зарплату за выпуск `#{publication.publication_number}`.**"
+                        embed=get_success_embed(f"Вы очистили зарплату за выпуск **#{publication.publication_number}**.")
                     )
 
                 embed = await get_publication_profile(
@@ -956,7 +947,7 @@ class SelectMaker(ui.StringSelect):
 
         match self.choose_type:
             case "maker":
-                await interaction.response.defer(with_message=True)
+                await interaction.response.send_message(embed=get_pending_embed())
 
                 guild = await guild_methods.get_guild(discord_id=interaction.guild.id)
 
@@ -968,21 +959,21 @@ class SelectMaker(ui.StringSelect):
                     await interaction.message.edit(view=view)
 
                     return await interaction.edit_original_response(
-                        content="**У вас недостаточно прав для выполнения данной команды.**"
+                        embed=get_failed_embed("У вас недостаточно прав для выполнения данного взаимодействия.")
                     )
 
                 elif not interaction_author.account_status:
                     await interaction.message.edit(view=view)
 
                     return await interaction.edit_original_response(
-                        content="**У вас недостаточно прав для выполнения данной команды.**"
+                        embed=get_failed_embed("У вас недостаточно прав для выполнения данного взаимодействия.")
                     )
 
                 elif int(interaction_author.level) < 2:
                     await interaction.message.edit(view=view)
 
                     return await interaction.edit_original_response(
-                        content="**У вас недостаточно прав для выполнения данной команды.**"
+                        embed=get_failed_embed("У вас недостаточно прав для выполнения данного взаимодействия.")
                     )
 
                 publication = await publication_methods.get_publication_by_id(
@@ -993,16 +984,14 @@ class SelectMaker(ui.StringSelect):
                     await interaction.message.edit(view=None)
 
                     return await interaction.edit_original_response(
-                        content="**Произошло что-то странное. Выпуска, с которым вы взаимодействуете"
-                        " не существует.**"
+                        embed=get_failed_embed("Выпуск с которым вы взаимодействуете был удалён.")
                     )
 
                 elif not publication.guild_id == interaction_author.guild_id:
                     await interaction.message.edit(view=None)
 
                     return await interaction.edit_original_response(
-                        content="**Произошло что-то странное. Выпуска, с которым вы взаимодействуете"
-                        " не существует.**"
+                        embed=get_failed_embed("Выпуск с которым вы взаимодействуете был удалён.")
                     )
 
                 if maker_id:
@@ -1012,14 +1001,14 @@ class SelectMaker(ui.StringSelect):
                         await interaction.message.edit(view=view)
 
                         return await interaction.edit_original_response(
-                            content=f"**Пользователь, которого вы указали не зарегистрирован в системе.**"
+                            embed=get_failed_embed("Выбранный вами пользователь не зарегистрирован в системе.")
                         )
 
                     if publication.maker_id == maker.id:
                         await interaction.message.edit(view=view)
 
                         return await interaction.edit_original_response(
-                            content=f"**Изменений не произошло, редактор выпуска установлен такой-же, какого вы указали.**"
+                            embed=get_success_embed(f"Для выпуска **#{publication.publication_number}** уже установлен редактор **{maker.nickname}**.")
                         )
 
                     await publication_methods.update_publication_by_id(
@@ -1036,7 +1025,7 @@ class SelectMaker(ui.StringSelect):
                     )
 
                     await interaction.edit_original_response(
-                        content=f"**Вы изменили редактора выпуска `#{publication.publication_number}` на <@{maker.discord_id}> `{maker.nickname}`.**"
+                        embed=get_success_embed(f"Вы установили редактора выпуска **#{publication.publication_number}** на **{maker.nickname}**.")
                     )
 
                 else:
@@ -1044,7 +1033,7 @@ class SelectMaker(ui.StringSelect):
                         await interaction.message.edit(view=view)
 
                         return await interaction.edit_original_response(
-                            content=f"**Изменений не произошло, редактор выпуска итак не указан.**"
+                            embed=get_failed_embed(f"У выпуска **#{publication.publication_number}** не установлен редактор.")
                         )
 
                     await publication_methods.update_publication_by_id(
@@ -1061,7 +1050,7 @@ class SelectMaker(ui.StringSelect):
                     )
 
                     await interaction.edit_original_response(
-                        content=f"**Вы очистили редактора выпуска `#{publication.publication_number}`.**"
+                        embed=get_success_embed(f"Вы очистили редактора выпуска **#{publication.publication_number}**.")
                     )
 
                 embed = await get_publication_profile(publication_id=publication.id)
@@ -1069,7 +1058,7 @@ class SelectMaker(ui.StringSelect):
                 return await interaction.message.edit(embed=embed, view=view)
 
             case "info_creator":
-                await interaction.response.defer(with_message=True)
+                await interaction.response.send_message(embed=get_pending_embed())
 
                 guild = await guild_methods.get_guild(discord_id=interaction.guild.id)
 
@@ -1081,21 +1070,21 @@ class SelectMaker(ui.StringSelect):
                     await interaction.message.edit(view=view)
 
                     return await interaction.edit_original_response(
-                        content="**У вас недостаточно прав для выполнения данной команды.**"
+                        embed=get_failed_embed("У вас недостаточно прав для выполнения данного взаимодействия.")
                     )
 
                 elif not interaction_author.account_status:
                     await interaction.message.edit(view=view)
 
                     return await interaction.edit_original_response(
-                        content="**У вас недостаточно прав для выполнения данной команды.**"
+                        embed=get_failed_embed("У вас недостаточно прав для выполнения данного взаимодействия.")
                     )
 
                 elif int(interaction_author.level) < 2:
                     await interaction.message.edit(view=view)
 
                     return await interaction.edit_original_response(
-                        content="**У вас недостаточно прав для выполнения данной команды.**"
+                        embed=get_failed_embed("У вас недостаточно прав для выполнения данного взаимодействия.")
                     )
 
                 publication = await publication_methods.get_publication_by_id(
@@ -1106,16 +1095,14 @@ class SelectMaker(ui.StringSelect):
                     await interaction.message.edit(view=None)
 
                     return await interaction.edit_original_response(
-                        content="**Произошло что-то странное. Выпуска, с которым вы взаимодействуете"
-                        " не существует.**"
+                        embed=get_failed_embed("Выпуск с которым вы взаимодействуете был удалён.")
                     )
 
                 elif not publication.guild_id == interaction_author.guild_id:
                     await interaction.message.edit(view=None)
 
                     return await interaction.edit_original_response(
-                        content="**Произошло что-то странное. Выпуска, с которым вы взаимодействуете"
-                        " не существует.**"
+                        embed=get_failed_embed("Выпуск с которым вы взаимодействуете был удалён.")
                     )
 
                 if maker_id:
@@ -1125,14 +1112,14 @@ class SelectMaker(ui.StringSelect):
                         await interaction.message.edit(view=view)
 
                         return await interaction.edit_original_response(
-                            content=f"**Пользователь, которого вы указали не зарегистрирован в системе.**"
+                            embed=get_failed_embed("Выбранный вами пользователь не зарегистрирован в системе.")
                         )
 
                     if publication.information_creator_id == creator.id:
                         await interaction.message.edit(view=view)
 
                         return await interaction.edit_original_response(
-                            content=f"**Изменений не произошло, автор информации выпуска установлен таким же, какого вы указали.**"
+                            embed=get_failed_embed(f"Для выпуска **#{publication.publication_number}** уже установлен автор информации **{creator.nickname}**.")
                         )
 
                     await publication_methods.update_publication_by_id(
@@ -1149,7 +1136,7 @@ class SelectMaker(ui.StringSelect):
                     )
 
                     await interaction.edit_original_response(
-                        content=f"**Вы изменили автора информации к выпуску `#{publication.publication_number}` на <@{creator.discord_id}> `{creator.nickname}`.**"
+                        embed=get_success_embed(f"Вы установили автора информации к выпуску **#{publication.publication_number}** на **{creator.nickname}**.")
                     )
 
                 else:
@@ -1157,7 +1144,7 @@ class SelectMaker(ui.StringSelect):
                         await interaction.message.edit(view=view)
 
                         return await interaction.edit_original_response(
-                            content=f"**Изменений не произошло, автор информации к выпуску итак не указан.**"
+                            embed=get_failed_embed(f"Для выпуска **#{publication.publication_number}** автор информации не установлен.")
                         )
 
                     await publication_methods.update_publication_by_id(
@@ -1174,7 +1161,7 @@ class SelectMaker(ui.StringSelect):
                     )
 
                     await interaction.edit_original_response(
-                        content=f"**Вы очистили автора информации к выпуску `#{publication.publication_number}`.**"
+                        embed=get_success_embed(f"Вы очистили автора информации к выпуску **#{publication.publication_number}**.")
                     )
 
                 embed = await get_publication_profile(publication_id=publication.id)
@@ -1182,7 +1169,7 @@ class SelectMaker(ui.StringSelect):
                 return await interaction.message.edit(embed=embed, view=view)
 
             case "salary_payer":
-                await interaction.response.defer(with_message=True)
+                await interaction.response.send_message(embed=get_pending_embed())
 
                 guild = await guild_methods.get_guild(discord_id=interaction.guild.id)
 
@@ -1194,21 +1181,21 @@ class SelectMaker(ui.StringSelect):
                     await interaction.message.edit(view=view)
 
                     return await interaction.edit_original_response(
-                        content="**У вас недостаточно прав для выполнения данной команды.**"
+                        embed=get_failed_embed("У вас недостаточно прав для выполнения данного взаимодействия.")
                     )
 
                 elif not interaction_author.account_status:
                     await interaction.message.edit(view=view)
 
                     return await interaction.edit_original_response(
-                        content="**У вас недостаточно прав для выполнения данной команды.**"
+                        embed=get_failed_embed("У вас недостаточно прав для выполнения данного взаимодействия.")
                     )
 
                 elif int(interaction_author.level) < 2:
                     await interaction.message.edit(view=view)
 
                     return await interaction.edit_original_response(
-                        content="**У вас недостаточно прав для выполнения данной команды.**"
+                        embed=get_failed_embed("У вас недостаточно прав для выполнения данного взаимодействия.")
                     )
 
                 publication = await publication_methods.get_publication_by_id(
@@ -1219,16 +1206,14 @@ class SelectMaker(ui.StringSelect):
                     await interaction.message.edit(view=view)
 
                     return await interaction.edit_original_response(
-                        content="**Произошло что-то странное. Выпуска, с которым вы взаимодействуете"
-                        " не существует.**"
+                        embed=get_failed_embed("Выпуск с которым вы взаимодействуете был удалён.")
                     )
 
                 elif not publication.guild_id == interaction_author.guild_id:
                     await interaction.message.edit(view=None)
 
                     return await interaction.edit_original_response(
-                        content="**Произошло что-то странное. Выпуска, с которым вы взаимодействуете"
-                        " не существует.**"
+                        embed=get_failed_embed("Выпуск с которым вы взаимодействуете был удалён.")
                     )
 
                 if maker_id:
@@ -1238,14 +1223,14 @@ class SelectMaker(ui.StringSelect):
                         await interaction.message.edit(view=view)
 
                         return await interaction.edit_original_response(
-                            content=f"**Изменений не произошло, человек, который выплати зарплату установлен таким же, какого вы указали.**"
+                            embed=get_failed_embed(f"Выплативший зарплату за выпуск **#{publication.publication_number}** человек не установлен.")
                         )
 
                     if not salary_payer:
                         await interaction.message.edit(view=view)
 
                         return await interaction.edit_original_response(
-                            content=f"**Пользователь, которого вы указали не зарегистрирован в системе.**"
+                            embed=get_failed_embed("Выбранный вами пользователь не зарегистрирован в системе.")
                         )
 
                     await publication_methods.update_publication_by_id(
@@ -1262,8 +1247,7 @@ class SelectMaker(ui.StringSelect):
                     )
 
                     await interaction.edit_original_response(
-                        content=f"**Вы изменили человека, который выплатил зарплату за"
-                        f" выпуск `#{publication.publication_number}` на <@{salary_payer.discord_id}> `{salary_payer.nickname}`.**"
+                        embed=get_success_embed(f"Вы установили выплатившего зарплату человека за выпуск **#{publication.publication_number}** на **{salary_payer.nickname}**.")
                     )
 
                 else:
@@ -1271,7 +1255,7 @@ class SelectMaker(ui.StringSelect):
                         await interaction.message.edit(view=view)
 
                         return await interaction.edit_original_response(
-                            content=f"**Изменений не произошло, автор информации к выпуску итак не указан.**"
+                            embed=get_failed_embed(f"Выплативший зарплату человек за выпуск **#{publication.publication_number}** не установлен.")
                         )
 
                     await publication_methods.update_publication_by_id(
@@ -1288,7 +1272,7 @@ class SelectMaker(ui.StringSelect):
                     )
 
                     await interaction.edit_original_response(
-                        content=f"**Вы очистили человека, который выплатил зарплату за выпуск `#{publication.publication_number}`.**"
+                        embed=get_success_embed(f"Вы очистили выплатившего зарплату человека за выпуск **#{publication.publication_number}**.")
                     )
 
                 embed = await get_publication_profile(publication_id=publication.id)
@@ -1341,7 +1325,7 @@ class SetStatus(ui.View):
     async def select_status(
         self, string_select: ui.StringSelect, interaction: disnake.MessageInteraction
     ):
-        await interaction.response.defer(with_message=True)
+        await interaction.response.send_message(embed=get_pending_embed())
 
         guild = await guild_methods.get_guild(discord_id=interaction.guild.id)
 
@@ -1353,21 +1337,21 @@ class SetStatus(ui.View):
             await interaction.message.edit(view=self)
 
             return await interaction.edit_original_response(
-                content="**У вас недостаточно прав для выполнения данной команды.**"
+                embed=get_failed_embed("У вас недостаточно прав для выполнения данного взаимодействия.")
             )
 
         elif not interaction_author.account_status:
             await interaction.message.edit(view=self)
 
             return await interaction.edit_original_response(
-                content="**У вас недостаточно прав для выполнения данной команды.**"
+                embed=get_failed_embed("У вас недостаточно прав для выполнения данного взаимодействия.")
             )
 
         elif int(interaction_author.level) < 2:
             await interaction.message.edit(view=self)
 
             return await interaction.edit_original_response(
-                content="**У вас недостаточно прав для выполнения данной команды.**"
+                embed=get_failed_embed("У вас недостаточно прав для выполнения данного взаимодействия.")
             )
 
         publication = await publication_methods.get_publication_by_id(
@@ -1376,27 +1360,27 @@ class SetStatus(ui.View):
 
         status = interaction.values[0]
 
+        status_title = get_status_title(status)
+
         if not publication:
             await interaction.message.edit(view=None)
 
             return await interaction.edit_original_response(
-                content="**Произошло что-то странное. Выпуска, с которым вы взаимодействуете"
-                " не существует.**"
+                embed=get_failed_embed("Выпуск с которым вы взаимодействуете был удалён.")
             )
 
         elif not publication.guild_id == interaction_author.guild_id:
             await interaction.message.edit(view=None)
 
             return await interaction.edit_original_response(
-                content="**Произошло что-то странное. Выпуска, с которым вы взаимодействуете"
-                " не существует.**"
+                embed=get_failed_embed("Выпуск с которым вы взаимодействуете был удалён.")
             )
 
         elif publication.status == status:
             await interaction.message.edit(view=self)
 
             return await interaction.edit_original_response(
-                content=f"**Изменений не произошло, у выпуска `#{publication.publication_number}` уже указан статус, который вы указали.**"
+                embed=get_failed_embed(f"Для выпуска **#{publication.publication_number}** уже установлен статус **{status_title.lower()}**")
             )
 
         await publication_methods.update_publication_by_id(
@@ -1412,13 +1396,11 @@ class SetStatus(ui.View):
             meta=status,
         )
 
-        status_title = get_status_title(status)
-
         embed = await get_publication_profile(publication_id=publication.id)
         view = SetStatus(author=self.author, publication_id=self.publication_id)
 
         await interaction.message.edit(embed=embed, view=view)
 
         return await interaction.edit_original_response(
-            content=f"**Вы установили выпуску `#{publication.publication_number}` статус `{status_title}`**"
+            embed=get_success_embed(f"Вы установили выпуску **#{publication.publication_number}** статус **{status_title.lower()}**.")
         )
