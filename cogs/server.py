@@ -26,7 +26,7 @@ class Server(commands.Cog):
     @server.sub_command(name="reboot", description="[DEV] Перезагрузить сервер")
     async def server_reboot(self, interaction: disnake.ApplicationCommandInteraction):
         return await interaction.send(
-            content=f"**Вы уверены что хотите перезагрузить сервер?**",
+            content=f"Вы уверены что хотите перезагрузить сервер?",
             view=ConfirmReboot(bot=self.bot, member=interaction.author),
         )
 
