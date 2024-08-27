@@ -74,7 +74,7 @@ class Makers(commands.Cog):
 
         elif maker and maker.account_status:
             return await interaction.edit_original_response(
-                embed=get_failed_embed(f"Редактор уже зарегистрирован в системе с нмкнйемом **{maker.nickname}** и его аккаунт активен.")
+                embed=get_failed_embed(f"Редактор уже зарегистрирован в системе с никнеймом **{maker.nickname}** и его аккаунт активен.")
             )
 
         maker = await maker_methods.add_maker(
