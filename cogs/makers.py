@@ -113,7 +113,7 @@ class Makers(commands.Cog):
         view = GearButton(author=interaction.author, maker_id=maker.id)
 
         return await interaction.edit_original_response(
-            embeds=[get_success_embed("Вы зарегистрировали редактора **** в системе."), embed],
+            embeds=[get_success_embed(f"Вы зарегистрировали редактора **{maker.nickname}** в системе."), embed],
             view=view
         )
 
