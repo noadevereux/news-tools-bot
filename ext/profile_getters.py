@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, date as dt_date
 
 import disnake
 from disnake import User, Member, Embed, Guild
@@ -161,7 +161,12 @@ async def get_publication_profile(publication_id: int) -> Embed:
     if not publication.date:
         date = "`не указана`"
     else:
-        date = publication.date.strftime("%d.%m.%Y")
+        if isinstance(publication.date, dt_date):
+            date = publication.date.strftime("%d.%m.%Y")
+        elif isinstance(publication.date, str):
+            date = dt_date.fromisoformat(publication.date).strftime("%d.%m.%Y")
+        else:
+            date = "*не удалось получить значение, обратитесь в поддержку*"
 
     if not publication.amount_dp:
         salary = "`не установлено`"
