@@ -90,34 +90,19 @@ async def get_maker_profile(maker_id: int, user: User | Member = None) -> Embed:
         title_emoji = "<:user:1220792994328875058>"
     else:
         title_emoji = "<:user_red:1223319477308100641>"
+    
+    embed = Embed(
+        title=f"{title_emoji} Профиль редактора {maker.nickname}",
+        color=0x2B2D31,
+        description=embed_description,
+        timestamp=maker.appointment_datetime
+    )
 
-    if isinstance(user, (User, Member)):
-        embed = Embed(
-            title=f"{title_emoji} Профиль редактора {maker.nickname}",
-            color=0x2B2D31,
-            description=embed_description,
-            timestamp=maker_appointment_datetime,
-        )
-
-        if not maker.account_status:
-            embed.set_author(name="🔴 АККАУНТ ДЕАКТИВИРОВАН 🔴")
-
-        embed.set_thumbnail(user.display_avatar.url)
-    else:
-        embed_description += "\n\n**🛠️ Упрощенная версия профиля, так как редактор не является участником сервера."
-
-        embed = Embed(
-            title=f"Профиль редактора {maker.nickname}",
-            color=0x2B2D31,
-            description=embed_description,
-            timestamp=maker.appointment_datetime,
-        )
-
-        if not maker.account_status:
-            embed.set_author(name="🔴 АККАУНТ ДЕАКТИВИРОВАН 🔴")
-
+    if not maker.account_status:
+        embed.set_author(name="🔴 Аккаунт деактивирован 🔴")
+    
     embed.set_footer(text="Дата постановления:")
-
+    
     badges_description = ""
 
     for badge in badges:
@@ -130,6 +115,14 @@ async def get_maker_profile(maker_id: int, user: User | Member = None) -> Embed:
 
     if len(badges) > 0:
         embed.add_field(name="Значки", value=badges_description, inline=False)
+
+    if isinstance(user, (User, Member)):
+        embed.set_thumbnail(user.display_avatar.url)
+
+    else:
+        embed_description += "\n\n**🛠️ Упрощенная версия профиля, так как редактор не является участником сервера."
+
+        embed.description = embed_description
 
     return embed
 
