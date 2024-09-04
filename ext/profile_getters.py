@@ -20,7 +20,7 @@ async def get_maker_profile(maker_id: int, user: User | Member = None) -> Embed:
     if maker.post_name:
         post = maker.post_name
     else:
-        post = "не установлено"
+        post = "Не установлено"
 
     status = get_status_title(maker.status)
 
@@ -62,29 +62,89 @@ async def get_maker_profile(maker_id: int, user: User | Member = None) -> Embed:
                 "awarder": awarder,
             }
         )
+    
+    embed_fields = [
+        {
+            "name": "<:hashtag:1220792495047184515> ID",
+            "value": f"```{maker.id}```",
+            "inline": True
+        },
+        {
+            "name": "<:id_card:1207329341227147274> Никнейм",
+            "value": f"```{maker.nickname}```",
+            "inline": True
+        },
+        {
+            "name": "<:discord_icon:1207328653734584371> Discord ID",
+            "value": f"```<@{maker.discord_id}>```",
+            "inline": False
+        },
+        {
+            "name": "<:access_key:1207330321075535882> Доступ",
+            "value": f"```{level}```",
+            "inline": True
+        },
+        {
+            "name": "<:status:1207331595497771018> Статус",
+            "value": f"```{status}```",
+            "inline": True
+        },
+        {
+            "name": "<:job_title:1207331119176089681>️ Должность",
+            "value": f"```{post}```",
+            "inline": False
+        },
+        {
+            "name": "<:warn_sign:1207315803893145610> Выговоры",
+            "value": f"```{maker.warns}```",
+            "inline": True
+        },
+        {
+            "name": "<:pred_sign:1207316150044590081> Предупреждения",
+            "value": f"```{maker.preds}```",
+            "inline": True
+        },
+        {
+            "name": "🗞 Выпуски",
+            "value": f"```{publications_amount}```",
+            "inline": False
+        },
+        {
+            "name": "<:yellow_calendar:1207339611911884902> Дней на посту",
+            "value": f"```{days}```",
+            "inline": True
+        },
+    ]
 
-    embed_description = f"""\
-{"**Значки: " + " ".join([badge.get("emoji") for badge in badges]) + "**" if len(badges) > 0 else ""}
+#     embed_description = f"""\
+# {"**Значки: " + " ".join([badge.get("emoji") for badge in badges]) + "**" if len(badges) > 0 else ""}
 
-**<:hashtag:1220792495047184515> ID аккаунта: `{maker.id}`**
-**<:discord_icon:1207328653734584371> Discord: <@{maker.discord_id}>**
-**<:id_card:1207329341227147274> Никнейм: {maker.nickname}**
-**<:access_key:1207330321075535882> Уровень доступа: {level}**
-**<:job_title:1207331119176089681>️ Должность: {post}**
-**<:status:1207331595497771018> Статус: {status.lower()}**
+# **<:hashtag:1220792495047184515> ID аккаунта: `{maker.id}`**
+# **<:discord_icon:1207328653734584371> Discord: <@{maker.discord_id}>**
+# **<:id_card:1207329341227147274> Никнейм: {maker.nickname}**
+# **<:access_key:1207330321075535882> Уровень доступа: {level}**
+# **<:job_title:1207331119176089681>️ Должность: {post}**
+# **<:status:1207331595497771018> Статус: {status.lower()}**
 
-**<:warn_sign:1207315803893145610> Выговоры: {maker.warns}**
-**<:pred_sign:1207316150044590081> Предупреждения: {maker.preds}**
+# **<:warn_sign:1207315803893145610> Выговоры: {maker.warns}**
+# **<:pred_sign:1207316150044590081> Предупреждения: {maker.preds}**
 
-**🗞 Сделано выпусков: {publications_amount}**
+# **🗞 Сделано выпусков: {publications_amount}**
 
-**<:yellow_calendar:1207339611911884902> Дней на посту редактора: {days}**
-    """
+# **<:yellow_calendar:1207339611911884902> Дней на посту редактора: {days}**
+#     """
+
+#     if maker.is_admin:
+#         embed_description += (
+#             "\n\n**🛡️ Пользователь обладает административным доступом**"
+#         )
 
     if maker.is_admin:
-        embed_description += (
-            "\n\n**🛡️ Пользователь обладает административным доступом**"
-        )
+        embed_fields.append({
+            "name": "🛡️ Админ-доступ",
+            "value": "```Да```",
+            "inline": True
+        })
 
     if maker.account_status:
         title_emoji = "<:user:1220792994328875058>"
@@ -94,9 +154,12 @@ async def get_maker_profile(maker_id: int, user: User | Member = None) -> Embed:
     embed = Embed(
         title=f"{title_emoji} Профиль редактора {maker.nickname}",
         color=0x2B2D31,
-        description=embed_description,
+        # description=embed_description,
         timestamp=maker.appointment_datetime
     )
+
+    for field in embed_fields:
+        embed.add_field(name=field["name"], value=field["value"], inline=field["inline"])
 
     if not maker.account_status:
         embed.set_author(name="🔴 Аккаунт деактивирован 🔴")
@@ -120,9 +183,11 @@ async def get_maker_profile(maker_id: int, user: User | Member = None) -> Embed:
         embed.set_thumbnail(user.display_avatar.url)
 
     else:
-        embed_description += "\n\n**🛠️ Упрощенная версия профиля, так как редактор не является участником сервера."
+        # embed_description += "\n\n**🛠️ Упрощенная версия профиля, так как редактор не является участником сервера."
 
-        embed.description = embed_description
+        # embed.description = embed_description
+
+        embed.add_field(name="🛠️ Упрощенная версия", value="```Да```", inline=False)
 
     return embed
 
