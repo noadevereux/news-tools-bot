@@ -116,29 +116,6 @@ async def get_maker_profile(maker_id: int, user: User | Member = None) -> Embed:
         },
     ]
 
-#     embed_description = f"""\
-# {"**Значки: " + " ".join([badge.get("emoji") for badge in badges]) + "**" if len(badges) > 0 else ""}
-
-# **<:hashtag:1220792495047184515> ID аккаунта: `{maker.id}`**
-# **<:discord_icon:1207328653734584371> Discord: <@{maker.discord_id}>**
-# **<:id_card:1207329341227147274> Никнейм: {maker.nickname}**
-# **<:access_key:1207330321075535882> Уровень доступа: {level}**
-# **<:job_title:1207331119176089681>️ Должность: {post}**
-# **<:status:1207331595497771018> Статус: {status.lower()}**
-
-# **<:warn_sign:1207315803893145610> Выговоры: {maker.warns}**
-# **<:pred_sign:1207316150044590081> Предупреждения: {maker.preds}**
-
-# **🗞 Сделано выпусков: {publications_amount}**
-
-# **<:yellow_calendar:1207339611911884902> Дней на посту редактора: {days}**
-#     """
-
-#     if maker.is_admin:
-#         embed_description += (
-#             "\n\n**🛡️ Пользователь обладает административным доступом**"
-#         )
-
     if maker.is_admin:
         embed_fields.append({
             "name": "🛡️ Админ-доступ",
@@ -154,7 +131,6 @@ async def get_maker_profile(maker_id: int, user: User | Member = None) -> Embed:
     embed = Embed(
         title=f"{title_emoji} Профиль редактора {maker.nickname}",
         color=0x2B2D31,
-        # description=embed_description,
         timestamp=maker.appointment_datetime
     )
 
@@ -183,10 +159,6 @@ async def get_maker_profile(maker_id: int, user: User | Member = None) -> Embed:
         embed.set_thumbnail(user.display_avatar.url)
 
     else:
-        # embed_description += "\n\n**🛠️ Упрощенная версия профиля, так как редактор не является участником сервера."
-
-        # embed.description = embed_description
-
         embed.add_field(name="🛠️ Упрощенная версия", value="```Да```", inline=False)
 
     return embed
