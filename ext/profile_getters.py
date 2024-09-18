@@ -169,40 +169,40 @@ async def get_publication_profile(publication_id: int) -> Embed:
     maker = await maker_methods.get_maker_by_id(id=publication.maker_id)
 
     if not maker:
-        maker = "`не указан`"
+        maker = "Не указан"
     else:
-        maker = f"<@{maker.discord_id}> `{maker.nickname}`"
+        maker = f"{maker.nickname}"
 
     information_creator = await maker_methods.get_maker_by_id(
         id=publication.information_creator_id
     )
 
     if not information_creator:
-        information_creator = "`не указан`"
+        information_creator = "Не указан"
     else:
         information_creator = (
-            f"<@{information_creator.discord_id}> `{information_creator.nickname}`"
+            f"{information_creator.nickname}"
         )
 
     salary_payer = await maker_methods.get_maker_by_id(id=publication.salary_payer_id)
 
     if not salary_payer:
-        salary_payer = "`не выплачено`"
+        salary_payer = "Не выплачено"
     else:
-        salary_payer = f"<@{salary_payer.discord_id}> `{salary_payer.nickname}`"
+        salary_payer = f"{salary_payer.nickname}"
 
     if not publication.date:
-        date = "`не указана`"
+        date = "Не указана"
     else:
         if isinstance(publication.date, dt_date):
             date = publication.date.strftime("%d.%m.%Y")
         elif isinstance(publication.date, str):
             date = dt_date.fromisoformat(publication.date).strftime("%d.%m.%Y")
         else:
-            date = "*не удалось получить значение, обратитесь в поддержку*"
+            date = "Не удалось получить значение, обратитесь в поддержку"
 
     if not publication.amount_dp:
-        salary = "`не установлено`"
+        salary = "Не установлено"
     else:
         salary = f"{publication.amount_dp}"
 
@@ -222,43 +222,43 @@ async def get_publication_profile(publication_id: int) -> Embed:
 
     embed_fields = [
         {
-            "name": "",
-            "value": "",
+            "name": "<:hashtag:1220792495047184515> ID",
+            "value": f"```{publication.id}```",
             "inline": True
         },
         {
-            "name": "",
-            "value": "",
+            "name": "<:id_card:1207329341227147274> Номер",
+            "value": f"```{publication.publication_number}```",
             "inline": True
         },
         {
-            "name": "",
-            "value": "",
+            "name": "<:yellow_calendar:1207339611911884902> Дата",
+            "value": f"```{date}```",
             "inline": True
         },
         {
-            "name": "",
-            "value": "",
+            "name": "<:user:1220792994328875058> Редактор",
+            "value": f"```{maker}```",
             "inline": True
         },
         {
-            "name": "",
-            "value": "",
+            "name": "<:workinprogress:1220793552234086451> Статус",
+            "value": f"```{status}```",
             "inline": True
         },
         {
-            "name": "",
-            "value": "",
+            "name": "<:money:1220793737391771829> Зарплата",
+            "value": f"```{salary}```",
             "inline": True
         },
         {
-            "name": "",
-            "value": "",
+            "name": "<:user:1220792994328875058> Информацию собрал",
+            "value": f"```{information_creator}```",
             "inline": True
         },
         {
-            "name": "",
-            "value": "",
+            "name": "<:user:1220792994328875058> Зарплату выплатил",
+            "value": f"```{salary_payer}```",
             "inline": True
         }
     ]
@@ -268,6 +268,9 @@ async def get_publication_profile(publication_id: int) -> Embed:
         # description=embed_description,
         color=0x2B2D31,
     )
+
+    for embed_field in embed_fields:
+        embed.add_field(name=embed_field["name"], value=embed_field["value"], inline=embed_field["inline"])
 
     return embed
 
