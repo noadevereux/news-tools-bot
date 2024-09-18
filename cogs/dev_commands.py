@@ -315,7 +315,7 @@ class DeveloperCommands(commands.Cog):
             guild_id: int = commands.Param(
                 name="guild", description="Сервер", autocomplete=guild_autocomplete
             ),
-            role_id: commands.LargeInt = commands.Param(
+            role_id: str = commands.Param(
                 name="role_id", description="Discord ID роли"
             ),
     ):
@@ -354,7 +354,7 @@ class DeveloperCommands(commands.Cog):
             guild_id: int = commands.Param(
                 name="guild", description="Сервер", autocomplete=guild_autocomplete
             ),
-            role_id: commands.LargeInt = commands.Param(
+            role_id: str = commands.Param(
                 name="role_id", description="Discord ID роли"
             ),
     ):
@@ -512,7 +512,7 @@ class DeveloperCommands(commands.Cog):
             guild_id: int = commands.Param(
                 name="guild", description="Сервер", autocomplete=guild_autocomplete
             ),
-            role_id: commands.LargeInt = commands.Param(
+            role_id: str = commands.Param(
                 name="role_id", description="Discord ID роли"
             ),
     ):
@@ -554,7 +554,7 @@ class DeveloperCommands(commands.Cog):
             guild_id: int = commands.Param(
                 name="guild", description="Сервер", autocomplete=guild_autocomplete
             ),
-            role_id: commands.LargeInt = commands.Param(
+            role_id: str = commands.Param(
                 name="role_id", description="Discord ID роли"
             ),
     ):
