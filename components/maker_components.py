@@ -1660,6 +1660,17 @@ class SubmitText(ui.Modal):
                     return await interaction.edit_original_response(
                         embed=get_failed_embed(f"Discord ID **{new_member.id}** уже привязан другому аккаунту.")
                     )
+                
+                if interaction_author.discord_id == maker.discord_id:
+                    main_menu = await MainMenu.create(
+                        author=self.author, maker_id=self.maker_id
+                    )
+                    
+                    await interaction.message.edit(view=main_menu)
+
+                    return await interaction.edit_original_message(
+                        embed=get_failed_embed("Вы не можете изменить Discord ID для своего аккаунта.")
+                    )
 
                 await maker_methods.update_maker(
                     guild_id=guild.id,
