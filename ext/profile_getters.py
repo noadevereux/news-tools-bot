@@ -208,18 +208,6 @@ async def get_publication_profile(publication_id: int) -> Embed:
 
     status = get_status_title(status_kw=publication.status)
 
-    # embed_description = f"""
-    # **<:hashtag:1220792495047184515> ID выпуска: `{publication.id}`**
-    # **<:id_card:1207329341227147274> Номер выпуска: `{publication.publication_number}`**
-    # **<:yellow_calendar:1207339611911884902> Дата публикации выпуска: {date}**
-    # **<:user:1220792994328875058> Редактор: {maker}**
-    # **<:workinprogress:1220793552234086451> Статус: {status.lower()}**
-    # **<:money:1220793737391771829> Зарплата за выпуск: {salary}**
-
-    # **<:user:1220792994328875058> Информацию для выпуска собрал: {information_creator}**
-    # **<:user:1220792994328875058> Зарплату выплатил: {salary_payer}**
-    # """
-
     embed_fields = [
         {
             "name": "<:hashtag:1220792495047184515> ID",
@@ -265,8 +253,7 @@ async def get_publication_profile(publication_id: int) -> Embed:
 
     embed = disnake.Embed(
         title=f"<:job_title:1207331119176089681> Информация о выпуске `[#{publication.publication_number}]`",
-        # description=embed_description,
-        color=0x2B2D31,
+        color=0x2B2D31
     )
 
     for embed_field in embed_fields:
