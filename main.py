@@ -6,6 +6,7 @@ from disnake.ext import commands
 
 from config import TOKEN, DEV_GUILDS, temp
 from ext.logger import Logger
+from ext.models.reusable import *
 
 from database.database import SessionManager
 
@@ -33,20 +34,20 @@ async def cog_load(
         bot.load_extension(name=f"cogs.{extension}")
     except commands.errors.ExtensionNotFound:
         return await interaction.edit_original_response(
-            content=f"Модуль {extension} не найден."
+            embed=get_failed_embed(f"Модуль **{extension}** не найден.")
         )
     except commands.errors.ExtensionAlreadyLoaded:
         return await interaction.edit_original_response(
-            content=f"Модуль {extension} уже загружен."
+            embed=get_failed_embed(f"Модуль **{extension}** уже загружен.")
         )
     except Exception as exception:
         await interaction.edit_original_response(
-            content=f"Произошла ошибка при загрузке модуля {extension}, информация записана в лог."
+            embed=get_failed_embed(f"Произошла ошибка при загрузке модуля **{extension}**, информация записана в лог.")
         )
         return await log.error(exception)
 
     return await interaction.edit_original_response(
-        content=f"Модуль {extension} загружен."
+        embed=get_success_embed(f"Модуль **{extension}** загружен.")
     )
 
 
@@ -61,20 +62,20 @@ async def cog_reload(
         bot.reload_extension(name=f"cogs.{extension}")
     except commands.errors.ExtensionNotLoaded:
         return await interaction.edit_original_response(
-            content=f"Модуль {extension} не загружен."
+            embed=get_failed_embed(f"Модуль **{extension}** не загружен.")
         )
     except commands.errors.ExtensionNotFound:
         return await interaction.edit_original_response(
-            content=f"Модуль {extension} не найден."
+            embed=get_failed_embed(f"Модуль **{extension}** не найден.")
         )
     except Exception as exception:
         await interaction.edit_original_response(
-            content=f"Произошла ошибка при перезагрузке модуля {extension}, информация записана в лог."
+            embed=(f"Произошла ошибка при перезагрузке модуля **{extension}**, информация записана в лог.")
         )
         return await log.error(exception)
 
     return await interaction.edit_original_response(
-        content=f"Модуль {extension} перезагружен."
+        embed=get_success_embed(f"Модуль **{extension}** перезагружен.")
     )
 
 
@@ -89,15 +90,15 @@ async def cog_unload(
         bot.unload_extension(name=f"cogs.{extension}")
     except commands.errors.ExtensionNotLoaded:
         return await interaction.edit_original_response(
-            content=f"Модуль {extension} не загружен."
+            embed=get_failed_embed(f"Модуль **{extension}** не загружен.")
         )
     except commands.errors.ExtensionNotFound:
         return await interaction.edit_original_response(
-            content=f"Модуль {extension} не найден."
+            embed=get_failed_embed(f"Модуль **{extension}** не найден.")
         )
 
     return await interaction.edit_original_response(
-        content=f"Модуль {extension} отгружен."
+        embed=get_success_embed(f"Модуль **{extension}** отгружен.")
     )
 
 

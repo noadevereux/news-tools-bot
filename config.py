@@ -31,4 +31,10 @@ DEFAULT_POST_TITLES = {
     5: "Руководитель",
 }
 
+REUSABLE_EMOJI = {
+    "pending": "<a:blurple_loading:1233390095336472689>",
+    "success": "<a:success:1261226409901293608>",
+    "fail": "<a:fail:1261225205678735440>"
+}
+
 # https://discord.com/api/oauth2/authorize?client_id=1089657230330183765&permissions=274878237888&scope=applications.commands%20bot

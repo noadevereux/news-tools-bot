@@ -13,6 +13,7 @@ from database.methods import (
 )
 from ext.tools import validate_date, get_status_title
 from ext.profile_getters import get_maker_profile
+from ext.models.reusable import *
 
 
 class MakersListPaginator(ui.View):
@@ -125,18 +126,12 @@ class LogsPaginator(ui.View):
         maker = await maker_methods.get_maker_by_id(id=maker_id)
 
         if not maker:
-            return None, disnake.Embed(
-                colour=0x2B2D31,
-                description=f"**Редактор не найден в базе данных.**"
-            )
+            return None, get_failed_embed("Редактор не найден.")
 
         maker_logs = await logs_methods.get_maker_logs(maker_id=maker.id)
 
         if len(maker_logs) == 0:
-            embed = disnake.Embed(
-                colour=0x2B2D31,
-                description="**Записи отсутствуют.**",
-            )
+            embed = get_failed_embed("Записи не найдены.")
 
             return None, embed
 
@@ -206,7 +201,7 @@ class GearButton(ui.View):
     ):
         if not interaction.author == self.author:
             return await interaction.send(
-                content="**Вы не можете взаимодействовать с компонентом, который был вызван не вами.**",
+                embed=get_failed_embed("Вы не можете взаимодействовать с компонентом, который был вызван не вами."),
                 ephemeral=True,
             )
 
@@ -235,7 +230,7 @@ class MainMenu(ui.View):
     ):
         if not interaction.author == self.author:
             return await interaction.send(
-                content="**Вы не можете взаимодействовать с компонентом, который был вызван не вами.**",
+                embed=get_failed_embed("Вы не можете взаимодействовать с компонентом, который был вызван не вами."),
                 ephemeral=True,
             )
 
@@ -254,7 +249,7 @@ class BackToMenu(ui.Button):
     async def callback(self, interaction: MessageInteraction, /) -> None:
         if not interaction.author == self.author:
             return await interaction.send(
-                content="**Вы не можете взаимодействовать с компонентом, который был вызван не вами.**",
+                embed=get_failed_embed("Вы не можете взаимодействовать с компонентом, который был вызван не вами."),
                 ephemeral=True,
             )
 
@@ -343,7 +338,7 @@ class OptionSelect(ui.StringSelect):
     async def callback(self, interaction: MessageInteraction, /):
         if not interaction.author == self.author:
             return await interaction.send(
-                content="**Вы не можете взаимодействовать с компонентом, который был вызван не вами.**",
+                embed=get_failed_embed("Вы не можете взаимодействовать с компонентом, который был вызван не вами."),
                 ephemeral=True,
             )
 
@@ -406,7 +401,7 @@ class OptionSelect(ui.StringSelect):
                 )
 
             case "activate":
-                await interaction.response.defer(with_message=True)
+                await interaction.response.send_message(embed=get_pending_embed())
 
                 guild = await guild_methods.get_guild(discord_id=interaction.guild.id)
 
@@ -416,29 +411,29 @@ class OptionSelect(ui.StringSelect):
 
                 if not interaction_author:
                     return await interaction.edit_original_response(
-                        content="**У вас недостаточно прав для выполнения данного взаимодействия.**"
+                        embed=get_failed_embed("У вас недостаточно прав для выполнения данного взаимодействия.")
                     )
 
                 elif not interaction_author.account_status:
                     return await interaction.edit_original_response(
-                        content="**У вас недостаточно прав для выполнения данного взаимодействия.**"
+                        embed=get_failed_embed("У вас недостаточно прав для выполнения данного взаимодействия.")
                     )
 
                 elif int(interaction_author.level) < 2:
                     return await interaction.edit_original_response(
-                        content="**У вас недостаточно прав для выполнения данного взаимодействия.**"
+                        embed=get_failed_embed("У вас недостаточно прав для выполнения данного взаимодействия.")
                     )
 
                 maker = await maker_methods.get_maker_by_id(id=self.maker_id)
 
                 if not maker:
                     return await interaction.edit_original_response(
-                        content="**Редактор не зарегистрирован в системе. Используйте `/maker register` чтобы зарегистрировать редактора.**"
+                        embed=get_failed_embed("Редактор не зарегистрирован в системе. Используйте `/maker register` чтобы зарегистрировать его.")
                     )
 
                 elif not maker.guild_id == interaction_author.guild_id:
                     return await interaction.edit_original_response(
-                        content="**Редактор не зарегистрирован в системе. Используйте `/maker register` чтобы зарегистрировать редактора.**"
+                        embed=get_failed_embed("Редактор не зарегистрирован в системе. Используйте `/maker register` чтобы зарегистрировать его.")
                     )
 
                 elif (
@@ -446,12 +441,12 @@ class OptionSelect(ui.StringSelect):
                     and not interaction_author.is_admin
                 ):
                     return await interaction.edit_original_response(
-                        content="**У вас недостаточно прав для выполнения данного взаимодействия.**"
+                        embed=get_failed_embed("У вас недостаточно прав для выполнения данного взаимодействия.")
                     )
 
                 elif maker.account_status:
                     return await interaction.edit_original_response(
-                        content="**Аккаунт редактора итак активен.**"
+                        embed=get_failed_embed("Аккаунт редактора итак активен.")
                     )
 
                 timestamp = datetime.now().isoformat()
@@ -527,13 +522,13 @@ class OptionSelect(ui.StringSelect):
                         try:
                             if isinstance(error, disnake.HTTPException):
                                 await channel.send(
-                                    content=f"**Мне не удалось выдать роль {duty_role.mention} участнику {member.mention}.**\n"
-                                            f"**Произошла внутренняя ошибка при выполнении запроса.**"
+                                    content=f"Мне не удалось выдать роль {duty_role.mention} участнику {member.mention}.\n"
+                                            f"Произошла внутренняя ошибка при выполнении запроса."
                                 )
                             elif isinstance(error, disnake.Forbidden):
                                 await channel.send(
-                                    content=f"**Мне не удалось выдать роль {duty_role.mention} участнику {member.mention}.**\n"
-                                            f"**У меня недостаточно прав для выполнения данного действия.**"
+                                    content=f"Мне не удалось выдать роль {duty_role.mention} участнику {member.mention}.\n"
+                                            f"У меня недостаточно прав для выполнения данного действия."
                                 )
                         except (disnake.HTTPException, disnake.Forbidden):
                             pass
@@ -550,11 +545,11 @@ class OptionSelect(ui.StringSelect):
                 await interaction.message.edit(embed=embed, view=main_menu)
 
                 return await interaction.edit_original_response(
-                    content=f"**Вы активировали аккаунт редактора <@{maker.discord_id}> `{maker.nickname}`.**",
+                    embed=get_success_embed(f"Вы активировали аккаунт редактора **{maker.nickname}**.")
                 )
 
             case "logs":
-                await interaction.response.defer(with_message=True, ephemeral=True)
+                await interaction.response.send_message(embed=get_pending_embed(), ephemeral=True)
 
                 view, embed = await LogsPaginator.create(maker_id=self.maker_id)
 
@@ -594,7 +589,7 @@ class WarnsControl(ui.View):
     ):
         if not interaction.author == self.author:
             return await interaction.send(
-                content="**Вы не можете взаимодействовать с компонентом, который был вызван не вами.**",
+                embed=get_failed_embed("Вы не можете взаимодействовать с компонентом, который был вызван не вами."),
                 ephemeral=True,
             )
 
@@ -610,7 +605,7 @@ class WarnsControl(ui.View):
     ):
         if not interaction.author == self.author:
             return await interaction.send(
-                content="**Вы не можете взаимодействовать с компонентом, который был вызван не вами.**",
+                embed=get_failed_embed("Вы не можете взаимодействовать с компонентом, который был вызван не вами."),
                 ephemeral=True,
             )
 
@@ -654,7 +649,7 @@ class PredsControl(ui.View):
     ):
         if not interaction.author == self.author:
             return await interaction.send(
-                content="**Вы не можете взаимодействовать с компонентом, который был вызван не вами.**",
+                embed=get_failed_embed("Вы не можете взаимодействовать с компонентом, который был вызван не вами."),
                 ephemeral=True,
             )
 
@@ -670,7 +665,7 @@ class PredsControl(ui.View):
     ):
         if not interaction.author == self.author:
             return await interaction.send(
-                content="**Вы не можете взаимодействовать с компонентом, который был вызван не вами.**",
+                embed=get_failed_embed("Вы не можете взаимодействовать с компонентом, который был вызван не вами."),
                 ephemeral=True,
             )
 
@@ -720,11 +715,11 @@ class SetLevel(ui.View):
     ):
         if not interaction.author == self.author:
             return await interaction.send(
-                content="**Вы не можете взаимодействовать с компонентом, который был вызван не вами.**",
+                embed=get_failed_embed("Вы не можете взаимодействовать с компонентом, который был вызван не вами."),
                 ephemeral=True,
             )
 
-        await interaction.response.defer(with_message=True)
+        await interaction.response.send_message(embed=get_pending_embed())
 
         level = interaction.values[0]
 
@@ -736,17 +731,17 @@ class SetLevel(ui.View):
 
         if not interaction_author:
             return await interaction.edit_original_response(
-                content="**У вас недостаточно прав для выполнения данного взаимодействия.**"
+                embed=get_failed_embed("У вас недостаточно прав для выполнения данного взаимодействия.")
             )
 
         elif not interaction_author.account_status:
             return await interaction.edit_original_response(
-                content="**У вас недостаточно прав для выполнения данного взаимодействия.**"
+                embed=get_failed_embed("У вас недостаточно прав для выполнения данного взаимодействия.")
             )
 
         elif int(interaction_author.level) < 2:
             return await interaction.edit_original_response(
-                content="**У вас недостаточно прав для выполнения данного взаимодействия.**"
+                embed=get_failed_embed("У вас недостаточно прав для выполнения данного взаимодействия.")
             )
 
         elif (
@@ -754,19 +749,19 @@ class SetLevel(ui.View):
             and not interaction_author.is_admin
         ):
             return await interaction.edit_original_response(
-                content="**Вы не можете установить редактору уровень доступа, который равнен или выше вашего.**"
+                embed=get_failed_embed(f"Вы не можете установить редактору {level} уровень доступа.")
             )
 
         maker = await maker_methods.get_maker_by_id(id=self.maker_id)
 
         if not maker:
             return await interaction.edit_original_response(
-                content="**Редактор не зарегистрирован в системе.**"
+                embed=get_failed_embed(f"Редактор c ID **{self.maker_id}** не зарегистрирован в системе.")
             )
 
         elif not maker.guild_id == interaction_author.guild_id:
             return await interaction.edit_original_response(
-                content="**Редактор не зарегистрирован в системе.**"
+                embed=get_failed_embed(f"Редактор c ID **{self.maker_id}** не зарегистрирован в системе.")
             )
 
         elif (
@@ -774,17 +769,17 @@ class SetLevel(ui.View):
             and not interaction_author.is_admin
         ):
             return await interaction.edit_original_response(
-                content="**У вас недостаточно прав для выполнения данного взаимодействия.**"
+                embed=get_failed_embed("У вас недостаточно прав для выполнения данного взаимодействия.")
             )
 
         elif not maker.account_status:
             return await interaction.edit_original_response(
-                content="**Невозможно изменить уровень деактивированному редактору.**"
+                embed=get_failed_embed(f"Невозможно изменить уровень деактивированному редактору.")
             )
 
         elif maker.level == level:
             return await interaction.edit_original_response(
-                content="**Изменений не произошло, уровень, который вы указали, итак установлен редактору.**"
+                embed=get_failed_embed(f"Уровень **{level}** уже установлен редактору **{maker.nickname}**.")
             )
 
         await maker_methods.update_maker(
@@ -814,7 +809,7 @@ class SetLevel(ui.View):
         await interaction.message.edit(embed=embed)
 
         return await interaction.edit_original_response(
-            content=f"**Вы установили редактору <@{maker.discord_id}> `{maker.nickname}` уровень `{level}`.**"
+            embed=get_success_embed(f"Вы установили редактору **{maker.nickname}** уровень **{level}**.")
         )
 
 
@@ -860,11 +855,11 @@ class SetStatus(ui.View):
     ):
         if not interaction.author == self.author:
             return await interaction.send(
-                content="**Вы не можете взаимодействовать с компонентом, который был вызван не вами.**",
+                embed=get_failed_embed("Вы не можете взаимодействовать с компонентом, который был вызван не вами."),
                 ephemeral=True,
             )
 
-        await interaction.response.defer(with_message=True)
+        await interaction.response.send_message(embed=get_pending_embed())
 
         status = interaction.values[0]
 
@@ -876,29 +871,29 @@ class SetStatus(ui.View):
 
         if not interaction_author:
             return await interaction.edit_original_response(
-                content="**У вас недостаточно прав для выполнения данного взаимодействия.**"
+                embed=get_failed_embed("У вас недостаточно прав для выполнения данного взаимодействия.")
             )
 
         elif not interaction_author.account_status:
             return await interaction.edit_original_response(
-                content="**У вас недостаточно прав для выполнения данного взаимодействия.**"
+                embed=get_failed_embed("У вас недостаточно прав для выполнения данного взаимодействия.")
             )
 
         elif int(interaction_author.level) < 2:
             return await interaction.edit_original_response(
-                content="**У вас недостаточно прав для выполнения данного взаимодействия.**"
+                embed=get_failed_embed("У вас недостаточно прав для выполнения данного взаимодействия.")
             )
 
         maker = await maker_methods.get_maker_by_id(id=self.maker_id)
 
         if not maker:
             return await interaction.edit_original_response(
-                content="**Редактор не зарегистрирован в системе.**"
+                embed=get_failed_embed(f"Редактор c ID **{self.maker_id}** не зарегистрирован в системе.")
             )
 
         elif not maker.guild_id == interaction_author.guild_id:
             return await interaction.edit_original_response(
-                content="**Редактор не зарегистрирован в системе.**"
+                embed=get_failed_embed(f"Редактор c ID **{self.maker_id}** не зарегистрирован в системе.")
             )
 
         elif (
@@ -906,17 +901,17 @@ class SetStatus(ui.View):
             and not interaction_author.is_admin
         ):
             return await interaction.edit_original_response(
-                content="**У вас недостаточно прав для выполнения данного взаимодействия.**"
+                embed=get_failed_embed("У вас недостаточно прав для выполнения данного взаимодействия.")
             )
 
         elif not maker.account_status:
             return await interaction.edit_original_response(
-                content="**Невозможно изменить статус деактивированному редактору.**"
+                embed=get_failed_embed("Невозможно изменить статус деактивированному редактору.")
             )
 
         elif maker.status == status:
             return await interaction.edit_original_response(
-                content="**Изменений не произошло, статус, который вы указали, уже установлен редактору.**"
+                embed=get_failed_embed(f"Статус **{get_status_title(status)}** уже установлен редактору **{maker.nickname}**.")
             )
 
         await maker_methods.update_maker(
@@ -943,7 +938,7 @@ class SetStatus(ui.View):
         )
 
         return await interaction.edit_original_response(
-            content=f"**Вы установили редактору <@{maker.discord_id}> `{maker.nickname}` статус `{status_title}`.**"
+            embed=get_success_embed(f"Вы установили редактору **{maker.nickname}** статус **{status_title}**.")
         )
 
 
@@ -979,7 +974,7 @@ class SubmitReason(ui.Modal):
     async def callback(self, interaction: ModalInteraction, /):
         if not interaction.author == self.author:
             return await interaction.send(
-                content="**Вы не можете взаимодействовать с компонентом, который был вызван не вами.**",
+                embed=get_failed_embed("Вы не можете взаимодействовать с компонентом, который был вызван не вами."),
                 ephemeral=True,
             )
 
@@ -987,7 +982,7 @@ class SubmitReason(ui.Modal):
 
         match self.action:
             case "give_warn":
-                await interaction.response.defer()
+                await interaction.response.send_message(embed=get_pending_embed())
 
                 guild = await guild_methods.get_guild(discord_id=interaction.guild.id)
 
@@ -997,29 +992,29 @@ class SubmitReason(ui.Modal):
 
                 if not interaction_author:
                     return await interaction.edit_original_response(
-                        content="**У вас недостаточно прав для выполнения данного взаимодействия.**"
+                        embed=get_failed_embed("У вас недостаточно прав для выполнения данного взаимодействия.")
                     )
 
                 elif not interaction_author.account_status:
                     return await interaction.edit_original_response(
-                        content="**У вас недостаточно прав для выполнения данного взаимодействия.**"
+                        embed=get_failed_embed("У вас недостаточно прав для выполнения данного взаимодействия.")
                     )
 
                 elif int(interaction_author.level) < 2:
                     return await interaction.edit_original_response(
-                        content="**У вас недостаточно прав для выполнения данного взаимодействия.**"
+                        embed=get_failed_embed("У вас недостаточно прав для выполнения данного взаимодействия.")
                     )
 
                 maker = await maker_methods.get_maker_by_id(id=self.maker_id)
 
                 if not maker:
                     return await interaction.edit_original_response(
-                        content="**Редактор не зарегистрирован в системе.**"
+                        embed=get_failed_embed(f"Редактор c ID **{self.maker_id}** не зарегистрирован в системе.")
                     )
 
                 elif not maker.guild_id == interaction_author.guild_id:
                     return await interaction.edit_original_response(
-                        content="**Редактор не зарегистрирован в системе.**"
+                        embed=get_failed_embed(f"Редактор c ID **{self.maker_id}** не зарегистрирован в системе.")
                     )
 
                 elif (
@@ -1027,7 +1022,7 @@ class SubmitReason(ui.Modal):
                     and not interaction_author.is_admin
                 ):
                     return await interaction.edit_original_response(
-                        content="**У вас недостаточно прав для выполнения данного взаимодействия.**"
+                        embed=get_failed_embed("У вас недостаточно прав для выполнения данного взаимодействия.")
                     )
 
                 await maker_methods.update_maker(
@@ -1050,10 +1045,10 @@ class SubmitReason(ui.Modal):
                 await interaction.message.edit(embed=embed)
 
                 return await interaction.edit_original_response(
-                    content=f"**Вы выдали выговор редактору <@{maker.discord_id}> `{maker.nickname}`. Причина: {reason}**"
+                    embed=get_success_embed(f"Вы выдали выговор редактору **{maker.nickname}**. Причина: **{reason}**.")
                 )
             case "take_warn":
-                await interaction.response.defer()
+                await interaction.response.send_message(embed=get_pending_embed())
 
                 guild = await guild_methods.get_guild(discord_id=interaction.guild.id)
 
@@ -1063,29 +1058,29 @@ class SubmitReason(ui.Modal):
 
                 if not interaction_author:
                     return await interaction.edit_original_response(
-                        content="**У вас недостаточно прав для выполнения данного взаимодействия.**"
+                        embed=get_failed_embed("У вас недостаточно прав для выполнения данного взаимодействия.")
                     )
 
                 elif not interaction_author.account_status:
                     return await interaction.edit_original_response(
-                        content="**У вас недостаточно прав для выполнения данного взаимодействия.**"
+                        embed=get_failed_embed("У вас недостаточно прав для выполнения данного взаимодействия.")
                     )
 
                 elif int(interaction_author.level) < 2:
                     return await interaction.edit_original_response(
-                        content="**У вас недостаточно прав для выполнения данного взаимодействия.**"
+                        embed=get_failed_embed("У вас недостаточно прав для выполнения данного взаимодействия.")
                     )
 
                 maker = await maker_methods.get_maker_by_id(id=self.maker_id)
 
                 if not maker:
                     return await interaction.edit_original_response(
-                        content="**Редактор не зарегистрирован в системе.**"
+                        embed=get_failed_embed(f"Редактор c ID **{self.maker_id}** не зарегистрирован в системе.")
                     )
 
                 elif not maker.guild_id == interaction_author.guild_id:
                     return await interaction.edit_original_response(
-                        content="**Редактор не зарегистрирован в системе.**"
+                        embed=get_failed_embed(f"Редактор c ID **{self.maker_id}** не зарегистрирован в системе.")
                     )
 
                 elif (
@@ -1093,12 +1088,12 @@ class SubmitReason(ui.Modal):
                     and not interaction_author.is_admin
                 ):
                     return await interaction.edit_original_response(
-                        content="**У вас недостаточно прав для выполнения данного взаимодействия.**"
+                        embed=get_failed_embed("У вас недостаточно прав для выполнения данного взаимодействия.")
                     )
 
                 if maker.warns <= 0:
                     return await interaction.edit_original_response(
-                        content="**Вы не можете установить отрицательное кол-во выговоров редактору.**"
+                        embed=get_failed_embed("Невозможно установить отрицательное количество выговоров.")
                     )
 
                 await maker_methods.update_maker(
@@ -1121,10 +1116,10 @@ class SubmitReason(ui.Modal):
                 await interaction.message.edit(embed=embed)
 
                 return await interaction.edit_original_response(
-                    content=f"**Вы сняли выговор редактору <@{maker.discord_id}> `{maker.nickname}`. Причина: {reason}**"
+                    embed=get_success_embed(f"Вы сняли выговор редактору **{maker.nickname}**. Причина: **{reason}**.")
                 )
             case "give_pred":
-                await interaction.response.defer()
+                await interaction.response.send_message(embed=get_pending_embed())
 
                 guild = await guild_methods.get_guild(discord_id=interaction.guild.id)
 
@@ -1134,29 +1129,29 @@ class SubmitReason(ui.Modal):
 
                 if not interaction_author:
                     return await interaction.edit_original_response(
-                        content="**У вас недостаточно прав для выполнения данного взаимодействия.**"
+                        embed=get_failed_embed("У вас недостаточно прав для выполнения данного взаимодействия.")
                     )
 
                 elif not interaction_author.account_status:
                     return await interaction.edit_original_response(
-                        content="**У вас недостаточно прав для выполнения данного взаимодействия.**"
+                        embed=get_failed_embed("У вас недостаточно прав для выполнения данного взаимодействия.")
                     )
 
                 elif int(interaction_author.level) < 2:
                     return await interaction.edit_original_response(
-                        content="**У вас недостаточно прав для выполнения данного взаимодействия.**"
+                        embed=get_failed_embed("У вас недостаточно прав для выполнения данного взаимодействия.")
                     )
 
                 maker = await maker_methods.get_maker_by_id(id=self.maker_id)
 
                 if not maker:
                     return await interaction.edit_original_response(
-                        content="**Редактор не зарегистрирован в системе.**"
+                        embed=get_failed_embed(f"Редактор c ID **{self.maker_id}** не зарегистрирован в системе.")
                     )
 
                 elif not maker.guild_id == interaction_author.guild_id:
                     return await interaction.edit_original_response(
-                        content="**Редактор не зарегистрирован в системе.**"
+                        embed=get_failed_embed(f"Редактор c ID **{self.maker_id}** не зарегистрирован в системе.")
                     )
 
                 elif (
@@ -1164,7 +1159,7 @@ class SubmitReason(ui.Modal):
                     and not interaction_author.is_admin
                 ):
                     return await interaction.edit_original_response(
-                        content="**У вас недостаточно прав для выполнения данного взаимодействия.**"
+                        embed=get_failed_embed("У вас недостаточно прав для выполнения данного взаимодействия.")
                     )
 
                 if maker.preds < 2:
@@ -1188,7 +1183,7 @@ class SubmitReason(ui.Modal):
                     await interaction.message.edit(embed=embed)
 
                     return await interaction.edit_original_response(
-                        content=f"**Вы выдали предупреждение редактору <@{maker.discord_id}> `{maker.nickname}`. Причина: {reason}**"
+                        embed=get_success_embed(f"Вы выдали предупреждение редактору **{maker.nickname}**. Причина: **{reason}**.")
                     )
                 else:
                     await logs_methods.add_log(
@@ -1223,11 +1218,11 @@ class SubmitReason(ui.Modal):
                     await interaction.message.edit(embed=embed)
 
                     return await interaction.edit_original_response(
-                        content=f"**Вы выдали предупреждение редактору <@{maker.discord_id}> `{maker.nickname}`. Причина: {reason}**\n"
-                        f"**⚠️ Система выдала выговор редактору. Причина: 3/3 предупреждений.**"
+                        embed=get_success_embed(f"Вы выдали предупреждение редактору **{maker.nickname}**. Причина: **{reason}**.\n"
+                                                "⚠️ Система выдала выговор редактору. Причина: 3/3 предупреждений.")
                     )
             case "take_pred":
-                await interaction.response.defer()
+                await interaction.response.send_message(embed=get_pending_embed())
 
                 guild = await guild_methods.get_guild(discord_id=interaction.guild.id)
 
@@ -1237,29 +1232,29 @@ class SubmitReason(ui.Modal):
 
                 if not interaction_author:
                     return await interaction.edit_original_response(
-                        content="**У вас недостаточно прав для выполнения данного взаимодействия.**"
+                        embed=get_failed_embed("У вас недостаточно прав для выполнения данного взаимодействия.")
                     )
 
                 elif not interaction_author.account_status:
                     return await interaction.edit_original_response(
-                        content="**У вас недостаточно прав для выполнения данного взаимодействия.**"
+                        embed=get_failed_embed("У вас недостаточно прав для выполнения данного взаимодействия.")
                     )
 
                 elif int(interaction_author.level) < 2:
                     return await interaction.edit_original_response(
-                        content="**У вас недостаточно прав для выполнения данного взаимодействия.**"
+                        embed=get_failed_embed("У вас недостаточно прав для выполнения данного взаимодействия.")
                     )
 
                 maker = await maker_methods.get_maker_by_id(id=self.maker_id)
 
                 if not maker:
                     return await interaction.edit_original_response(
-                        content="**Редактор не зарегистрирован в системе.**"
+                        embed=get_failed_embed(f"Редактор c ID **{self.maker_id}** не зарегистрирован в системе.")
                     )
 
                 elif not maker.guild_id == interaction_author.guild_id:
                     return await interaction.edit_original_response(
-                        content="**Редактор не зарегистрирован в системе.**"
+                        embed=get_failed_embed(f"Редактор c ID **{self.maker_id}** не зарегистрирован в системе.")
                     )
 
                 elif (
@@ -1267,7 +1262,7 @@ class SubmitReason(ui.Modal):
                     and not interaction_author.is_admin
                 ):
                     return await interaction.edit_original_response(
-                        content="**У вас недостаточно прав для выполнения данного взаимодействия.**"
+                        embed=get_failed_embed("У вас недостаточно прав для выполнения данного взаимодействия.")
                     )
 
                 if maker.preds > 0:
@@ -1291,7 +1286,7 @@ class SubmitReason(ui.Modal):
                     await interaction.message.edit(embed=embed)
 
                     return await interaction.edit_original_response(
-                        content=f"**Вы сняли предупреждение редактору <@{maker.discord_id}> `{maker.nickname}`. Причина: {reason}**"
+                        embed=get_success_embed(f"Вы сняли предупреждение редактору **{maker.nickname}**. Причина: **{reason}**.")
                     )
 
                 elif (maker.preds == 0) and (maker.warns > 0):
@@ -1327,17 +1322,17 @@ class SubmitReason(ui.Modal):
                     await interaction.message.edit(embed=embed)
 
                     return await interaction.edit_original_response(
-                        content=f"**Вы сняли предупреждение редактору <@{maker.discord_id}> `{maker.nickname}`. Причина: {reason}**\n"
-                        f"**⚠️ Система сняла выговор редактору. Причина: распад выговора на 3 предупреждения.**"
+                        embed=get_success_embed(f"Вы сняли предупреждение редактору **{maker.nickname}**. Причина: **{reason}**.\n"
+                                                "⚠️ Система сняла выговор редактору. Причина: распад выговора на 3 предупреждения.")
                     )
 
                 else:
                     return await interaction.edit_original_response(
-                        content="**Вы не можете установить отрицательное количество предупреждений редактору.**"
+                        embed=get_failed_embed("Невозможно установить отрицательное количество предупреждений редактору.")
                     )
 
             case "deactivate":
-                await interaction.response.defer()
+                await interaction.response.send_message(embed=get_pending_embed())
 
                 guild = await guild_methods.get_guild(discord_id=interaction.guild.id)
 
@@ -1347,29 +1342,29 @@ class SubmitReason(ui.Modal):
 
                 if not interaction_author:
                     return await interaction.edit_original_response(
-                        content="**У вас недостаточно прав для выполнения данного взаимодействия.**"
+                        embed=get_failed_embed("У вас недостаточно прав для выполнения данного взаимодействия.")
                     )
 
                 elif not interaction_author.account_status:
                     return await interaction.edit_original_response(
-                        content="**У вас недостаточно прав для выполнения данного взаимодействия.**"
+                        embed=get_failed_embed("У вас недостаточно прав для выполнения данного взаимодействия.")
                     )
 
                 elif int(interaction_author.level) < 2:
                     return await interaction.edit_original_response(
-                        content="**У вас недостаточно прав для выполнения данного взаимодействия.**"
+                        embed=get_failed_embed("У вас недостаточно прав для выполнения данного взаимодействия.")
                     )
 
                 maker = await maker_methods.get_maker_by_id(id=self.maker_id)
 
                 if not maker:
                     return await interaction.edit_original_response(
-                        content="**Редактор не зарегистрирован в системе.**"
+                        embed=get_failed_embed(f"Редактор c ID **{self.maker_id}** не зарегистрирован в системе.")
                     )
 
                 elif not maker.guild_id == interaction_author.guild_id:
                     return await interaction.edit_original_response(
-                        content="**Редактор не зарегистрирован в системе.**"
+                        embed=get_failed_embed(f"Редактор c ID **{self.maker_id}** не зарегистрирован в системе.")
                     )
 
                 elif (
@@ -1377,12 +1372,12 @@ class SubmitReason(ui.Modal):
                     and not interaction_author.is_admin
                 ):
                     return await interaction.edit_original_response(
-                        content="**У вас недостаточно прав для выполнения данного взаимодействия.**"
+                        embed=get_failed_embed("У вас недостаточно прав для выполнения данного взаимодействия.")
                     )
 
                 elif not maker.account_status:
                     return await interaction.edit_original_response(
-                        content="**Аккаунт редактора итак деактивирован.**"
+                        embed=get_failed_embed(f"Аккаунт редактора **{maker.nickname}** уже деактивирован.")
                     )
 
                 await maker_methods.update_maker(
@@ -1453,7 +1448,7 @@ class SubmitReason(ui.Modal):
                 await interaction.message.edit(embed=embed, view=main_menu)
 
                 return await interaction.edit_original_response(
-                    content=f"**Вы деактивировали аккаунт редактора <@{maker.discord_id}> `{maker.nickname}`. Причина: {reason}.**"
+                    embed=get_success_embed(f"Вы деактивировали аккаунт редактора **{maker.nickname}**. Причина: **{reason}**.")
                 )
 
 
@@ -1545,13 +1540,13 @@ class SubmitText(ui.Modal):
     async def callback(self, interaction: ModalInteraction, /):
         if not interaction.author == self.author:
             return await interaction.send(
-                content="**Вы не можете взаимодействовать с компонентом, который был вызван не вами.**",
+                embed=get_failed_embed("Вы не можете взаимодействовать с компонентом, который был вызван не вами."),
                 ephemeral=True,
             )
 
         match self.modal_type:
             case "discord":
-                await interaction.response.defer()
+                await interaction.response.send_message(embed=get_pending_embed())
 
                 new_member = disnake.Object(
                     int(interaction.text_values.get("discord_id"))
@@ -1571,7 +1566,7 @@ class SubmitText(ui.Modal):
                     await interaction.message.edit(view=main_menu)
 
                     return await interaction.edit_original_response(
-                        content="**У вас недостаточно прав для выполнения данного взаимодействия.**"
+                        embed=get_failed_embed("У вас недостаточно прав для выполнения данного взаимодействия.")
                     )
 
                 elif not interaction_author.account_status:
@@ -1582,7 +1577,7 @@ class SubmitText(ui.Modal):
                     await interaction.message.edit(view=main_menu)
 
                     return await interaction.edit_original_response(
-                        content="**У вас недостаточно прав для выполнения данного взаимодействия.**"
+                        embed=get_failed_embed("У вас недостаточно прав для выполнения данного взаимодействия.")
                     )
 
                 elif int(interaction_author.level) < 2:
@@ -1593,7 +1588,7 @@ class SubmitText(ui.Modal):
                     await interaction.message.edit(view=main_menu)
 
                     return await interaction.edit_original_response(
-                        content="**У вас недостаточно прав для выполнения данного взаимодействия.**"
+                        embed=get_failed_embed("У вас недостаточно прав для выполнения данного взаимодействия.")
                     )
 
                 maker = await maker_methods.get_maker_by_id(id=self.maker_id)
@@ -1606,7 +1601,7 @@ class SubmitText(ui.Modal):
                     await interaction.message.edit(view=main_menu)
 
                     return await interaction.edit_original_response(
-                        content="**Редактор не зарегистрирован в системе.**"
+                        embed=get_failed_embed(f"Редактор c ID **{self.maker_id}** не зарегистрирован в системе.")
                     )
 
                 elif not maker.guild_id == interaction_author.guild_id:
@@ -1617,7 +1612,7 @@ class SubmitText(ui.Modal):
                     await interaction.message.edit(view=main_menu)
 
                     return await interaction.edit_original_response(
-                        content="**Редактор не зарегистрирован в системе.**"
+                        embed=get_failed_embed(f"Редактор c ID **{self.maker_id}** не зарегистрирован в системе.")
                     )
 
                 elif (
@@ -1631,7 +1626,7 @@ class SubmitText(ui.Modal):
                     await interaction.message.edit(view=main_menu)
 
                     return await interaction.edit_original_response(
-                        content="**У вас недостаточно прав для выполнения данного взаимодействия.**"
+                        embed=get_failed_embed("У вас недостаточно прав для выполнения данного взаимодействия.")
                     )
 
                 if maker.discord_id == new_member.id:
@@ -1642,7 +1637,7 @@ class SubmitText(ui.Modal):
                     await interaction.message.edit(view=main_menu)
 
                     return await interaction.edit_original_response(
-                        content="**Изменений не произошло, к аккаунту редактора итак привязан указанный дискорд.**"
+                        embed=get_failed_embed(f"К аккаунту редактора **{maker.nickname}** уже привязан Discord ID **{new_member.id}**.")
                     )
 
                 if await maker_methods.is_maker_exists(
@@ -1655,7 +1650,7 @@ class SubmitText(ui.Modal):
                     await interaction.message.edit(view=main_menu)
 
                     return await interaction.edit_original_response(
-                        content="**Пользователь, которого вы указали, уже привязан к какому-то аккаунту.**"
+                        embed=get_failed_embed(f"Discord ID **{new_member.id}** уже привязан другому аккаунту.")
                     )
 
                 await maker_methods.update_maker(
@@ -1682,11 +1677,11 @@ class SubmitText(ui.Modal):
                 await interaction.message.edit(embed=embed, view=main_menu)
 
                 return await interaction.edit_original_response(
-                    content=f"**Вы изменили Discord редактору `{maker.nickname}` с ID `{maker.id}` с <@{maker.discord_id}> на <@{new_member.id}>.**"
+                    embed=get_success_embed(f"Вы изменили Discord ID редактору **{maker.nickname}** с **{maker.discord_id}** на **{new_member.id}**.")
                 )
 
             case "nickname":
-                await interaction.response.defer()
+                await interaction.response.send_message(embed=get_pending_embed())
 
                 nickname = interaction.text_values.get("nickname")
 
@@ -1704,7 +1699,7 @@ class SubmitText(ui.Modal):
                     await interaction.message.edit(view=main_menu)
 
                     return await interaction.edit_original_response(
-                        content="**У вас недостаточно прав для выполнения данного взаимодействия.**"
+                        embed=get_failed_embed("У вас недостаточно прав для выполнения данного взаимодействия.")
                     )
 
                 elif not interaction_author.account_status:
@@ -1715,7 +1710,7 @@ class SubmitText(ui.Modal):
                     await interaction.message.edit(view=main_menu)
 
                     return await interaction.edit_original_response(
-                        content="**У вас недостаточно прав для выполнения данного взаимодействия.**"
+                        embed=get_failed_embed("У вас недостаточно прав для выполнения данного взаимодействия.")
                     )
 
                 elif int(interaction_author.level) < 2:
@@ -1726,7 +1721,7 @@ class SubmitText(ui.Modal):
                     await interaction.message.edit(view=main_menu)
 
                     return await interaction.edit_original_response(
-                        content="**У вас недостаточно прав для выполнения данного взаимодействия.**"
+                        embed=get_failed_embed("У вас недостаточно прав для выполнения данного взаимодействия.")
                     )
 
                 maker = await maker_methods.get_maker_by_id(id=self.maker_id)
@@ -1739,7 +1734,7 @@ class SubmitText(ui.Modal):
                     await interaction.message.edit(view=main_menu)
 
                     return await interaction.edit_original_response(
-                        content="**Редактор не зарегистрирован в системе.**"
+                        embed=get_failed_embed(f"Редактор c ID **{self.maker_id}** не зарегистрирован в системе.")
                     )
 
                 elif not maker.guild_id == interaction_author.guild_id:
@@ -1750,7 +1745,7 @@ class SubmitText(ui.Modal):
                     await interaction.message.edit(view=main_menu)
 
                     return await interaction.edit_original_response(
-                        content="**Редактор не зарегистрирован в системе.**"
+                        embed=get_failed_embed(f"Редактор c ID **{self.maker_id}** не зарегистрирован в системе.")
                     )
 
                 elif (
@@ -1764,7 +1759,7 @@ class SubmitText(ui.Modal):
                     await interaction.message.edit(view=main_menu)
 
                     return await interaction.edit_original_response(
-                        content="**У вас недостаточно прав для выполнения данного взаимодействия.**"
+                        embed=get_failed_embed("У вас недостаточно прав для выполнения данного взаимодействия.")
                     )
 
                 elif maker.nickname == nickname:
@@ -1775,7 +1770,7 @@ class SubmitText(ui.Modal):
                     await interaction.message.edit(view=main_menu)
 
                     return await interaction.edit_original_response(
-                        content="**Изменений не произошло, никнейм, который вы указали, итак принадлежит редактору.**"
+                        embed=get_failed_embed(f"Никнейм **{nickname}** уже установлен редактору.")
                     )
 
                 await maker_methods.update_maker(
@@ -1802,11 +1797,11 @@ class SubmitText(ui.Modal):
                 await interaction.message.edit(embed=embed, view=main_menu)
 
                 return await interaction.edit_original_response(
-                    content=f"**Вы изменили никнейм редактора <@{maker.discord_id}> с `{maker.nickname}` на `{nickname}`.**"
+                    embed=get_success_embed(f"Вы изменили никнейм редактора <@{maker.discord_id}> с **{maker.nickname}** на **{nickname}**.")
                 )
 
             case "post_name":
-                await interaction.response.defer()
+                await interaction.response.send_message(embed=get_pending_embed())
 
                 post = interaction.text_values.get("post_name")
 
@@ -1824,7 +1819,7 @@ class SubmitText(ui.Modal):
                     await interaction.message.edit(view=main_menu)
 
                     return await interaction.edit_original_response(
-                        content="**У вас недостаточно прав для выполнения данного взаимодействия.**"
+                        embed=get_failed_embed("У вас недостаточно прав для выполнения данного взаимодействия.")
                     )
 
                 elif not interaction_author.account_status:
@@ -1835,7 +1830,7 @@ class SubmitText(ui.Modal):
                     await interaction.message.edit(view=main_menu)
 
                     return await interaction.edit_original_response(
-                        content="**У вас недостаточно прав для выполнения данного взаимодействия.**"
+                        embed=get_failed_embed("У вас недостаточно прав для выполнения данного взаимодействия.")
                     )
 
                 elif int(interaction_author.level) < 2:
@@ -1846,7 +1841,7 @@ class SubmitText(ui.Modal):
                     await interaction.message.edit(view=main_menu)
 
                     return await interaction.edit_original_response(
-                        content="**У вас недостаточно прав для выполнения данного взаимодействия.**"
+                        embed=get_failed_embed("У вас недостаточно прав для выполнения данного взаимодействия.")
                     )
 
                 maker = await maker_methods.get_maker_by_id(id=self.maker_id)
@@ -1859,7 +1854,7 @@ class SubmitText(ui.Modal):
                     await interaction.message.edit(view=main_menu)
 
                     return await interaction.edit_original_response(
-                        content="**Редактор не зарегистрирован в системе.**"
+                        embed=get_failed_embed(f"Редактор c ID **{self.maker_id}** не зарегистрирован в системе.")
                     )
 
                 elif not maker.guild_id == interaction_author.guild_id:
@@ -1870,7 +1865,7 @@ class SubmitText(ui.Modal):
                     await interaction.message.edit(view=main_menu)
 
                     return await interaction.edit_original_response(
-                        content="**Редактор не зарегистрирован в системе.**"
+                        embed=get_failed_embed(f"Редактор c ID **{self.maker_id}** не зарегистрирован в системе.")
                     )
 
                 elif (
@@ -1884,7 +1879,7 @@ class SubmitText(ui.Modal):
                     await interaction.message.edit(view=main_menu)
 
                     return await interaction.edit_original_response(
-                        content="**У вас недостаточно прав для выполнения данного взаимодействия.**"
+                        embed=get_failed_embed("У вас недостаточно прав для выполнения данного взаимодействия.")
                     )
 
                 elif not maker.account_status:
@@ -1895,7 +1890,7 @@ class SubmitText(ui.Modal):
                     await interaction.message.edit(view=main_menu)
 
                     return await interaction.edit_original_response(
-                        content="**Невозможно изменить должность деактивированному редактору.**"
+                        embed=get_failed_embed("Невозможно изменить должность деактивированному редактору.")
                     )
 
                 if not post == "":
@@ -1907,7 +1902,7 @@ class SubmitText(ui.Modal):
                         await interaction.message.edit(view=main_menu)
 
                         return await interaction.edit_original_response(
-                            content="**Изменений не произошло, должность, которую вы указали, итак принадлежит редактору.**"
+                            embed=get_failed_embed(f"Должность **{post}** уже установлена редактору **{maker.nickname}**.")
                         )
 
                     await maker_methods.update_maker(
@@ -1934,7 +1929,7 @@ class SubmitText(ui.Modal):
                     await interaction.message.edit(embed=embed, view=main_menu)
 
                     return await interaction.edit_original_response(
-                        content=f"**Вы установили редактору <@{maker.discord_id}> `{maker.nickname}` должность `{post}`.**"
+                        embed=get_success_embed(f"Вы установили редактору **{maker.nickname}** должность **{post}**.")
                     )
 
                 else:
@@ -1946,7 +1941,7 @@ class SubmitText(ui.Modal):
                         await interaction.message.edit(view=main_menu)
 
                         return await interaction.edit_original_response(
-                            content=f"**Изменений не произошло, у редактора итак установлена стандартная должность.**"
+                            embed=get_failed_embed(f"У редактора **{maker.nickname}** уже установлена стандартная должность **{maker.post_name}**.")
                         )
 
                     await maker_methods.update_maker(
@@ -1973,11 +1968,11 @@ class SubmitText(ui.Modal):
                     await interaction.message.edit(embed=embed, view=main_menu)
 
                     return await interaction.edit_original_response(
-                        content=f"**Вы установили редактору <@{maker.discord_id}> `{maker.nickname}` стандартную должность `{DEFAULT_POST_TITLES.get(int(maker.level))}`.**"
+                        embed=get_success_embed(f"Вы установили редактору **{maker.nickname}** стандартную должность **{DEFAULT_POST_TITLES.get(int(maker.level))}**.")
                     )
 
             case "date":
-                await interaction.response.defer()
+                await interaction.response.send_message(embed=get_pending_embed())
 
                 date_str = interaction.text_values.get("date")
 
@@ -1991,7 +1986,7 @@ class SubmitText(ui.Modal):
                     await interaction.message.edit(view=main_menu)
 
                     return await interaction.edit_original_response(
-                        content="**Указана дата в неверном формате. Укажите дату в формате `ГГГГ-ММ-ДД`.**"
+                        embed=get_failed_embed("Неверный формат даты. Укажите дату в формате `ГГГГ-ММ-ДД`.")
                     )
 
                 new_datetime = datetime.fromisoformat(date_str)
@@ -2004,7 +1999,7 @@ class SubmitText(ui.Modal):
                     await interaction.message.edit(view=main_menu)
 
                     return await interaction.edit_original_response(
-                        content="**Дату постановления нельзя указать в будущем.**"
+                        embed=get_failed_embed("Дату постановления нельзя указать в будещем.")
                     )
 
                 guild = await guild_methods.get_guild(discord_id=interaction.guild.id)
@@ -2021,7 +2016,7 @@ class SubmitText(ui.Modal):
                     await interaction.message.edit(view=main_menu)
 
                     return await interaction.edit_original_response(
-                        content="**У вас недостаточно прав для выполнения данного взаимодействия.**"
+                        embed=get_failed_embed("У вас недостаточно прав для выполнения данного взаимодействия.")
                     )
 
                 elif not interaction_author.account_status:
@@ -2032,7 +2027,7 @@ class SubmitText(ui.Modal):
                     await interaction.message.edit(view=main_menu)
 
                     return await interaction.edit_original_response(
-                        content="**У вас недостаточно прав для выполнения данного взаимодействия.**"
+                        embed=get_failed_embed("У вас недостаточно прав для выполнения данного взаимодействия.")
                     )
 
                 elif int(interaction_author.level) < 2:
@@ -2043,7 +2038,7 @@ class SubmitText(ui.Modal):
                     await interaction.message.edit(view=main_menu)
 
                     return await interaction.edit_original_response(
-                        content="**У вас недостаточно прав для выполнения данного взаимодействия.**"
+                        embed=get_failed_embed("У вас недостаточно прав для выполнения данного взаимодействия.")
                     )
 
                 maker = await maker_methods.get_maker_by_id(id=self.maker_id)
@@ -2056,7 +2051,7 @@ class SubmitText(ui.Modal):
                     await interaction.message.edit(view=main_menu)
 
                     return await interaction.edit_original_response(
-                        content="**Редактор не зарегистрирован в системе.**"
+                        embed=get_failed_embed(f"Редактор c ID **{self.maker_id}** не зарегистрирован в системе.")
                     )
 
                 elif not maker.guild_id == interaction_author.guild_id:
@@ -2067,7 +2062,7 @@ class SubmitText(ui.Modal):
                     await interaction.message.edit(view=main_menu)
 
                     return await interaction.edit_original_response(
-                        content="**Редактор не зарегистрирован в системе.**"
+                        embed=get_failed_embed(f"Редактор c ID **{self.maker_id}** не зарегистрирован в системе.")
                     )
 
                 elif (
@@ -2081,7 +2076,7 @@ class SubmitText(ui.Modal):
                     await interaction.message.edit(view=main_menu)
 
                     return await interaction.edit_original_response(
-                        content="**У вас недостаточно прав для выполнения данного взаимодействия.**"
+                        embed=get_failed_embed("У вас недостаточно прав для выполнения данного взаимодействия.")
                     )
 
                 await maker_methods.update_maker(
@@ -2108,5 +2103,5 @@ class SubmitText(ui.Modal):
                 await interaction.message.edit(embed=embed, view=main_menu)
 
                 return await interaction.edit_original_response(
-                    content=f"**Вы установили дату постановления редактора <@{maker.discord_id}> `{maker.nickname}` на <t:{int(new_datetime.timestamp())}:D>**"
+                    embed=get_success_embed(f"Вы установили дату постановления редактора **{maker.nickname}** на <t:{int(new_datetime.timestamp())}:D>.")
                 )
