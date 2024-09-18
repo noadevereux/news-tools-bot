@@ -516,7 +516,7 @@ class OptionSelect(ui.StringSelect):
 
                     try:
                         await member.add_roles(duty_role, reason=f"{interaction_author.nickname} активировал аккаунт")
-                    except (disnake.HTTPException, disnake.Forbidden) as error:
+                    except (disnake.HTTPException, disnake.Forbidden, AttributeError) as error:
                         channel = interaction.guild.get_channel(guild.channel_id)
 
                         try:
@@ -529,6 +529,10 @@ class OptionSelect(ui.StringSelect):
                                 await channel.send(
                                     content=f"Мне не удалось выдать роль {duty_role.mention} участнику {member.mention}.\n"
                                             f"У меня недостаточно прав для выполнения данного действия."
+                                )
+                            elif isinstance(error, AttributeError):
+                                await channel.send(
+                                    components=f"Мне не удалось найти пользователя <@{maker.discord_id}> чтобы выдать ему роль"
                                 )
                         except (disnake.HTTPException, disnake.Forbidden):
                             pass
@@ -1419,7 +1423,7 @@ class SubmitReason(ui.Modal):
 
                     try:
                         await member.remove_roles(duty_role, reason=f"{interaction_author.nickname} деактивировал аккаунт")
-                    except (disnake.HTTPException, disnake.Forbidden) as error:
+                    except (disnake.HTTPException, disnake.Forbidden, AttributeError) as error:
                         channel = interaction.guild.get_channel(guild.channel_id)
 
                         try:
@@ -1432,6 +1436,10 @@ class SubmitReason(ui.Modal):
                                 await channel.send(
                                     content=f"**Мне не удалось снять роль {duty_role.mention} участнику {member.mention}.**\n"
                                             f"**У меня недостаточно прав для выполнения данного действия.**"
+                                )
+                            elif isinstance(error, AttributeError):
+                                await channel.send(
+                                    components=f"Мне не удалось найти пользователя <@{maker.discord_id}> чтобы снять ему роль"
                                 )
                         except (disnake.HTTPException, disnake.Forbidden):
                             pass
