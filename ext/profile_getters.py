@@ -20,7 +20,7 @@ async def get_maker_profile(maker_id: int, user: User | Member = None) -> Embed:
     if maker.post_name:
         post = maker.post_name
     else:
-        post = "не установлено"
+        post = "Не установлено"
 
     status = get_status_title(maker.status)
 
@@ -62,62 +62,86 @@ async def get_maker_profile(maker_id: int, user: User | Member = None) -> Embed:
                 "awarder": awarder,
             }
         )
-
-    embed_description = f"""\
-{"**Значки: " + " ".join([badge.get("emoji") for badge in badges]) + "**" if len(badges) > 0 else ""}
-
-**<:hashtag:1220792495047184515> ID аккаунта: `{maker.id}`**
-**<:discord_icon:1207328653734584371> Discord: <@{maker.discord_id}>**
-**<:id_card:1207329341227147274> Никнейм: {maker.nickname}**
-**<:access_key:1207330321075535882> Уровень доступа: {level}**
-**<:job_title:1207331119176089681>️ Должность: {post}**
-**<:status:1207331595497771018> Статус: {status.lower()}**
-
-**<:warn_sign:1207315803893145610> Выговоры: {maker.warns}**
-**<:pred_sign:1207316150044590081> Предупреждения: {maker.preds}**
-
-**🗞 Сделано выпусков: {publications_amount}**
-
-**<:yellow_calendar:1207339611911884902> Дней на посту редактора: {days}**
-    """
+    
+    embed_fields = [
+        {
+            "name": "<:hashtag:1220792495047184515> ID",
+            "value": f"```{maker.id}```",
+            "inline": True
+        },
+        {
+            "name": "<:id_card:1207329341227147274> Никнейм",
+            "value": f"```{maker.nickname}```",
+            "inline": True
+        },
+        {
+            "name": "<:discord_icon:1207328653734584371> Discord ID",
+            "value": f"```<@{maker.discord_id}>```",
+            "inline": False
+        },
+        {
+            "name": "<:access_key:1207330321075535882> Доступ",
+            "value": f"```{level}```",
+            "inline": True
+        },
+        {
+            "name": "<:status:1207331595497771018> Статус",
+            "value": f"```{status}```",
+            "inline": True
+        },
+        {
+            "name": "<:job_title:1207331119176089681>️ Должность",
+            "value": f"```{post}```",
+            "inline": False
+        },
+        {
+            "name": "<:warn_sign:1207315803893145610> Выговоры",
+            "value": f"```{maker.warns}```",
+            "inline": True
+        },
+        {
+            "name": "<:pred_sign:1207316150044590081> Предупреждения",
+            "value": f"```{maker.preds}```",
+            "inline": True
+        },
+        {
+            "name": "🗞 Выпуски",
+            "value": f"```{publications_amount}```",
+            "inline": False
+        },
+        {
+            "name": "<:yellow_calendar:1207339611911884902> Дней на посту",
+            "value": f"```{days}```",
+            "inline": True
+        },
+    ]
 
     if maker.is_admin:
-        embed_description += (
-            "\n\n**🛡️ Пользователь обладает административным доступом**"
-        )
+        embed_fields.append({
+            "name": "🛡️ Админ-доступ",
+            "value": "```Да```",
+            "inline": True
+        })
 
     if maker.account_status:
         title_emoji = "<:user:1220792994328875058>"
     else:
         title_emoji = "<:user_red:1223319477308100641>"
+    
+    embed = Embed(
+        title=f"{title_emoji} Профиль редактора {maker.nickname}",
+        color=0x2B2D31,
+        timestamp=maker.appointment_datetime
+    )
 
-    if isinstance(user, (User, Member)):
-        embed = Embed(
-            title=f"{title_emoji} Профиль редактора {maker.nickname}",
-            color=0x2B2D31,
-            description=embed_description,
-            timestamp=maker_appointment_datetime,
-        )
+    for field in embed_fields:
+        embed.add_field(name=field["name"], value=field["value"], inline=field["inline"])
 
-        if not maker.account_status:
-            embed.set_author(name="🔴 АККАУНТ ДЕАКТИВИРОВАН 🔴")
-
-        embed.set_thumbnail(user.display_avatar.url)
-    else:
-        embed_description += "\n\n**🛠️ Упрощенная версия профиля, так как редактор не является участником сервера."
-
-        embed = Embed(
-            title=f"Профиль редактора {maker.nickname}",
-            color=0x2B2D31,
-            description=embed_description,
-            timestamp=maker.appointment_datetime,
-        )
-
-        if not maker.account_status:
-            embed.set_author(name="🔴 АККАУНТ ДЕАКТИВИРОВАН 🔴")
-
+    if not maker.account_status:
+        embed.set_author(name="🔴 Аккаунт деактивирован 🔴")
+    
     embed.set_footer(text="Дата постановления:")
-
+    
     badges_description = ""
 
     for badge in badges:
@@ -131,67 +155,110 @@ async def get_maker_profile(maker_id: int, user: User | Member = None) -> Embed:
     if len(badges) > 0:
         embed.add_field(name="Значки", value=badges_description, inline=False)
 
+    if isinstance(user, (User, Member)):
+        embed.set_thumbnail(user.display_avatar.url)
+
+    else:
+        embed.add_field(name="🛠️ Упрощенная версия", value="```Да```", inline=False)
+
     return embed
 
 
 async def get_publication_profile(publication_id: int) -> Embed:
     publication = await publication_methods.get_publication_by_id(publication_id)
     maker = await maker_methods.get_maker_by_id(id=publication.maker_id)
+
     if not maker:
-        maker = "`не указан`"
+        maker = "Не указан"
     else:
-        maker = f"<@{maker.discord_id}> `{maker.nickname}`"
+        maker = f"{maker.nickname}"
 
     information_creator = await maker_methods.get_maker_by_id(
         id=publication.information_creator_id
     )
+
     if not information_creator:
-        information_creator = "`не указан`"
+        information_creator = "Не указан"
     else:
         information_creator = (
-            f"<@{information_creator.discord_id}> `{information_creator.nickname}`"
+            f"{information_creator.nickname}"
         )
 
     salary_payer = await maker_methods.get_maker_by_id(id=publication.salary_payer_id)
+
     if not salary_payer:
-        salary_payer = "`не выплачено`"
+        salary_payer = "Не выплачено"
     else:
-        salary_payer = f"<@{salary_payer.discord_id}> `{salary_payer.nickname}`"
+        salary_payer = f"{salary_payer.nickname}"
 
     if not publication.date:
-        date = "`не указана`"
+        date = "Не указана"
     else:
         if isinstance(publication.date, dt_date):
             date = publication.date.strftime("%d.%m.%Y")
         elif isinstance(publication.date, str):
             date = dt_date.fromisoformat(publication.date).strftime("%d.%m.%Y")
         else:
-            date = "*не удалось получить значение, обратитесь в поддержку*"
+            date = "Не удалось получить значение, обратитесь в поддержку"
 
     if not publication.amount_dp:
-        salary = "`не установлено`"
+        salary = "Не установлено"
     else:
         salary = f"{publication.amount_dp}"
 
     status = get_status_title(status_kw=publication.status)
 
-    embed_description = f"""
-    **<:hashtag:1220792495047184515> ID выпуска: `{publication.id}`**
-    **<:id_card:1207329341227147274> Номер выпуска: `{publication.publication_number}`**
-    **<:yellow_calendar:1207339611911884902> Дата публикации выпуска: {date}**
-    **<:user:1220792994328875058> Редактор: {maker}**
-    **<:workinprogress:1220793552234086451> Статус: {status.lower()}**
-    **<:money:1220793737391771829> Зарплата за выпуск: {salary}**
-
-    **<:user:1220792994328875058> Информацию для выпуска собрал: {information_creator}**
-    **<:user:1220792994328875058> Зарплату выплатил: {salary_payer}**
-    """
+    embed_fields = [
+        {
+            "name": "<:hashtag:1220792495047184515> ID",
+            "value": f"```{publication.id}```",
+            "inline": True
+        },
+        {
+            "name": "<:id_card:1207329341227147274> Номер",
+            "value": f"```{publication.publication_number}```",
+            "inline": True
+        },
+        {
+            "name": "<:yellow_calendar:1207339611911884902> Дата",
+            "value": f"```{date}```",
+            "inline": True
+        },
+        {
+            "name": "<:user:1220792994328875058> Редактор",
+            "value": f"```{maker}```",
+            "inline": True
+        },
+        {
+            "name": "<:workinprogress:1220793552234086451> Статус",
+            "value": f"```{status}```",
+            "inline": True
+        },
+        {
+            "name": "<:money:1220793737391771829> Зарплата",
+            "value": f"```{salary}```",
+            "inline": True
+        },
+        {
+            "name": "<:user:1220792994328875058> Информацию собрал",
+            "value": f"```{information_creator}```",
+            "inline": True
+        },
+        {
+            "name": "<:user:1220792994328875058> Зарплату выплатил",
+            "value": f"```{salary_payer}```",
+            "inline": True
+        }
+    ]
 
     embed = disnake.Embed(
         title=f"<:job_title:1207331119176089681> Информация о выпуске `[#{publication.publication_number}]`",
-        description=embed_description,
-        color=0x2B2D31,
+        color=0x2B2D31
     )
+
+    for embed_field in embed_fields:
+        embed.add_field(name=embed_field["name"], value=embed_field["value"], inline=embed_field["inline"])
+
     return embed
 
 
