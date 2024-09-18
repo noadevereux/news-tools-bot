@@ -19,6 +19,7 @@ from ext.models.autocompleters import (
 )
 from ext.profile_getters import get_guild_profile, get_badge_profile
 from ext.tools import validate_url
+from ext.models.reusable import *
 
 
 class DeveloperCommands(commands.Cog):
@@ -39,7 +40,7 @@ class DeveloperCommands(commands.Cog):
 
     @dev.sub_command(name="test", description="[DEV] Выполнить тестовую функцию")
     async def dev_test(self, interaction: disnake.ApplicationCommandInteraction):
-        await interaction.response.defer(ephemeral=True)
+        await interaction.response.send_message(embed=get_pending_embed(), ephemeral=True)
 
         makers = await maker_methods.get_all_makers(2)
 
@@ -47,7 +48,7 @@ class DeveloperCommands(commands.Cog):
 
         print(makers_guild)
 
-        return await interaction.edit_original_response(content="Check console")
+        return await interaction.edit_original_response(embed=get_success_embed("Проверьте вывод в консоли."))
 
     @dev.sub_command_group(name="service", description="[DEV] Служебные команды")
     async def dev_service(self, interaction: disnake.ApplicationCommandInteraction):
@@ -59,7 +60,7 @@ class DeveloperCommands(commands.Cog):
     async def dev_service_stats(
             self, interaction: disnake.ApplicationCommandInteraction
     ):
-        await interaction.response.defer()
+        await interaction.response.send_message(embed=get_pending_embed())
 
         all_makers = await maker_methods.get_all_makers()
         all_publications = await publication_methods.get_all_publications()
@@ -97,29 +98,30 @@ class DeveloperCommands(commands.Cog):
                 name="guild_name", description="Название сервера"
             ),
     ):
-        await interaction.response.defer()
+        await interaction.response.send_message(embed=get_pending_embed())
 
         if guild_id not in self.bot.guilds:
             return await interaction.edit_original_response(
-                content=f"**Бот не является участником сервера `{guild_id.name}`. Сначала пригласите его.**"
+                embed=get_failed_embed(f"Бот не является участником сервера **{guild_id.name}**.")
             )
 
         guild = await guild_methods.get_guild(guild_id.id)
 
         if guild:
             return await interaction.edit_original_response(
-                content=f"**Сервер `{guild.guild_name}` уже зарегистрирован.**"
+                embed=get_failed_embed(f"Сервер **{guild.guild_name}** уже зарегистрирован.")
             )
 
         try:
             await guild_methods.add_guild(discord_id=guild_id.id, guild_name=guild_name)
         except IntegrityError:
             return await interaction.edit_original_response(
-                content=f"**Сервер с названием `{guild_name}` уже существует.**"
+                embed=get_failed_embed(f"Сервер с названием **{guild_name}** уже существует.")
             )
 
         return await interaction.edit_original_response(
-            content=f"**Вы зарегистрировали сервер `{guild_name}`. Число участников: `{guild_id.member_count}`.**"
+            embed=get_success_embed(
+                f"Вы зарегистрировали сервер **{guild_name}**. Число участников: **{guild_id.member_count}**.")
         )
 
     @dev_guild.sub_command(name="activate", description="[DEV] Активировать сервер")
@@ -130,18 +132,18 @@ class DeveloperCommands(commands.Cog):
                 name="guild", description="Сервер", autocomplete=guild_autocomplete
             ),
     ):
-        await interaction.response.defer()
+        await interaction.response.send_message(embed=get_pending_embed())
 
         guild = await guild_methods.get_guild_by_id(id=guild_id)
 
         if not guild:
             return await interaction.edit_original_response(
-                content="**Сервер с указанным ID не зарегистрирован.**"
+                embed=get_failed_embed(f"Сервер с ID {guild_id} не зарегистрирован.")
             )
 
         elif guild.is_active:
             return await interaction.edit_original_response(
-                content="**Указанный сервер уже активен.**"
+                embed=get_failed_embed(f"Сервер **{guild.guild_name}** уже активен.")
             )
 
         await guild_methods.update_guild(
@@ -149,7 +151,7 @@ class DeveloperCommands(commands.Cog):
         )
 
         return await interaction.edit_original_response(
-            content=f"**Вы активировали сервер `{guild.guild_name}`.**"
+            embed=get_success_embed(f"Вы активировали сервер **{guild.guild_name}**.")
         )
 
     @dev_guild.sub_command(name="deactivate", description="[DEV] Деактивировать сервер")
@@ -160,23 +162,25 @@ class DeveloperCommands(commands.Cog):
                 name="guild", description="Сервер", autocomplete=guild_autocomplete
             ),
     ):
-        await interaction.response.defer()
+        await interaction.response.send_message(embed=get_pending_embed())
 
         guild = await guild_methods.get_guild_by_id(id=guild_id)
 
         if not guild:
             return await interaction.edit_original_response(
-                content="**Сервер с указанным ID не зарегистрирован.**"
+                embed=get_failed_embed(f"Сервер с ID {guild_id} не зарегистрирован.")
             )
 
         elif not guild.is_active:
             return await interaction.edit_original_response(
-                content="**Указанный сервер уже деактивирован.**"
+                embed=get_failed_embed(f"Сервер **{guild.guild_name}** уже деактивирован.")
             )
 
         elif guild.is_admin_guild:
             return await interaction.edit_original_response(
-                content="**Указанный сервер является администрирующим. Чтобы деактивировать его сначала снимите права администратора.**"
+                embed=get_failed_embed(
+                    f"Сервер **{guild.guild_name}** является администрирующим. Чтобы деактивировать его сначала снимите права администратора."
+                )
             )
 
         await guild_methods.update_guild(
@@ -184,7 +188,7 @@ class DeveloperCommands(commands.Cog):
         )
 
         return await interaction.edit_original_response(
-            content=f"**Вы деактивировали сервер `{guild.guild_name}`.**"
+            embed=get_success_embed(f"Вы деактивировали сервер **{guild.guild_name}**.")
         )
 
     @dev_guild.sub_command(
@@ -197,13 +201,13 @@ class DeveloperCommands(commands.Cog):
                 name="guild", description="Сервер", autocomplete=guild_autocomplete
             ),
     ):
-        await interaction.response.defer()
+        await interaction.response.send_message(embed=get_pending_embed())
 
         guild = await guild_methods.get_guild_by_id(id=guild_id)
 
         if not guild:
             return await interaction.edit_original_response(
-                content="**Сервер с указаным ID не зарегистрирован.**"
+                embed=get_failed_embed(f"Сервер с ID {guild_id} не зарегистрирован.")
             )
 
         _guild = self.bot.get_guild(guild.discord_id)
@@ -223,18 +227,18 @@ class DeveloperCommands(commands.Cog):
                 name="new_name", description="Новое имя сервера"
             ),
     ):
-        await interaction.response.defer()
+        await interaction.response.send_message(embed=get_pending_embed())
 
         guild = await guild_methods.get_guild_by_id(id=guild_id)
 
         if not guild:
             return await interaction.edit_original_response(
-                content="**Сервер с указанным ID не зарегистрирован.**"
+                embed=get_failed_embed(f"Сервер с ID {guild_id} не зарегистрирован.")
             )
 
         elif guild.guild_name == new_name:
             return await interaction.edit_original_response(
-                content="**Изменений не произошло, имя которое вы указали итак установлено серверу.**"
+                embed=get_failed_embed(f"Имя **{new_name}** итак установлено серверу **{guild.guild_name}**.")
             )
 
         await guild_methods.update_guild(
@@ -242,7 +246,7 @@ class DeveloperCommands(commands.Cog):
         )
 
         return await interaction.edit_original_response(
-            content=f"**Вы изменили имя сервера с `{guild.guild_name}` на `{new_name}`.**"
+            embed=get_success_embed(f"Вы изменили имя сервера с **{guild.guild_name}** на **{new_name}**.")
         )
 
     @dev_guild.sub_command(
@@ -258,19 +262,21 @@ class DeveloperCommands(commands.Cog):
                 default=None, name="role_id", description="Discord ID роли"
             ),
     ):
-        await interaction.response.defer()
+        await interaction.response.send_message(embed=get_pending_embed())
 
         guild = await guild_methods.get_guild_by_id(id=guild_id)
 
         if not guild:
             return await interaction.edit_original_response(
-                content="**Сервер с указаным Discord ID не зарегистрирован.**"
+                embed=get_failed_embed(f"Сервер с ID {guild_id} не зарегистрирован.")
             )
 
         if role_id:
             if role_id == guild.duty_role_id:
                 return await interaction.edit_original_response(
-                    content="**Данная роль итак указана в качестве основной для этого сервера.**"
+                    embed=get_failed_embed(
+                        f"Роль с ID **{role_id}** уже указана как основная для сервера **{guild.guild_name}**."
+                    )
                 )
 
             await guild_methods.update_guild_by_id(
@@ -280,12 +286,14 @@ class DeveloperCommands(commands.Cog):
             )
 
             return await interaction.edit_original_response(
-                content=f"**Вы установили роль с ID `{role_id}` в качестве основной роли для сервера `{guild.guild_name}`.**"
+                embed=get_success_embed(
+                    f"Вы установили роль с ID **{role_id}** как основную для сервера **{guild.guild_name}**."
+                )
             )
         else:
             if not guild.duty_role_id:
                 return await interaction.edit_original_response(
-                    content="**Основная роль итак не указана для сервера.**"
+                    embed=get_failed_embed(f"Основная роль не указана для сервера **{guild.guild_name}**.")
                 )
 
             await guild_methods.update_guild_by_id(
@@ -295,7 +303,7 @@ class DeveloperCommands(commands.Cog):
             )
 
             return await interaction.edit_original_response(
-                content=f"**Вы удалили основную роль для сервера `{guild.guild_name}`.**"
+                embed=get_success_embed(f"Вы удалили основную роль для сервера **{guild.guild_name}**.")
             )
 
     @dev_guild.sub_command(
@@ -311,20 +319,20 @@ class DeveloperCommands(commands.Cog):
                 name="role_id", description="Discord ID роли"
             ),
     ):
-        await interaction.response.defer()
+        await interaction.response.send_message(embed=get_pending_embed())
 
         guild = await guild_methods.get_guild_by_id(id=guild_id)
 
         if not guild:
             return await interaction.edit_original_response(
-                content="**Сервер с указаным Discord ID не зарегистрирован.**"
+                embed=get_failed_embed(f"Сервер с ID {guild_id} не зарегистрирован.")
             )
 
         roles_list: list = guild.roles_list
 
         if role_id in roles_list:
             return await interaction.edit_original_response(
-                content="**Роль с указанным Discord ID уже подключена к серверу.**"
+                embed=get_failed_embed(f"Роль с ID **{role_id}** уже подключена к серверу **{role_id}**.")
             )
 
         roles_list.append(role_id)
@@ -334,7 +342,7 @@ class DeveloperCommands(commands.Cog):
         )
 
         return await interaction.edit_original_response(
-            content=f"**Вы подключили роль с ID `{role_id}` к серверу `{guild.guild_name}`.**"
+            embed=get_success_embed(f"Вы подключили роль с ID **{role_id}** к серверу **{guild.guild_name}**.")
         )
 
     @dev_guild.sub_command(
@@ -350,20 +358,20 @@ class DeveloperCommands(commands.Cog):
                 name="role_id", description="Discord ID роли"
             ),
     ):
-        await interaction.response.defer()
+        await interaction.response.send_message(embed=get_pending_embed())
 
         guild = await guild_methods.get_guild_by_id(id=guild_id)
 
         if not guild:
             return await interaction.edit_original_response(
-                content="**Сервер с указаным Discord ID не зарегистрирован.**"
+                embed=get_failed_embed(f"Сервер с ID {guild_id} не зарегистрирован.")
             )
 
         roles_list: list = guild.roles_list
 
         if role_id not in roles_list:
             return await interaction.edit_original_response(
-                content="**Роль с указанным Discord ID итак не подключена к серверу.**"
+                embed=get_failed_embed(f"Роль с ID **{role_id}** не подключена к серверу **{guild.guild_name}**.")
             )
 
         roles_list.remove(role_id)
@@ -373,7 +381,7 @@ class DeveloperCommands(commands.Cog):
         )
 
         return await interaction.edit_original_response(
-            content=f"**Вы отключили роль с ID `{role_id}` от сервера `{guild.guild_name}`.**"
+            embed=get_success_embed(f"Вы отключили роль с ID **{role_id}** от сервера **{guild.guild_name}**.")
         )
 
     @dev_guild.sub_command(
@@ -385,18 +393,18 @@ class DeveloperCommands(commands.Cog):
             interaction: disnake.ApplicationCommandInteraction,
             guild_id: int = commands.Param(name="guild", description="Сервер"),
     ):
-        await interaction.response.defer()
+        await interaction.response.send_message(embed=get_pending_embed())
 
         guild = await guild_methods.get_guild_by_id(id=guild_id)
 
         if not guild:
             return await interaction.edit_original_response(
-                content="**Сервер с указаным ID не зарегистрирован.**"
+                embed=get_failed_embed(f"Сервер с ID {guild_id} не зарегистрирован.")
             )
 
         elif guild.is_notifies_enabled:
             return await interaction.edit_original_response(
-                content=f"**Изменений не произошло, уведомления итак включены для сервера `{guild.guild_name}`.**"
+                embed=get_failed_embed(f"Уведомления уже включены для сервера **{guild.guild_name}**.")
             )
 
         await guild_methods.update_guild(
@@ -404,7 +412,8 @@ class DeveloperCommands(commands.Cog):
         )
 
         return await interaction.edit_original_response(
-            content=f"**Вы включили уведомления о выдаче и снятии ролей для сервера `{guild.guild_name}`.**"
+            embed=get_success_embed(
+                f"Вы включили уведомления о выдаче и снятии ролей для сервера **{guild.guild_name}**.")
         )
 
     @dev_guild.sub_command(
@@ -418,18 +427,18 @@ class DeveloperCommands(commands.Cog):
                 name="guild", description="Сервер", autocomplete=guild_autocomplete
             ),
     ):
-        await interaction.response.defer()
+        await interaction.response.send_message(embed=get_pending_embed())
 
         guild = await guild_methods.get_guild_by_id(id=guild_id)
 
         if not guild:
             return await interaction.edit_original_response(
-                content="**Сервер с указаным Discord ID не зарегистрирован.**"
+                embed=get_failed_embed(f"Сервер с ID {guild_id} не зарегистрирован.")
             )
 
         elif not guild.is_notifies_enabled:
             return await interaction.edit_original_response(
-                content=f"**Изменений не произошло, уведомления итак отключены для сервера `{guild.guild_name}`.**"
+                embed=get_failed_embed(f"Уведомления не включены для сервера **{guild.guild_name}**.")
             )
 
         await guild_methods.update_guild(
@@ -437,7 +446,8 @@ class DeveloperCommands(commands.Cog):
         )
 
         return await interaction.edit_original_response(
-            content=f"**Вы отключили уведомления о выдаче и снятии ролей для сервера `{guild.guild_name}`.**"
+            embed=get_success_embed(
+                f"Вы отключили уведомления о выдаче и снятии ролей для сервера **{guild.guild_name}**.")
         )
 
     @dev_guild.sub_command(
@@ -453,19 +463,20 @@ class DeveloperCommands(commands.Cog):
                 default=None, name="channel_id", description="Discord ID канала"
             ),
     ):
-        await interaction.response.defer()
+        await interaction.response.send_message(embed=get_pending_embed())
 
         guild = await guild_methods.get_guild_by_id(id=guild_id)
 
         if not guild:
             return await interaction.edit_original_response(
-                content="**Сервер с указаным Discord ID не зарегистрирован.**"
+                embed=get_failed_embed(f"Сервер с ID {guild_id} не зарегистрирован.")
             )
 
         if not channel_id:
             if not guild.channel_id:
                 return await interaction.edit_original_response(
-                    content=f"**Изменений не произошло, рабочий канал итак не установлен для сервера `{guild.guild_name}`.**"
+                    embed=get_failed_embed(
+                        f"Рабочий канал не установлен для сервера **{guild.guild_name}**.")
                 )
 
             await guild_methods.update_guild(
@@ -473,12 +484,13 @@ class DeveloperCommands(commands.Cog):
             )
 
             return await interaction.edit_original_response(
-                content=f"**Вы удалили рабочий канал для сервера `{guild.guild_name}`.**"
+                embed=get_failed_embed(f"Вы удалили рабочий канал для сервера **{guild.guild_name}**.")
             )
         elif channel_id:
             if guild.channel_id == channel_id:
                 return await interaction.edit_original_response(
-                    content="**Изменений не произошло, указанный канал итак установлен в качестве рабочего канала сервера.**"
+                    embed=get_failed_embed(
+                        f"Канал с ID **{channel_id}** уже установлен в качестве рабочего канала сервера **{guild.guild_name}**.")
                 )
 
             await guild_methods.update_guild(
@@ -486,7 +498,8 @@ class DeveloperCommands(commands.Cog):
             )
 
             return await interaction.edit_original_response(
-                content=f"**Вы изменили рабочий канал для сервера `{guild.guild_name}` на `{channel_id}`.**"
+                embed=get_success_embed(
+                    f"Вы изменили рабочий канал для сервера **{guild.guild_name}** на **{channel_id}**.")
             )
 
     @dev_guild.sub_command(
@@ -503,20 +516,21 @@ class DeveloperCommands(commands.Cog):
                 name="role_id", description="Discord ID роли"
             ),
     ):
-        await interaction.response.defer()
+        await interaction.response.send_message(embed=get_pending_embed())
 
         guild = await guild_methods.get_guild_by_id(id=guild_id)
 
         if not guild:
             return await interaction.edit_original_response(
-                content="**Сервер с указаным Discord ID не зарегистрирован.**"
+                embed=get_failed_embed(f"Сервер с ID {guild_id} не зарегистрирован.")
             )
 
         roles_list: list = guild.log_roles_list
 
         if role_id in roles_list:
             return await interaction.edit_original_response(
-                content="**Роль с указанным Discord ID уже подключена к логированию на сервере.**"
+                embed=get_failed_embed(
+                    f"Роль с ID **{role_id}** уже подключена к логированию на сервере **{guild.guild_name}**.")
             )
 
         roles_list.append(role_id)
@@ -526,7 +540,8 @@ class DeveloperCommands(commands.Cog):
         )
 
         return await interaction.edit_original_response(
-            content=f"**Вы подключили роль с ID `{role_id}` к логированию на сервере `{guild.guild_name}`.**"
+            embed=get_success_embed(
+                f"Вы подключили роль с ID **{role_id}** к логированию на сервере **{guild.guild_name}**.")
         )
 
     @dev_guild.sub_command(
@@ -543,20 +558,20 @@ class DeveloperCommands(commands.Cog):
                 name="role_id", description="Discord ID роли"
             ),
     ):
-        await interaction.response.defer()
+        await interaction.response.send_message(embed=get_pending_embed())
 
         guild = await guild_methods.get_guild_by_id(id=guild_id)
 
         if not guild:
             return await interaction.edit_original_response(
-                content="**Сервер с указаным Discord ID не зарегистрирован.**"
+                embed=get_failed_embed(f"Сервер с ID {guild_id} не зарегистрирован.")
             )
 
         roles_list: list = guild.log_roles_list
 
         if role_id not in roles_list:
             return await interaction.edit_original_response(
-                content="**Роль с указанным Discord ID итак не подключена к серверу.**"
+                embed=get_failed_embed(f"Роль с ID **{role_id}** итак не подключена к серверу **{guild.guild_name}**.")
             )
 
         roles_list.remove(role_id)
@@ -566,7 +581,8 @@ class DeveloperCommands(commands.Cog):
         )
 
         return await interaction.edit_original_response(
-            content=f"**Вы отключили роль с ID `{role_id}` от логирования на сервере `{guild.guild_name}`.**"
+            embed=get_success_embed(
+                f"Вы отключили роль с ID **{role_id}** от логирования на сервере **{guild.guild_name}**.")
         )
 
     @dev_guild.sub_command(
@@ -583,19 +599,20 @@ class DeveloperCommands(commands.Cog):
                 default=None, name="channel_id", description="Discord ID канала"
             ),
     ):
-        await interaction.response.defer()
+        await interaction.response.send_message(embed=get_pending_embed())
 
         guild = await guild_methods.get_guild_by_id(id=guild_id)
 
         if not guild:
             return await interaction.edit_original_response(
-                content="**Сервер с указаным Discord ID не зарегистрирован.**"
+                embed=get_failed_embed(f"Сервер с ID {guild_id} не зарегистрирован.")
             )
 
         if not channel_id:
             if not guild.log_roles_channel:
                 return await interaction.edit_original_response(
-                    content=f"**Изменений не произошло, канал итак не установлен для сервера `{guild.guild_name}`.**"
+                    embed=get_failed_embed(
+                        f"Канал для логирования ролей не установлен для сервера `{guild.guild_name}`.")
                 )
 
             await guild_methods.update_guild(
@@ -603,12 +620,13 @@ class DeveloperCommands(commands.Cog):
             )
 
             return await interaction.edit_original_response(
-                content=f"**Вы удалили канал логирования ролей для сервера `{guild.guild_name}`.**"
+                embed=get_success_embed(f"Вы удалили канал логирования ролей для сервера **{guild.guild_name}**.")
             )
         elif channel_id:
             if guild.log_roles_channel == channel_id:
                 return await interaction.edit_original_response(
-                    content="**Изменений не произошло, указанный канал итак установлен в качестве канала логирования ролей для сервера.**"
+                    embed=get_failed_embed(
+                        f"Канал с ID **{channel_id}** уже установлен в качестве канала логирования ролей для сервера **{guild.guild_name}**.")
                 )
 
             await guild_methods.update_guild(
@@ -618,7 +636,8 @@ class DeveloperCommands(commands.Cog):
             )
 
             return await interaction.edit_original_response(
-                content=f"**Вы изменили канал логирования ролей для сервера `{guild.guild_name}` на `{channel_id}`.**"
+                embed=get_success_embed(
+                    f"Вы изменили канал логирования ролей для сервера **{guild.guild_name}** на **{channel_id}**.")
             )
 
     @dev_guild.sub_command(
@@ -631,18 +650,18 @@ class DeveloperCommands(commands.Cog):
                 name="guild", description="Сервер", autocomplete=guild_autocomplete
             ),
     ):
-        await interaction.response.defer()
+        await interaction.response.send_message(embed=get_pending_embed())
 
         guild = await guild_methods.get_guild_by_id(id=guild_id)
 
         if not guild:
             return await interaction.edit_original_response(
-                content="**Сервер с указаным Discord ID не зарегистрирован.**"
+                embed=get_failed_embed(f"Сервер с ID {guild_id} не зарегистрирован.")
             )
 
         if guild.is_admin_guild:
             return await interaction.edit_original_response(
-                content="**Изменений не произошло, сервер итак имеет административные права.**"
+                embed=get_failed_embed(f"Сервер **{guild.guild_name}** уже имеет административные права.")
             )
 
         await guild_methods.update_guild(
@@ -650,7 +669,7 @@ class DeveloperCommands(commands.Cog):
         )
 
         return await interaction.edit_original_response(
-            content=f"**Вы предоставили административные права серверу `{guild.guild_name}`.**"
+            embed=get_success_embed(f"Вы предоставили административные права серверу **{guild.guild_name}**.")
         )
 
     @dev_guild.sub_command(
@@ -664,18 +683,18 @@ class DeveloperCommands(commands.Cog):
                 name="guild", description="Сервер", autocomplete=guild_autocomplete
             ),
     ):
-        await interaction.response.defer()
+        await interaction.response.send_message(embed=get_pending_embed())
 
         guild = await guild_methods.get_guild_by_id(id=guild_id)
 
         if not guild:
             return await interaction.edit_original_response(
-                content="**Сервер с указаным Discord ID не зарегистрирован.**"
+                embed=get_failed_embed(f"Сервер с ID {guild_id} не зарегистрирован.")
             )
 
         if not guild.is_admin_guild:
             return await interaction.edit_original_response(
-                content="**Изменений не произошло, сервер итак не имеет административные права.**"
+                embed=get_failed_embed(f"Сервер **{guild.guild_name}** не имеет административные права.")
             )
 
         await guild_methods.update_guild(
@@ -683,7 +702,7 @@ class DeveloperCommands(commands.Cog):
         )
 
         return await interaction.edit_original_response(
-            content=f"**Вы забрали административные права у сервера `{guild.guild_name}`.**"
+            embed=get_success_embed(f"Вы забрали административные права у сервера **{guild.guild_name}**.")
         )
 
     @dev.sub_command_group(name="badge", description="[DEV] Управление значками")
@@ -697,21 +716,26 @@ class DeveloperCommands(commands.Cog):
             name: str = commands.Param(name="name", description="Название значка"),
             emoji: str = commands.Param(name="emoji", description="Эмодзи значка"),
     ):
-        await interaction.response.defer()
+        await interaction.response.send_message(embed=get_pending_embed())
 
         if_badge_exists = await badge_methods.if_badge_exists(name=name, emoji=emoji)
 
         if if_badge_exists:
             return await interaction.edit_original_response(
-                content=f"**Значок {emoji} `{name}` уже существует.**"
+                embed=get_failed_embed(f"Значок **{emoji} {name}** уже существует.")
             )
 
         badge = await badge_methods.add_badge(name=name, emoji=emoji)
 
         badge_profile = await get_badge_profile(badge_id=badge.id)
 
+        embeds = [
+            get_success_embed(f"Вы создали значок **{emoji} {name}**."),
+            badge_profile
+        ]
+
         return await interaction.edit_original_response(
-            content=f"**Вы создали значок {emoji} `{name}`.**", embed=badge_profile
+            embeds=embeds
         )
 
     @dev_badge.sub_command(
@@ -724,13 +748,13 @@ class DeveloperCommands(commands.Cog):
                 name="badge", description="Значок", autocomplete=badge_autocomplete
             ),
     ):
-        await interaction.response.defer()
+        await interaction.response.send_message(embed=get_pending_embed())
 
         badge = await badge_methods.get_badge(badge_id=badge_id)
 
         if not badge:
             return await interaction.edit_original_response(
-                content="**Значка с указанным ID не существует.**"
+                embed=get_failed_embed(f"Значка с ID **{badge_id}** не существует.")
             )
 
         embed = await get_badge_profile(badge_id=badge_id)
@@ -746,17 +770,17 @@ class DeveloperCommands(commands.Cog):
             ),
             emoji: str = commands.Param(name="emoji", description="Новый эмодзи"),
     ):
-        await interaction.response.defer()
+        await interaction.response.send_message(embed=get_pending_embed())
 
         badge = await badge_methods.get_badge(badge_id=badge_id)
 
         if not badge:
             return await interaction.edit_original_response(
-                content="**Значка с указанным ID не существует.**"
+                embed=get_failed_embed(f"Значка с ID **{badge_id}** не существует.")
             )
         elif badge.emoji == emoji:
             return await interaction.edit_original_response(
-                content="**Значку уже установлен эмодзи, который вы указали.**"
+                embed=get_failed_embed(f"Значку **[{badge.id}] {badge.name}** уже установлен эмодзи **{emoji}**.")
             )
 
         await badge_methods.update_badge(
@@ -764,7 +788,8 @@ class DeveloperCommands(commands.Cog):
         )
 
         return await interaction.edit_original_response(
-            content=f"**Вы изменили эмодзи значку `[{badge.id}] {badge.name}` с {badge.emoji} на {emoji}.**"
+            embed=get_success_embed(
+                f"Вы изменили эмодзи значку **[{badge.id}] {badge.name}** с **{badge.emoji}** на **{emoji}**.")
         )
 
     @dev_badge.sub_command(name="name", description="[DEV] Изменить название значка")
@@ -776,17 +801,17 @@ class DeveloperCommands(commands.Cog):
             ),
             name: str = commands.Param(name="name", description="Новое название"),
     ):
-        await interaction.response.defer()
+        await interaction.response.send_message(embed=get_pending_embed())
 
         badge = await badge_methods.get_badge(badge_id=badge_id)
 
         if not badge:
             return await interaction.edit_original_response(
-                content="**Значка с указанным ID не существует.**"
+                embed=get_failed_embed(f"Значка с ID **{badge_id}** не существует.")
             )
         elif badge.name == name:
             return await interaction.edit_original_response(
-                content="**Значку уже установлено название, которое вы указали.**"
+                embed=get_failed_embed(f"Значку **[{badge.id}] {badge.name}** уже установлено это название.")
             )
 
         await badge_methods.update_badge(
@@ -794,7 +819,7 @@ class DeveloperCommands(commands.Cog):
         )
 
         return await interaction.edit_original_response(
-            content=f"**Вы изменили название значку `[ID: {badge.id}]` с `{badge.name}` на `{name}`.**"
+            embed=get_success_embed(f"Вы изменили название значку **[{badge.id}]** с **{badge.name}** на **{name}**.")
         )
 
     @dev_badge.sub_command(
@@ -810,19 +835,20 @@ class DeveloperCommands(commands.Cog):
                 default=None, name="description", description="Новое описание"
             ),
     ):
-        await interaction.response.defer()
+        await interaction.response.send_message(embed=get_pending_embed())
 
         badge = await badge_methods.get_badge(badge_id=badge_id)
 
         if not badge:
             return await interaction.edit_original_response(
-                content="**Значка с указанным ID не существует.**"
+                embed=get_failed_embed(f"Значка с ID **{badge_id}** не существует.")
             )
 
         if description:
             if badge.description == description:
                 return await interaction.edit_original_response(
-                    content="**Значку уже установлено описание, которое вы указали.**"
+                    embed=get_failed_embed(
+                        f"Значку **[{badge.id}] {badge.name}** уже установлено описание **{description}**.")
                 )
 
             await badge_methods.update_badge(
@@ -830,12 +856,14 @@ class DeveloperCommands(commands.Cog):
             )
 
             return await interaction.edit_original_response(
-                content=f"**Вы изменили описание значку `[{badge.id}] {badge.name}` с `{badge.description if badge.description is not None else 'не задано'}` на `{description}`.**"
+                embed=get_success_embed(
+                    f"Вы изменили описание значку **[{badge.id}] {badge.name}** с **{badge.description if badge.description is not None else 'не задано'}** на **{description}**."
+                )
             )
         else:
             if not badge.description:
                 return await interaction.edit_original_response(
-                    content="**У значка итак не установлено описание.**"
+                    embed=get_failed_embed(f"У значка **[{badge.id}] {badge.name}** отсутствует описание.")
                 )
 
             await badge_methods.update_badge(
@@ -843,7 +871,8 @@ class DeveloperCommands(commands.Cog):
             )
 
             return await interaction.edit_original_response(
-                content=f"**Вы очистили описание `{badge.description}` значка `[{badge.id}] {badge.name}`.**"
+                embed=get_success_embed(
+                    f"Вы очистили описание **{badge.description}** значка **[{badge.id}] {badge.name}**.")
             )
 
     @dev_badge.sub_command(name="link", description="[DEV] Изменить ссылку значка")
@@ -857,24 +886,25 @@ class DeveloperCommands(commands.Cog):
                 default=None, name="link", description="Новая ссылка"
             ),
     ):
-        await interaction.response.defer()
+        await interaction.response.send_message(embed=get_pending_embed())
 
         badge = await badge_methods.get_badge(badge_id=badge_id)
 
         if not badge:
             return await interaction.edit_original_response(
-                content="**Значка с указанным ID не существует.**"
+                embed=get_failed_embed(f"Значка с ID **{badge_id}** не существует.")
             )
 
         if link:
             if not validate_url(link):
                 return await interaction.edit_original_response(
-                    content="**Вы указали невалидную ссылку. Ссылка должна начинаться на `https://` и вести куда-либо.**"
+                    embed=get_failed_embed(
+                        f"Вы указали невалидную ссылку **{link}**. Ссылка должна начинаться на `https://` и вести куда-либо.")
                 )
 
             if badge.link == link:
                 return await interaction.edit_original_response(
-                    content="**Значку уже установлена ссылка, которую вы указали.**"
+                    embed=get_failed_embed(f"Значку **[{badge.id}] {badge.name}** уже установлена ссылка **{link}**.")
                 )
 
             await badge_methods.update_badge(
@@ -882,12 +912,13 @@ class DeveloperCommands(commands.Cog):
             )
 
             return await interaction.edit_original_response(
-                content=f"**Вы изменили ссылку значка `[{badge.id}] {badge.name}` с `{badge.link if badge.link is not None else 'не задана'}` на `{link}`.**"
+                embed=get_success_embed(f"Вы изменили ссылку значка **[{badge.id}] {badge.name}** с "
+                                        f"**{badge.link if badge.link is not None else 'не задана'}** на **{link}**.")
             )
         else:
             if not badge.link:
                 return await interaction.edit_original_response(
-                    content="**У значка итак не установлена ссылка.**"
+                    embed=get_failed_embed(f"У значка **[{badge.id}] {badge.name}** отсутствует ссылка.")
                 )
 
             await badge_methods.update_badge(
@@ -895,7 +926,7 @@ class DeveloperCommands(commands.Cog):
             )
 
             return await interaction.edit_original_response(
-                content=f"**Вы очистили ссылку `{badge.link}` значка `[{badge.id}] {badge.name}`.**"
+                embed=get_success_embed(f"Вы очистили ссылку **{badge.link}** у значка **[{badge.id}] {badge.name}**.")
             )
 
     @dev_badge.sub_command(
@@ -911,27 +942,27 @@ class DeveloperCommands(commands.Cog):
                 name="guild", description="Сервер", autocomplete=guild_autocomplete
             ),
     ):
-        await interaction.response.defer()
+        await interaction.response.send_message(embed=get_pending_embed())
 
         badge = await badge_methods.get_badge(badge_id=badge_id)
 
         if not badge:
             return await interaction.edit_original_response(
-                content="**Значка с указанным ID не существует.**"
+                embed=get_failed_embed(f"Значка с ID **{badge_id}** не существует.")
             )
 
         guild = await guild_methods.get_guild_by_id(id=guild_id)
 
         if not guild:
             return await interaction.edit_original_response(
-                content="**Сервера с указанным ID не существует.**"
+                embed=get_failed_embed(f"Сервера с ID **{guild_id}** не существует.")
             )
 
         new_allowed_guilds = list(badge.allowed_guilds).copy()
 
         if guild_id in new_allowed_guilds:
             return await interaction.edit_original_response(
-                content=f"**Сервер `{guild.guild_name}` уже находится в списке разрешенных.**"
+                embed=get_failed_embed(f"Сервер **{guild.guild_name}** уже находится в списке разрешенных.")
             )
 
         new_allowed_guilds.append(guild_id)
@@ -941,7 +972,8 @@ class DeveloperCommands(commands.Cog):
         )
 
         return await interaction.edit_original_response(
-            content=f"**Сервер `{guild.guild_name}` добавлен в список разрешенных для значка `[{badge.id}] {badge.name}`.**"
+            embed=get_success_embed(
+                f"Сервер **{guild.guild_name}** добавлен в список разрешенных для значка **[{badge.id}] {badge.name}**.")
         )
 
     @dev_badge.sub_command(
@@ -957,27 +989,27 @@ class DeveloperCommands(commands.Cog):
                 name="guild", description="Сервер", autocomplete=guild_autocomplete
             ),
     ):
-        await interaction.response.defer()
+        await interaction.response.send_message(embed=get_pending_embed())
 
         badge = await badge_methods.get_badge(badge_id=badge_id)
 
         if not badge:
             return await interaction.edit_original_response(
-                content="**Значка с указанным ID не существует.**"
+                embed=get_failed_embed(f"Значка с ID **{badge_id}** не существует.")
             )
 
         guild = await guild_methods.get_guild_by_id(id=guild_id)
 
         if not guild:
             return await interaction.edit_original_response(
-                content="**Сервера с указанным ID не существует.**"
+                embed=get_failed_embed(f"Сервера с ID **{guild_id}** не существует.")
             )
 
         new_allowed_guilds = list(badge.allowed_guilds).copy()
 
         if guild_id not in new_allowed_guilds:
             return await interaction.edit_original_response(
-                content=f"**Сервер `{guild.guild_name}` итак не находится в списке разрешенных.**"
+                embed=get_failed_embed(f"Сервер **{guild.guild_name}** не находится в списке разрешенных.")
             )
 
         new_allowed_guilds.remove(guild_id)
@@ -987,7 +1019,8 @@ class DeveloperCommands(commands.Cog):
         )
 
         return await interaction.edit_original_response(
-            content=f"**Сервер `{guild.guild_name}` удалён из списка разрешенных для значка `[{badge.id}] {badge.name}`.**"
+            embed=get_success_embed(
+                f"Сервер **{guild.guild_name}** удалён из списка разрешенных для значка **[{badge.id}] {badge.name}**.")
         )
 
     @dev_badge.sub_command(
@@ -1009,17 +1042,18 @@ class DeveloperCommands(commands.Cog):
                 ],
             ),
     ):
-        await interaction.response.defer()
+        await interaction.response.send_message(embed=get_pending_embed())
 
         badge = await badge_methods.get_badge(badge_id=badge_id)
 
         if not badge:
             return await interaction.edit_original_response(
-                content="**Значка с указанным ID не существует.**"
+                embed=get_failed_embed(f"Значка с ID **{badge_id}** не существует.")
             )
         elif badge.is_global == bool(is_global):
             return await interaction.edit_original_response(
-                content="**У значка уже установлен этот глобальный статус.**"
+                embed=get_failed_embed(
+                    f"У значка **[{badge.id}] {badge.name}** уже установлен глобальный статус **{bool(is_global)}**.")
             )
 
         await badge_methods.update_badge(
@@ -1027,7 +1061,8 @@ class DeveloperCommands(commands.Cog):
         )
 
         return await interaction.edit_original_response(
-            content=f"**Вы изменили глобальный статус значка `[{badge.id}] {badge.name}` с `{badge.is_global}` на `{bool(is_global)}`.**"
+            embed=get_success_embed(
+                f"Вы изменили глобальный статус значка **[{badge.id}] {badge.name}** с **{badge.is_global}** на **{bool(is_global)}**.")
         )
 
     @dev_badge.sub_command(name="give", description="[DEV] Выдать редактору значок")
@@ -1041,20 +1076,20 @@ class DeveloperCommands(commands.Cog):
                 name="badge", description="Значок", autocomplete=badge_autocomplete
             ),
     ):
-        await interaction.response.defer()
+        await interaction.response.send_message(embed=get_pending_embed())
 
         maker = await maker_methods.get_maker_by_id(id=maker_id)
 
         if not maker:
             return await interaction.edit_original_response(
-                content="**Редактор с указанным ID не существует.**"
+                embed=get_failed_embed(f"Редактор с ID **{maker_id}** не существует.")
             )
 
         badge = await badge_methods.get_badge(badge_id=badge_id)
 
         if not badge:
             return await interaction.edit_original_response(
-                content="**Значка с указанным ID не существует.**"
+                embed=get_failed_embed(f"Значка с ID **{badge_id}** не существует.")
             )
 
         awarded_badge = await badge_methods.get_makers_awarded_badge(
@@ -1063,13 +1098,15 @@ class DeveloperCommands(commands.Cog):
 
         if awarded_badge:
             return await interaction.edit_original_response(
-                content="**Указанный редактор уже был награждён этим значком.**"
+                embed=get_failed_embed(
+                    f"Редактор **[{maker.id}] {maker.nickname}** уже был награждён значком **[{badge.id}] {badge.name}**.")
             )
 
         await badge_methods.add_awarded_badge(maker_id=maker.id, badge_id=badge.id)
 
         return await interaction.edit_original_response(
-            content=f"**Вы наградили редактора `{maker.nickname}` значком `[{badge.id}] {badge.name}`.**"
+            embed=get_success_embed(
+                f"Вы наградили редактора **[{maker.id}] {maker.nickname}** значком **[{badge.id}] {badge.name}**.")
         )
 
     @dev_badge.sub_command(name="take", description="[DEV] Снять с редактора значок")
@@ -1083,20 +1120,20 @@ class DeveloperCommands(commands.Cog):
                 name="badge", description="Значок", autocomplete=badge_autocomplete
             ),
     ):
-        await interaction.response.defer()
+        await interaction.response.send_message(embed=get_pending_embed())
 
         maker = await maker_methods.get_maker_by_id(id=maker_id)
 
         if not maker:
             return await interaction.edit_original_response(
-                content="**Редактор с указанным ID не существует.**"
+                embed=get_failed_embed(f"Редактор с ID **{maker_id}** не существует.")
             )
 
         badge = await badge_methods.get_badge(badge_id=badge_id)
 
         if not badge:
             return await interaction.edit_original_response(
-                content="**Значка с указанным ID не существует.**"
+                embed=get_failed_embed(f"Значка с ID **{badge_id}** не существует.")
             )
 
         awarded_badge = await badge_methods.get_makers_awarded_badge(
@@ -1105,13 +1142,15 @@ class DeveloperCommands(commands.Cog):
 
         if not awarded_badge:
             return await interaction.edit_original_response(
-                content="**Указанный редактор итак не награждён этим значком.**"
+                embed=get_failed_embed(
+                    f"Редактор **[{maker.id}] {maker.nickname}** не награждён значком **[{badge.id}] {badge.name}**.")
             )
 
         await badge_methods.delete_awarded_badge(maker_id=maker.id, badge_id=badge.id)
 
         return await interaction.edit_original_response(
-            content=f"**Вы забрали у редактора `{maker.nickname}` значок `[{badge.id}] {badge.name}`.**"
+            embed=get_success_embed(
+                f"Вы забрали у редактора **[{maker.id}] {maker.nickname}** значок **[{badge.id}] {badge.name}**.")
         )
 
     @dev_badge.sub_command(
@@ -1127,13 +1166,13 @@ class DeveloperCommands(commands.Cog):
                 name="channel", description="Канал куда отправить раздачу"
             ),
     ):
-        await interaction.response.defer(ephemeral=True)
+        await interaction.response.send_message(embed=get_pending_embed(), ephemeral=True)
 
         badge = await badge_methods.get_badge(badge_id=badge_id)
 
         if not badge:
             return await interaction.edit_original_response(
-                content="**Значка с указанным ID не существует.**"
+                embed=get_failed_embed(f"Значка с ID **{badge_id}** не существует.")
             )
 
         button = disnake.ui.Button(
@@ -1144,18 +1183,18 @@ class DeveloperCommands(commands.Cog):
         )
 
         await channel.send(
-            content=f"## {interaction.author.mention} запустил раздачу значка\n"
-                    f"Нажмите на кнопку чтобы получить значок на все свои аккаунты.\n\n"
-                    f"**Информация о значке:**\n"
-                    f"**Эмодзи:** {badge.emoji}\n"
-                    f"**Название:** {badge.name}\n"
-                    f"**Описание:** {badge.description if badge.description is not None else 'не задано'}\n"
-                    f"**Ссылка значка:** {badge.link if badge.link is not None else 'не задана'}",
+            content=f"## Запущена раздача значка «{badge.name}»\n"
+                    f"> Нажмите на кнопку чтобы получить значок на все свои аккаунты.\n\n"
+                    f"Информация о значке:\n"
+                    f"Эмодзи: {badge.emoji}\n"
+                    f"Название: {badge.name}\n"
+                    f"Описание: {badge.description if badge.description is not None else 'не задано'}\n"
+                    f"Ссылка значка: {badge.link if badge.link is not None else 'не задана'}",
             components=button,
         )
 
         return await interaction.edit_original_response(
-            content=f"**Вы запустили раздачу значка `[{badge.id}] {badge.name}`.**"
+            embed=get_success_embed(f"Вы запустили раздачу значка **[{badge.id}] {badge.name}**.")
         )
 
 

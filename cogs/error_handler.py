@@ -4,6 +4,7 @@ from ext.logger import Logger
 from datetime import datetime
 
 from ext.models.exceptions import *
+from ext.models.reusable import *
 
 
 class ErrorHandler(commands.Cog):
@@ -22,20 +23,20 @@ class ErrorHandler(commands.Cog):
 
         has_been_responded = interaction.response.is_done()
         if not has_been_responded:
-            await interaction.response.defer(ephemeral=True)
+            await interaction.response.send_message(embed=get_pending_embed(), ephemeral=True)
 
         embed = disnake.Embed(
             title="Произошла ошибка",
             description=f"""\
-**Во время выполнения команды `/{interaction.application_command.qualified_name}` произошла непредвиденная ошибка.**
+Во время выполнения команды `/{interaction.application_command.qualified_name}` произошла непредвиденная ошибка.
 
-**Уникальный идентификатор ошибки:**
+Уникальный идентификатор ошибки:
 ```
 {error_uid}
 ```
-**Сообщите разработчикам об ошибке приложив её уникальный идентификатор, чтобы они смогли решить её.**
+Сообщите разработчикам об ошибке приложив её уникальный идентификатор, чтобы они смогли решить её.
 
-**Приносим свои извинения за доставленные неудобства.**
+Приносим свои извинения за доставленные неудобства.
 """,
             timestamp=datetime.now(),
             colour=disnake.Colour.red(),
@@ -48,35 +49,35 @@ class ErrorHandler(commands.Cog):
 
         if isinstance(error, commands.errors.GuildNotFound):
             return await interaction.edit_original_response(
-                content=f"**Сервер с ID `{error.argument}` не найден. Возможно бот не добавлен на этот сервер или его не существует.**"
+                embed=get_failed_embed(f"Сервер с ID **{error.argument}** не найден. Возможно бот не добавлен на этот сервер или его не существует.")
             )
         elif isinstance(error, commands.NotOwner):
             return await interaction.edit_original_response(
-                content="**Эта команда доступна только разработчикам.**"
+                embed=get_failed_embed("Эта команда доступна только разработчикам.")
             )
         elif isinstance(error, commands.LargeIntConversionFailure):
             return await interaction.edit_original_response(
-                content=f"**Один из параметров принимает только числовые значения, но получено `{error.argument}`.**"
+                embed=get_failed_embed(f"Один из параметров принимает только числовые значения, а указано **{error.argument}**.")
             )
         elif isinstance(error, GuildNotExists):
             return await interaction.edit_original_response(
-                content="**Этот сервер не зарегистрирован или не активен. Использовать команды на нем невозможно.**"
+                embed=get_failed_embed("Этот сервер не зарегистрирован или был деактивирован. Использовать бота здесь невозможно.")
             )
         elif isinstance(error, CommandCalledInDM):
             return await interaction.edit_original_response(
-                content="**Эту команду нельзя использовать в личных сообщениях.**"
+                embed=get_failed_embed("Эту команду нельзя использовать в личных сообщениях.")
             )
         elif isinstance(error, GuildNotAdmin):
             return await interaction.edit_original_response(
-                content="**Этот сервер не обладает административным доступом для доступа к этой команде.**"
+                embed=get_failed_embed("Эта команда может быть исполнена только на серверах с административным доступом.")
             )
         elif isinstance(error, UserNotExists):
             return await interaction.edit_original_response(
-                content="**У вас недостаточно прав для использования этой команды.**"
+                embed=get_failed_embed("У вас недостаточно прав для исполнения этой команды.")
             )
         elif isinstance(error, UserNotAdmin):
             return await interaction.edit_original_response(
-                content="**У вас недостаточно прав для использования этой команды.**"
+                embed=get_failed_embed("У вас недостаточно прав для исполнения этой команды.")
             )
         else:
             return await interaction.edit_original_response(embed=embed)
