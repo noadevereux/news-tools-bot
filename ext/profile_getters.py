@@ -167,6 +167,7 @@ async def get_maker_profile(maker_id: int, user: User | Member = None) -> Embed:
 async def get_publication_profile(publication_id: int) -> Embed:
     publication = await publication_methods.get_publication_by_id(publication_id)
     maker = await maker_methods.get_maker_by_id(id=publication.maker_id)
+
     if not maker:
         maker = "`не указан`"
     else:
@@ -175,6 +176,7 @@ async def get_publication_profile(publication_id: int) -> Embed:
     information_creator = await maker_methods.get_maker_by_id(
         id=publication.information_creator_id
     )
+
     if not information_creator:
         information_creator = "`не указан`"
     else:
@@ -183,6 +185,7 @@ async def get_publication_profile(publication_id: int) -> Embed:
         )
 
     salary_payer = await maker_methods.get_maker_by_id(id=publication.salary_payer_id)
+
     if not salary_payer:
         salary_payer = "`не выплачено`"
     else:
@@ -205,23 +208,67 @@ async def get_publication_profile(publication_id: int) -> Embed:
 
     status = get_status_title(status_kw=publication.status)
 
-    embed_description = f"""
-    **<:hashtag:1220792495047184515> ID выпуска: `{publication.id}`**
-    **<:id_card:1207329341227147274> Номер выпуска: `{publication.publication_number}`**
-    **<:yellow_calendar:1207339611911884902> Дата публикации выпуска: {date}**
-    **<:user:1220792994328875058> Редактор: {maker}**
-    **<:workinprogress:1220793552234086451> Статус: {status.lower()}**
-    **<:money:1220793737391771829> Зарплата за выпуск: {salary}**
+    # embed_description = f"""
+    # **<:hashtag:1220792495047184515> ID выпуска: `{publication.id}`**
+    # **<:id_card:1207329341227147274> Номер выпуска: `{publication.publication_number}`**
+    # **<:yellow_calendar:1207339611911884902> Дата публикации выпуска: {date}**
+    # **<:user:1220792994328875058> Редактор: {maker}**
+    # **<:workinprogress:1220793552234086451> Статус: {status.lower()}**
+    # **<:money:1220793737391771829> Зарплата за выпуск: {salary}**
 
-    **<:user:1220792994328875058> Информацию для выпуска собрал: {information_creator}**
-    **<:user:1220792994328875058> Зарплату выплатил: {salary_payer}**
-    """
+    # **<:user:1220792994328875058> Информацию для выпуска собрал: {information_creator}**
+    # **<:user:1220792994328875058> Зарплату выплатил: {salary_payer}**
+    # """
+
+    embed_fields = [
+        {
+            "name": "",
+            "value": "",
+            "inline": True
+        },
+        {
+            "name": "",
+            "value": "",
+            "inline": True
+        },
+        {
+            "name": "",
+            "value": "",
+            "inline": True
+        },
+        {
+            "name": "",
+            "value": "",
+            "inline": True
+        },
+        {
+            "name": "",
+            "value": "",
+            "inline": True
+        },
+        {
+            "name": "",
+            "value": "",
+            "inline": True
+        },
+        {
+            "name": "",
+            "value": "",
+            "inline": True
+        },
+        {
+            "name": "",
+            "value": "",
+            "inline": True
+        }
+    ]
 
     embed = disnake.Embed(
         title=f"<:job_title:1207331119176089681> Информация о выпуске `[#{publication.publication_number}]`",
-        description=embed_description,
+        # description=embed_description,
         color=0x2B2D31,
     )
+
     return embed
 
 
