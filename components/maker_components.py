@@ -1429,13 +1429,13 @@ class SubmitReason(ui.Modal):
                         try:
                             if isinstance(error, disnake.HTTPException):
                                 await channel.send(
-                                    content=f"**Мне не удалось снять роль {duty_role.mention} участнику {member.mention}.**\n"
-                                            f"**Произошла внутренняя ошибка при выполнении запроса.**"
+                                    content=f"Мне не удалось снять роль {duty_role.mention} участнику {member.mention}.\n"
+                                            f"Произошла внутренняя ошибка при выполнении запроса."
                                 )
                             elif isinstance(error, disnake.Forbidden):
                                 await channel.send(
-                                    content=f"**Мне не удалось снять роль {duty_role.mention} участнику {member.mention}.**\n"
-                                            f"**У меня недостаточно прав для выполнения данного действия.**"
+                                    content=f"Мне не удалось снять роль {duty_role.mention} участнику {member.mention}.**\n"
+                                            f"У меня недостаточно прав для выполнения данного действия."
                                 )
                             elif isinstance(error, AttributeError):
                                 await channel.send(
