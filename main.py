@@ -2,7 +2,7 @@ import datetime
 import os
 import asyncio
 import disnake
-from disnake.ext import commands
+from disnake.ext import commands, tasks
 
 from config import TOKEN, DEV_GUILDS, temp
 from ext.logger import Logger
@@ -106,19 +106,39 @@ async def cog_unload(
 async def on_ready():
     # await create_db_tables.start()
     await log.info("Запущена новая сессия.")
-    await bot.change_presence(
-        activity=disnake.Activity(
-            name="news-tools.ru | v1.3", type=disnake.ActivityType.playing
-        ),
-        status=disnake.Status.online,
-    )
-
     temp["startup_time"] = datetime.datetime.now()
+    await change_presence.start()
 
 
 # @tasks.loop(count=1)
 # async def create_db_tables():
 #     await create_tables()
+
+@tasks.loop(seconds=3)
+async def change_presence():
+    if not temp.get("current_presence"):
+        temp["current_presence"] = 1
+    
+    match temp["current_presence"]:
+        case 1:
+            await bot.change_presence(
+                    activity=disnake.Activity(
+                        name="is this the end? | v1.4", type=disnake.ActivityType.watching
+                    ),
+                    status=disnake.Status.online,
+                )
+            
+            temp["current_presence"] = 2
+
+        case _:
+            await bot.change_presence(
+                    activity=disnake.Activity(
+                        name="v1.4", type=disnake.ActivityType.watching
+                    ),
+                    status=disnake.Status.online,
+                )
+            
+            temp["current_presence"] = 1
 
 
 async def load_cogs():
