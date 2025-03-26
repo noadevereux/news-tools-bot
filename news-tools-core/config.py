@@ -12,7 +12,7 @@ temp = {"startup_time": None}
 
 TOKEN = getenv("TOKEN")
 
-DEV_GUILDS = tuple(map(int, getenv("DEV_GUILDS", "").split(",")))
+DEV_GUILDS = [int(getenv("DEV_GUILD"), 0)]
 
 MYSQL_USER = getenv("MYSQL_USER")
 MYSQL_PASSWORD = getenv("MYSQL_PASSWORD")

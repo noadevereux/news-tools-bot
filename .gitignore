@@ -1,5 +1,5 @@
 /news-tools-core/alembic.ini
-/news-tools-core/alembic
 /news-tools-core/logs/*.log
 .env
 venv/
+scripts/

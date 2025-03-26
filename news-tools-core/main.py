@@ -4,7 +4,7 @@ import asyncio
 import disnake
 from disnake.ext import commands, tasks
 
-from config import TOKEN, DEV_GUILDS, temp
+from config import TOKEN, DEV_GUILDS, temp, MYSQL_USER, MYSQL_PASSWORD
 from ext.logger import Logger
 from ext.models.reusable import *
 
