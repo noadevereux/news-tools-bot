@@ -1,0 +1,38 @@
+name: news-tools-bot
+
+services:
+  bot:
+    build: ./news-tools-core
+    env_file:
+      - .env
+    ports:
+      - "${API_PORT}:8080"
+    networks:
+      - default
+    depends_on:
+      database:
+        condition: service_healthy
+        restart: true
+        required: true
+  
+  database:
+    image: mysql:8
+    env_file:
+      - .env
+    environment:
+      MYSQL_RANDOM_ROOT_PASSWORD: yes
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    volumes:
+      - database-data:/var/lib/mysql
+    networks:
+      - default
+
+
+networks:
+  default:
+    driver: bridge
+
+volumes:
+  database-data:
