@@ -3,7 +3,8 @@ from dotenv import load_dotenv
 
 load_dotenv("./.env")
 
-# Temp variables ###
+### Temp variable
+# This variable serves as a temporarly storage for a service data. It should not be assigned manually
 
 temp = {"startup_time": None}
 
@@ -11,7 +12,8 @@ temp = {"startup_time": None}
 
 TOKEN = getenv("TOKEN")
 
-DEV_GUILDS = (1063529260918264009,)
+# List of guild ids on which dev commands should be registered
+DEV_GUILDS = (1171526838795898920,)
 
 MYSQL_USER = getenv("MYSQL_USER")
 MYSQL_PASSWORD = getenv("MYSQL_PASSWORD")
@@ -31,10 +33,10 @@ DEFAULT_POST_TITLES = {
     5: "Руководитель",
 }
 
+# Ids of emoji which is used in service messages
+# Preferably they should be created in the application itself on developer portal
 REUSABLE_EMOJI = {
     "pending": "<a:blurple_loading:1233390095336472689>",
     "success": "<a:success:1261226409901293608>",
     "fail": "<a:fail:1261225205678735440>"
 }
-
-# https://discord.com/api/oauth2/authorize?client_id=1089657230330183765&permissions=274878237888&scope=applications.commands%20bot
