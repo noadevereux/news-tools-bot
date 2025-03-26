@@ -1,7 +1,4 @@
 from os import getenv
-from dotenv import load_dotenv
-
-load_dotenv("./.env")
 
 ### Temp variable
 # This variable serves as a temporarly storage for a service data. It should not be assigned manually
