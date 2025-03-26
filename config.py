@@ -1,7 +1,7 @@
 from os import getenv
 from dotenv import load_dotenv
 
-load_dotenv("./venv/.env")
+load_dotenv("./.env")
 
 # Temp variables ###
 
