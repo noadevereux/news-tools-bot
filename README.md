@@ -6,6 +6,22 @@
 
 <p align="center">Система управления новостным департаментом для вашего сервера. Работает с помощью <a href="https://github.com/DisnakeDev/disnake">disnake</a></p>
 
+<br/>
+<p align="center">
+  <a href="https://discord.gg/tKDdwpknSR">
+    <img src="https://img.shields.io/badge/discord-News_Tools_Lounge-blue?logo=discord" />
+  </a>
+  <a href="https://github.com/noadevereux/news-tools-bot/releases/tag/v1.4">
+    <img src="https://img.shields.io/github/v/release/wkmeupinside/news-tools-bot" />
+  </a>
+  <a href="https://github.com/wkmeupinside/news-tools-bot?tab=License-1-ov-file">
+    <img src="https://img.shields.io/badge/license-NCOSL-red" />
+  </a>
+  <a href="#">
+    <img src="https://img.shields.io/github/stars/wkmeupinside/news-tools-bot" />
+  </a>
+</p>
+
 ## Общая информация
 
 ### Условия использования и лицензирования
