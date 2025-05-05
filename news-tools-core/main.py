@@ -123,7 +123,7 @@ async def change_presence():
         case 1:
             await bot.change_presence(
                     activity=disnake.Activity(
-                        name="is this the end? | v1.4", type=disnake.ActivityType.watching
+                        name="v1.4", type=disnake.ActivityType.watching
                     ),
                     status=disnake.Status.online,
                 )
@@ -133,7 +133,7 @@ async def change_presence():
         case _:
             await bot.change_presence(
                     activity=disnake.Activity(
-                        name="v1.4", type=disnake.ActivityType.watching
+                        name="https://github.com/noadevereux/news-tools-bot", type=disnake.ActivityType.watching
                     ),
                     status=disnake.Status.online,
                 )
