@@ -6,7 +6,6 @@
 
 <p align="center">Система управления новостным департаментом для вашего сервера. Работает с помощью <a href="https://github.com/DisnakeDev/disnake">disnake</a></p>
 
-<br/>
 <p align="center">
   <a href="https://discord.gg/tKDdwpknSR">
     <img src="https://img.shields.io/badge/discord-News_Tools_Lounge-blue?logo=discord" />
