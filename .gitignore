@@ -2,4 +2,3 @@
 /news-tools-core/logs/*.log
 .env
 venv/
-scripts/
