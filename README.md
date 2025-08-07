@@ -1,5 +1,5 @@
 <p align="center">
-  <img height="200" width="200" src="https://news-tools.ru/static/img/logo.png">
+  <img height="200" width="200" src="https://docs.news-tools.ru/static/logodark.png">
 </p>
 
 <h1 align="center">News Tools</h1>
